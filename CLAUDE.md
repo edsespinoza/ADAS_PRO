@@ -208,6 +208,7 @@ Verificar `memory/iem_tracker.md` para saber quais skills existem. Sempre prefer
 
 | Skill | Cobre |
 |---|---|
+| `adas-rules` | Regras de negócio — roles, planos, permissões, RLS, invariantes críticos |
 | `adas-landing` | `index.html` — seções, hero, brands, CSS tokens |
 | `adas-auth` | `js/auth.js` — modelos de dados, roles, fluxo offline |
 | `adas-membros` | `membros.html` |

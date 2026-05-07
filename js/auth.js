@@ -457,7 +457,7 @@ const AUTH = (function () {
               ? 'E-mail ou senha incorretos.'
               : 'Sistema de autenticação temporariamente indisponível. Tente novamente em instantes.' };
           }
-          if (localUser && checkHash(passClean, localUser.passwordHash)) {
+          if (localUser && await checkHash(passClean, localUser.passwordHash)) {
             _clearRateLimit(emailClean);
             const localSession = _buildSession(localUser, localUser.id);
             _currentSession = localSession;
@@ -686,7 +686,7 @@ const AUTH = (function () {
     _tickets       = {};
     _notifications = [];
     await _seedDefaultUsersLocal();
-    seedDemoData();
+    await seedDemoData();
     const email = role === 'admin' ? 'admin@adaspro.com.br' : 'fernanda@autocenter.com';
     const pass  = role === 'admin' ? _DEMO_AD_PASS          : 'Demo@123';
     _clearRateLimit(email); // garante que tentativas anteriores não bloqueiem o demo

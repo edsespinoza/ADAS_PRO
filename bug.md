@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-07 (Fix #53–#59 — segurança admin, auditoria, expiração, downloads, UX)  
+**Última atualização:** 2026-05-07 (Fix #53–#60 — segurança admin, auditoria, expiração, downloads, UX, biblioteca superadmin)  
 **Responsável:** AutoTech Service
 
 ---
@@ -439,6 +439,28 @@
   - **(b) Loading skeletons:** `@keyframes skeleton-pulse`, `.skeleton-row`, `.skeleton-cell` adicionados a `auth.css`. Helper `skeletonTable(cols, rows)` no admin.html. `loadAuditoria()` usa skeleton de 5 colunas × 6 linhas durante carregamento.
   - **(c) Consistência de status:** `statusBadge()` em admin.html simplificado — emojis redundantes removidos (o dot CSS `::before` já indica estado); labels agora são "Ativo / Pendente / Bloqueado" consistentes com as classes `.status-active/pending/blocked` de `auth.css`.
   - **Arquivo:** `css/auth.css` + `admin.html`
+
+---
+
+## 🟠 ALTA — Controle Superadmin
+
+- [x] **#60 — Biblioteca de Materiais no painel Superadmin** ✅ 2026-05-07
+  - **Problema:** Superadmin não tinha nenhum controle sobre a Biblioteca. O único painel com gestão de materiais era o `admin.html`, colocando uma funcionalidade crítica fora do alcance do nível máximo de acesso.
+  - **Implementação em `superadmin.html`:**
+    - Novo item "📚 Biblioteca de Materiais" na sidebar (seção Negócio, após Editorial)
+    - Página `page-biblioteca` com stats (total / ocultos / com arquivo), filtros por busca e categoria, tabela com colunas: Material, Categoria, Nível Visualizar, Nível Download, Visibilidade, Ações
+    - Modal `modalSaBiblioteca` com todos os campos + **bloco exclusivo Superadmin**: seletor de `accessLevel` (1–4 = Free/Módulo/Pro/Premium), seletor de `downloadLevel`, toggle "Ocultar material"
+    - Botão **"🚫 Revogar acesso global à categoria"** (disponível no modal de edição) — remove a categoria das permissões de todos os usuários de uma vez
+    - Botões de ação por linha: Editar (✏️), Toggle visibilidade (🙈/👁️), Excluir (🗑)
+  - **Implementação em `js/auth.js`:**
+    - `revokeAllPermissionsForCategory(catId)` — percorre `_users`, remove catId de `permissions[]`, chama `_sbUpsertUser` para cada afetado e persiste via `_saveUsersLocal()`. Retorna `{ ok, count }`.
+    - Exportado no objeto público `AUTH`
+  - **Controles exclusivos do Superadmin** (não disponíveis no admin):
+    - `accessLevel` por material (admin usa padrão fixo)
+    - `downloadLevel` por material
+    - Toggle de visibilidade (ocultar sem excluir)
+    - Revogação em massa por categoria
+  - **Arquivos:** `superadmin.html` + `js/auth.js`
 
 ---
 

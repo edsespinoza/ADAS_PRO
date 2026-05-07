@@ -917,6 +917,17 @@ const AUTH = (function () {
   function addContent(item)        { const c=getContent(); const id='cnt_'+Date.now().toString(36); c.push({icon:'📄',...item,id}); saveContent(c); return id; }
   function editContent(id, updates){ const c=getContent(); const i=c.findIndex(x=>x.id===id); if(i<0)return false; c[i]={...c[i],...updates}; saveContent(c); return true; }
   function deleteContent(id)       { saveContent(getContent().filter(c=>c.id!==id)); return true; }
+  function revokeAllPermissionsForCategory(catId) {
+    if (!catId) return { ok:false, count:0 };
+    let count = 0;
+    Object.values(_users).forEach(u => {
+      if (!u.permissions) return;
+      const idx = u.permissions.indexOf(catId);
+      if (idx >= 0) { u.permissions.splice(idx, 1); count++; _sbUpsertUser(u); }
+    });
+    _saveUsersLocal();
+    return { ok:true, count };
+  }
 
   /* ─── Artigos Editoriais ─── */
   function _getItems(key)       { try { const r=localStorage.getItem(key); return r?JSON.parse(r):[]; } catch { return []; } }
@@ -1299,7 +1310,7 @@ const AUTH = (function () {
     exportData, importData, resetToDefaults, getStats,
     getUserPlan, isAccessValid, setUserPlan,
     getUserAccessLevel, canViewContent, canDownloadContent, trackDownload,
-    setAccessExpiry, getUserDownloads, getRecentResets,
+    setAccessExpiry, getUserDownloads, getRecentResets, revokeAllPermissionsForCategory,
     verifyMFA, logAudit, getAuditLogs, resetPassword, updatePassword,
     uploadFile, getSignedUrl, callEdgeFunction,
     onAuthStateChange: (cb) => { if (_sb) _sb.auth.onAuthStateChange(cb); },

@@ -1320,6 +1320,9 @@
         <span class="nav-icon">✏️</span>Conteúdo Editorial
         <span class="nav-badge" id="badgeDrafts" style="display:none;background:#F4A261;color:#000;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:auto">0</span>
       </a>
+      <a class="sidebar-nav-item" onclick="showPage('biblioteca',this)">
+        <span class="nav-icon">📚</span>Biblioteca de Materiais
+      </a>
 
       <div class="sidebar-nav-section" style="margin-top:10px">Sistema</div>
       <a class="sidebar-nav-item" onclick="showPage('system',this)">
@@ -1919,6 +1922,55 @@
         </div>
       </div>
 
+      <!-- ═══ PAGE: BIBLIOTECA DE MATERIAIS ═══ -->
+      <div class="page" id="page-biblioteca">
+
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+          <div class="ed-stat-card" style="background:var(--tech-bg);border-color:var(--tech-border)">
+            <div class="ed-stat-icon">📚</div>
+            <div><div class="ed-stat-val" id="saLibTotal">0</div><div class="ed-stat-lbl">Total de materiais</div></div>
+          </div>
+          <div class="ed-stat-card" style="background:var(--warning-bg);border-color:var(--gold-border)">
+            <div class="ed-stat-icon">🙈</div>
+            <div><div class="ed-stat-val" id="saLibHidden">0</div><div class="ed-stat-lbl">Ocultos</div></div>
+          </div>
+          <div class="ed-stat-card" style="background:var(--success-bg);border-color:var(--success-border)">
+            <div class="ed-stat-icon">⬆</div>
+            <div><div class="ed-stat-val" id="saLibStorage">0</div><div class="ed-stat-lbl">Com arquivo</div></div>
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="saLibSearch" placeholder="Buscar material..." oninput="filterSaContent()"/></div>
+          <select id="saLibCatFilter" class="cat-filter-select" onchange="filterSaContent()">
+            <option value="">Todas as categorias</option>
+          </select>
+          <button onclick="openAddSaContent()" style="padding:9px 20px;background:var(--accent);color:var(--bg);border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap">+ Adicionar material</button>
+        </div>
+
+        <!-- Tabela -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <div><div class="table-card-title">Biblioteca de Conteúdo</div><div class="table-card-sub" id="saLibCount">—</div></div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead><tr>
+                <th>Material</th>
+                <th>Categoria</th>
+                <th>Visualizar</th>
+                <th>Download</th>
+                <th>Visibilidade</th>
+                <th>Ações</th>
+              </tr></thead>
+              <tbody id="saLibTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /pages-wrap -->
   </main>
 </div><!-- /dashboard -->
@@ -2015,6 +2067,83 @@
       </div><!-- /editor-sidebar -->
     </div><!-- /editor-main -->
   </div><!-- /editor-shell -->
+</div>
+
+<!-- Modal — Biblioteca de Materiais (Superadmin) -->
+<div class="modal-overlay" id="modalSaBiblioteca" onclick="if(event.target===this)closeModal('modalSaBiblioteca')">
+  <div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="saLibModalTitle">Adicionar material</div>
+      <button class="modal-close" onclick="closeModal('modalSaBiblioteca')">✕</button>
+    </div>
+    <div class="config-row">
+      <div class="config-field"><label>Título <span style="color:var(--danger)">*</span></label><input class="config-input" id="saLibTitle" placeholder="Ex: Honda LKAS Tipo 3"/></div>
+      <div class="config-field"><label>Categoria <span style="color:var(--danger)">*</span></label><select class="config-input" id="saLibCatSel"><option value="">— Selecione —</option></select></div>
+    </div>
+    <div class="config-field" style="margin-bottom:12px"><label>Descrição</label><textarea class="config-input config-textarea" id="saLibDesc" placeholder="Descreva o conteúdo técnico..."></textarea></div>
+    <div class="config-row">
+      <div class="config-field"><label>Tipo</label>
+        <select class="config-input" id="saLibType">
+          <option value="pdf">PDF</option><option value="video">Vídeo</option><option value="image">Imagem</option><option value="doc">Documento</option>
+        </select>
+      </div>
+      <div class="config-field"><label>Ícone (emoji)</label><input class="config-input" id="saLibIcon" placeholder="📄" maxlength="4"/></div>
+    </div>
+
+    <!-- Controles exclusivos do Superadmin -->
+    <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.22);border-radius:10px;padding:16px;margin:14px 0">
+      <div style="font-size:.7rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">⚡ Controle de Acesso — Exclusivo Superadmin</div>
+      <div class="config-row" style="margin-bottom:10px">
+        <div class="config-field">
+          <label>Nível mínimo para visualizar</label>
+          <select class="config-input" id="saLibAccessLevel">
+            <option value="1">1 — Free (todos)</option>
+            <option value="2" selected>2 — Módulo</option>
+            <option value="3">3 — Pro</option>
+            <option value="4">4 — Premium</option>
+          </select>
+        </div>
+        <div class="config-field">
+          <label>Nível mínimo para baixar</label>
+          <select class="config-input" id="saLibDownloadLevel">
+            <option value="1">1 — Free (todos)</option>
+            <option value="2">2 — Módulo</option>
+            <option value="3" selected>3 — Pro</option>
+            <option value="4">4 — Premium</option>
+          </select>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.83rem;color:rgba(255,255,255,.55)">
+        <input type="checkbox" id="saLibHidden" style="accent-color:var(--gold);width:15px;height:15px"/>
+        Ocultar material (invisível para membros — sem afetar permissões já concedidas)
+      </label>
+    </div>
+
+    <!-- Upload PDF -->
+    <div class="config-field" style="margin-bottom:0">
+      <label>Arquivo PDF <span style="font-size:.7rem;color:rgba(255,255,255,.3)">(opcional — Supabase Storage)</span></label>
+      <div class="sa-upload-zone" id="saUploadZone">
+        <input type="file" id="saLibFile" accept=".pdf,application/pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="onSaFileSelected(this)"/>
+        <div style="font-size:1.4rem;margin-bottom:4px">📁</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.4)">Arraste o PDF ou <strong style="color:var(--accent)">clique para selecionar</strong></div>
+      </div>
+      <div class="sa-upload-info" id="saUploadFileInfo">
+        <span>📄</span>
+        <div class="sa-upload-name" id="saUploadFileName">—</div>
+        <div class="sa-upload-remove" onclick="clearSaFileInput()">✕ remover</div>
+      </div>
+      <div class="sa-upload-progress" id="saUploadProgress"><div class="sa-upload-bar" id="saUploadProgressBar"></div></div>
+      <div style="font-size:.72rem;color:rgba(0,180,216,.6);margin-top:5px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="saUploadCurrentPath"></div>
+    </div>
+
+    <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:18px">
+      <button id="saLibRevokeBtn" style="display:none;padding:8px 14px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25);border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer" onclick="revokeCurrentCatAccess()">🚫 Revogar acesso global à categoria</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal('modalSaBiblioteca')">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" id="saLibSaveBtn" onclick="saveSaContent()">Salvar material</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal — Confirmar Exclusão de Usuário -->
@@ -2266,6 +2395,23 @@
 .btn-danger-confirm { padding:9px 18px;background:var(--danger);border:none;border-radius:7px;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;box-shadow:0 2px 6px rgba(239,68,68,.3); }
 .btn-danger-confirm:hover { background:#B91C1C; }
 .btn-danger-confirm:disabled { opacity:.4;cursor:not-allowed; }
+
+/* ═══ BIBLIOTECA SA — upload zone ═══ */
+.sa-upload-zone { border:2px dashed rgba(255,255,255,.12);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:var(--transition);position:relative;background:rgba(255,255,255,.02); }
+.sa-upload-zone:hover { border-color:var(--accent);background:rgba(255,255,255,.04); }
+.sa-upload-info { display:none;align-items:center;gap:10px;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:9px 12px;margin-top:8px; }
+.sa-upload-info.show,.sa-upload-info[style*="flex"] { display:flex; }
+.sa-upload-name { font-size:.8rem;color:rgba(255,255,255,.75);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.sa-upload-remove { font-size:.72rem;color:rgba(255,255,255,.3);cursor:pointer;transition:color .2s;flex-shrink:0; }
+.sa-upload-remove:hover { color:#ff6b7a; }
+.sa-upload-progress { height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:8px;overflow:hidden;display:none; }
+.sa-upload-bar { height:100%;background:linear-gradient(90deg,var(--accent),var(--tech));border-radius:2px;width:0%;transition:width .4s; }
+
+/* Nível de acesso badges */
+.sa-level-free     { color:rgba(255,255,255,.4); }
+.sa-level-modulo   { color:var(--tech); }
+.sa-level-pro      { color:var(--warning); }
+.sa-level-premium  { color:var(--gold); }
 </style>
 
 <script>
@@ -2870,16 +3016,211 @@ function exportAudit() {
   showToast('Auditoria exportada com sucesso.', 'success');
 }
 
+/* ════════════════════════════════════════════
+   BIBLIOTECA DE MATERIAIS — Superadmin
+════════════════════════════════════════════ */
+const SA_LEVEL_LABELS = { 1:'Free', 2:'Módulo', 3:'Pro', 4:'Premium' };
+const SA_LEVEL_COLORS = { 1:'rgba(255,255,255,.38)', 2:'var(--tech)', 3:'var(--warning)', 4:'var(--gold)' };
+let _saEditingContentId = null;
+
+function loadSaBiblioteca() {
+  const sel = document.getElementById('saLibCatFilter');
+  if (sel.options.length < 2) {
+    AUTH.CATEGORIES.forEach(c => sel.add(new Option(c.icon + ' ' + c.label, c.id)));
+  }
+  filterSaContent();
+}
+
+function filterSaContent() {
+  const q    = (document.getElementById('saLibSearch')?.value || '').toLowerCase();
+  const catF = document.getElementById('saLibCatFilter')?.value || '';
+  const all  = AUTH.getContent();
+  const items = all.filter(c =>
+    (!q    || c.title.toLowerCase().includes(q) || (c.desc||'').toLowerCase().includes(q)) &&
+    (!catF || c.cat === catF)
+  );
+  document.getElementById('saLibTotal').textContent   = all.length;
+  document.getElementById('saLibHidden').textContent  = all.filter(c => c.hidden).length;
+  document.getElementById('saLibStorage').textContent = all.filter(c => c.filePath).length;
+  document.getElementById('saLibCount').textContent   = items.length + ' material(is)';
+
+  if (!items.length) {
+    document.getElementById('saLibTbody').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px">Nenhum material encontrado.</td></tr>';
+    return;
+  }
+
+  document.getElementById('saLibTbody').innerHTML = items.map(c => {
+    const cat = AUTH.CATEGORIES.find(x => x.id === c.cat) || { label: c.cat, icon: '📄' };
+    const al  = c.accessLevel   || 1;
+    const dl  = c.downloadLevel || 1;
+    const storageBadge = c.filePath
+      ? '<span style="font-size:.65rem;background:rgba(0,180,216,.12);color:var(--tech);padding:1px 5px;border-radius:3px;margin-left:5px">⬆ Storage</span>' : '';
+    const visiBadge = c.hidden
+      ? '<span style="background:rgba(251,191,36,.14);color:var(--gold);border-radius:4px;padding:2px 7px;font-size:.7rem;font-weight:600">OCULTO</span>'
+      : '<span style="background:rgba(52,211,153,.1);color:var(--success);border-radius:4px;padding:2px 7px;font-size:.7rem;font-weight:600">VISÍVEL</span>';
+    return `<tr>
+      <td>
+        <div style="font-weight:600;font-size:.83rem">${esc(c.title)}${storageBadge}</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">${(c.type||'pdf').toUpperCase()} · ${c.fileSize||'—'}</div>
+      </td>
+      <td><span style="background:rgba(255,255,255,.06);padding:3px 8px;border-radius:5px;font-size:.77rem">${esc(cat.icon)} ${esc(cat.label)}</span></td>
+      <td><span style="font-size:.8rem;font-weight:600;color:${SA_LEVEL_COLORS[al]}">${SA_LEVEL_LABELS[al]||'—'}</span></td>
+      <td><span style="font-size:.8rem;font-weight:600;color:${SA_LEVEL_COLORS[dl]}">${SA_LEVEL_LABELS[dl]||'—'}</span></td>
+      <td>${visiBadge}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn action-btn-edit" onclick="openEditSaContent('${c.id}')" title="Editar">✏️</button>
+          <button class="action-btn" onclick="toggleSaContentVisibility('${c.id}')" title="${c.hidden?'Tornar visível':'Ocultar'}" style="font-size:.85rem">${c.hidden?'👁️':'🙈'}</button>
+          <button class="action-btn action-btn-delete" onclick="deleteSaContent('${c.id}')" title="Excluir">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function _populateSaCatSelect() {
+  const sel = document.getElementById('saLibCatSel');
+  while (sel.options.length > 1) sel.remove(1);
+  AUTH.CATEGORIES.forEach(c => sel.add(new Option(c.icon + ' ' + c.label, c.id)));
+}
+
+function openAddSaContent() {
+  _saEditingContentId = null;
+  document.getElementById('saLibModalTitle').textContent = 'Adicionar material';
+  ['saLibTitle','saLibDesc','saLibIcon'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('saLibCatSel').value       = '';
+  document.getElementById('saLibType').value         = 'pdf';
+  document.getElementById('saLibAccessLevel').value  = '2';
+  document.getElementById('saLibDownloadLevel').value= '3';
+  document.getElementById('saLibHidden').checked     = false;
+  document.getElementById('saLibRevokeBtn').style.display = 'none';
+  _populateSaCatSelect();
+  clearSaFileInput();
+  openModal('modalSaBiblioteca');
+}
+
+function openEditSaContent(id) {
+  const item = AUTH.getContent().find(c => c.id === id);
+  if (!item) return;
+  _saEditingContentId = id;
+  document.getElementById('saLibModalTitle').textContent = 'Editar material';
+  _populateSaCatSelect();
+  document.getElementById('saLibTitle').value         = item.title || '';
+  document.getElementById('saLibCatSel').value        = item.cat   || '';
+  document.getElementById('saLibDesc').value          = item.desc  || '';
+  document.getElementById('saLibType').value          = item.type  || 'pdf';
+  document.getElementById('saLibIcon').value          = item.icon  || '📄';
+  document.getElementById('saLibAccessLevel').value   = String(item.accessLevel   || 2);
+  document.getElementById('saLibDownloadLevel').value = String(item.downloadLevel || 3);
+  document.getElementById('saLibHidden').checked      = !!item.hidden;
+  document.getElementById('saLibRevokeBtn').style.display = '';
+  clearSaFileInput();
+  if (item.filePath) document.getElementById('saUploadCurrentPath').textContent = 'Arquivo atual: ' + item.filePath;
+  openModal('modalSaBiblioteca');
+}
+
+async function saveSaContent() {
+  const title = document.getElementById('saLibTitle').value.trim();
+  const cat   = document.getElementById('saLibCatSel').value;
+  if (!title || !cat) { showToast('Título e categoria são obrigatórios.', 'warn'); return; }
+
+  const desc          = document.getElementById('saLibDesc').value.trim();
+  const type          = document.getElementById('saLibType').value;
+  const icon          = document.getElementById('saLibIcon').value.trim() || '📄';
+  const accessLevel   = parseInt(document.getElementById('saLibAccessLevel').value, 10);
+  const downloadLevel = parseInt(document.getElementById('saLibDownloadLevel').value, 10);
+  const hidden        = document.getElementById('saLibHidden').checked;
+
+  const fileInput = document.getElementById('saLibFile');
+  let filePath = _saEditingContentId
+    ? (AUTH.getContent().find(c => c.id === _saEditingContentId)?.filePath || '') : '';
+
+  if (fileInput.files[0]) {
+    const slug = title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+                   .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const storagePath = cat + '/' + slug + '.pdf';
+    const btn = document.getElementById('saLibSaveBtn');
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    const bar = document.getElementById('saUploadProgressBar');
+    document.getElementById('saUploadProgress').style.display = 'block';
+    let fp = 0;
+    const fi = setInterval(() => { fp = Math.min(fp + 8, 85); bar.style.width = fp + '%'; }, 150);
+    const res = await AUTH.uploadFile(fileInput.files[0], storagePath);
+    clearInterval(fi);
+    if (res.ok) { bar.style.width = '100%'; filePath = storagePath; }
+    else { showToast('Erro no upload: ' + res.msg, 'error'); btn.disabled = false; btn.textContent = 'Salvar material'; return; }
+    setTimeout(() => { document.getElementById('saUploadProgress').style.display = 'none'; }, 800);
+    btn.disabled = false; btn.textContent = 'Salvar material';
+  }
+
+  const item = { title, cat, desc, type, icon, accessLevel, downloadLevel, hidden, ...(filePath && { filePath }) };
+  if (_saEditingContentId) {
+    AUTH.editContent(_saEditingContentId, item);
+    showToast('Material atualizado!', 'success');
+  } else {
+    AUTH.addContent(item);
+    showToast('Material adicionado!', 'success');
+  }
+  closeModal('modalSaBiblioteca');
+  filterSaContent();
+}
+
+function toggleSaContentVisibility(id) {
+  const item = AUTH.getContent().find(c => c.id === id);
+  if (!item) return;
+  AUTH.editContent(id, { hidden: !item.hidden });
+  showToast(item.hidden ? 'Material tornado visível.' : 'Material ocultado.', 'success');
+  filterSaContent();
+}
+
+function deleteSaContent(id) {
+  const item = AUTH.getContent().find(c => c.id === id);
+  if (!item) return;
+  if (!confirm('Excluir "' + item.title + '"?\n\nEsta ação não pode ser desfeita.')) return;
+  AUTH.deleteContent(id);
+  showToast('Material excluído.', 'success');
+  filterSaContent();
+}
+
+function revokeCurrentCatAccess() {
+  if (!_saEditingContentId) return;
+  const item = AUTH.getContent().find(c => c.id === _saEditingContentId);
+  if (!item) return;
+  const cat = AUTH.CATEGORIES.find(c => c.id === item.cat);
+  const label = cat ? cat.label : item.cat;
+  if (!confirm('Revogar acesso à categoria "' + label + '" de TODOS os usuários?\n\nIsso remove esta categoria das permissões de todos os membros. A ação não pode ser desfeita automaticamente.')) return;
+  const res = AUTH.revokeAllPermissionsForCategory(item.cat);
+  showToast('Acesso revogado para ' + res.count + ' usuário(s).', 'success');
+}
+
+function onSaFileSelected(input) {
+  if (!input.files[0]) return;
+  document.getElementById('saUploadFileInfo').style.display = 'flex';
+  document.getElementById('saUploadZone').style.display     = 'none';
+  document.getElementById('saUploadFileName').textContent   = input.files[0].name;
+}
+
+function clearSaFileInput() {
+  const fi = document.getElementById('saLibFile');
+  if (fi) fi.value = '';
+  document.getElementById('saUploadFileInfo').style.display = 'none';
+  document.getElementById('saUploadZone').style.display     = 'block';
+  document.getElementById('saUploadProgress').style.display = 'none';
+  document.getElementById('saUploadCurrentPath').textContent = '';
+}
+
 /* ────────────────────────────────────────────
    NAVEGAÇÃO
 ──────────────────────────────────────────── */
 const PAGE_TITLES = {
-  dashboard: ['Dashboard',         'Controle total do sistema ADAS PRO'],
-  admins:    ['Gerenciar Admins',  'Promova, rebaixe e gerencie a equipe'],
-  security:  ['Segurança',         'Logs de acesso e configurações de proteção'],
-  plans:     ['Planos & Módulos',  'Edite planos e gerencie módulos avulsos'],
-  system:    ['Sistema',           'Configurações globais e modo manutenção'],
-  audit:     ['Auditoria',         'Log completo de todas as ações no sistema'],
+  dashboard:  ['Dashboard',               'Controle total do sistema ADAS PRO'],
+  admins:     ['Gerenciar Admins',        'Promova, rebaixe e gerencie a equipe'],
+  security:   ['Segurança',               'Logs de acesso e configurações de proteção'],
+  plans:      ['Planos & Módulos',        'Edite planos e gerencie módulos avulsos'],
+  system:     ['Sistema',                 'Configurações globais e modo manutenção'],
+  audit:      ['Auditoria',               'Log completo de todas as ações no sistema'],
+  biblioteca: ['Biblioteca de Materiais', 'Gerencie, controle e configure os materiais técnicos'],
 };
 
 function showPage(pageId, navEl) {
@@ -2894,9 +3235,10 @@ function showPage(pageId, navEl) {
     document.getElementById('tbSub').textContent   = t[1];
   }
   // Carrega dados ao abrir cada página
-  if (pageId === 'editorial') { loadEditorialStats(); renderEditorialTable(); }
-  if (pageId === 'admins')    { _loadUsers(); }
-  if (pageId === 'audit')     { renderAudit(); }
+  if (pageId === 'editorial')  { loadEditorialStats(); renderEditorialTable(); }
+  if (pageId === 'admins')     { _loadUsers(); }
+  if (pageId === 'audit')      { renderAudit(); }
+  if (pageId === 'biblioteca') { loadSaBiblioteca(); }
 }
 
 /* ────────────────────────────────────────────

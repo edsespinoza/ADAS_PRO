@@ -274,12 +274,7 @@ const AUTH = (function () {
       const salt = hashed.split('$')[2];
       return hashSimple(plain.trim(), salt) === hashed;
     }
-    try { return btoa(plain+'_'+_legacyDjb2(plain)) === hashed; } catch { return false; }
-  }
-  function _legacyDjb2(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h = ((h<<5)-h)+c; h=h&h; }
-    return Math.abs(h).toString(36);
+    return false; // Formato de hash desconhecido — rejeitar
   }
   function _secureToken() {
     const b = crypto.getRandomValues(new Uint8Array(32));
@@ -396,10 +391,16 @@ const AUTH = (function () {
         _offlineMode  = true;
         _loadFromLocalStorage();
         await _seedDefaultUsersLocal();
-        // Em modo offline permite restaurar qualquer sessão cacheada — dados locais são seed,
-        // não produção, então o risco de forge é irrelevante. Sem isso admin fica em loop redirect.
+        // Em modo offline restaura sessão cacheada, mas rejeita se o usuário estiver bloqueado.
         const _cached = _readSessionCache();
-        if (_cached) { _currentSession = _cached; }
+        if (_cached) {
+          const _cachedUser = _users[_cached.userId];
+          if (_cachedUser && _cachedUser.status === 'blocked') {
+            localStorage.removeItem(SESSION_KEY);
+          } else {
+            _currentSession = _cached;
+          }
+        }
         return;
       }
     }
@@ -1114,10 +1115,19 @@ const AUTH = (function () {
     const a    = Object.assign(document.createElement('a'), { href:url, download:'adaspro-backup.json' });
     a.click(); URL.revokeObjectURL(url);
   }
+  const _VALID_ROLES   = new Set(['membro','gestor','admin','superadmin']);
+  const _VALID_STATUSES = new Set(['active','pending','blocked']);
   function importData(json) {
     try {
       const d = JSON.parse(json);
-      if (d.users)    { _users=d.users;     Object.values(d.users).forEach(u=>_sbUpsertUser(u)); }
+      if (d.users) {
+        Object.values(d.users).forEach(u => {
+          if (!_VALID_ROLES.has(u.role))     u.role   = 'membro';
+          if (!_VALID_STATUSES.has(u.status)) u.status = 'pending';
+        });
+        _users = d.users;
+        Object.values(d.users).forEach(u => _sbUpsertUser(u));
+      }
       if (d.content)  saveContent(d.content);
       if (d.tickets)  { _tickets=d.tickets; Object.values(d.tickets).forEach(t=>_sbUpsertTicket(t)); }
       if (d.settings) saveSettings(d.settings);

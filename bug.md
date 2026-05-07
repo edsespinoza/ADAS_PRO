@@ -444,14 +444,14 @@
 
 ## 🔵 BAIXO — Auditoria VoltAgent 2026-05-04 (backlog)
 
-- [ ] **#50 — Findings de baixa prioridade (agrupar em uma sessão de cleanup)**
-  - **[F-08]** Rate limiting bypassável via incógnito — aceitável enquanto Supabase Auth tem rate limiting server-side (`auth.js:273`)
-  - **[F-10]** Edge Functions com `deno.land/std@0.177.0` — fixar para `0.224.0` e `esm.sh/@supabase/supabase-js@2.49.0` (`functions/*/index.ts:5`)
-  - **[F-13]** Sessão cacheada de bloqueado restaurada em modo offline sem check de `status` (`auth.js:362`)
-  - **[F-14]** `importData()` aceita JSON sem sanitizar campos `role`/`status` — risco insider (`auth.js:1067`)
-  - **[F-15]** `supabase.min.js` sem hash SRI (`login.html:180` · `mfa-verify.html:164`)
-  - **[L-03]** `build-config.js` interpola env vars sem escape — substituir por `JSON.stringify(url)` (`scripts/build-config.js:33`)
-  - **[L-06]** `_legacyDjb2` provavelmente dead code em produção — confirmar e remover (`auth.js:263`)
+- [x] **#50 — Findings de baixa prioridade (cleanup)** ✅ 2026-05-07
+  - **[F-08]** Rate limiting bypassável via incógnito — risco aceito; Supabase Auth tem rate limiting server-side.
+  - **[F-10]** Edge Functions atualizadas: `deno.land/std@0.177.0` → `0.224.0`; `supabase-js@2` → `2.49.0` (pinagem de versão) — todas as 3 functions (`approve-user`, `get-download-url`, `notify`). **Deploy necessário.**
+  - **[F-13]** Modo offline: sessão cacheada de usuário bloqueado não é mais restaurada — `_readSessionCache()` agora verifica `_users[userId].status !== 'blocked'` antes de setar `_currentSession` (`auth.js`).
+  - **[F-14]** `importData()` sanitiza `role` e `status` importados via JSON — valores inválidos substituídos por `'membro'` / `'pending'` antes de persistir (`auth.js`).
+  - **[F-15]** SRI hash adicionado em todas as 7 páginas que carregam `supabase.min.js` (`integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"`).
+  - **[L-03]** `build-config.js` usa `JSON.stringify()` para interpolar `url`, `anonKey` e `siteUrl` — previne injeção de caracteres especiais (aspas, barras) em env vars (`scripts/build-config.js`).
+  - **[L-06]** `_legacyDjb2()` removida e `checkHash()` simplificada — formato desconhecido retorna `false` diretamente (`auth.js`).
 
 ---
 

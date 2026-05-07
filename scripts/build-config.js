@@ -35,10 +35,10 @@ const content = `/* ================================================
    ================================================ */
 
 const SUPABASE_CONFIG = {
-  url:         '${url}',
-  anonKey:     '${anonKey}',
+  url:         ${JSON.stringify(url)},
+  anonKey:     ${JSON.stringify(anonKey)},
   demoEnabled: ${demoEnabled},
-  siteUrl:     '${siteUrl}',
+  siteUrl:     ${JSON.stringify(siteUrl)},
 };
 `;
 

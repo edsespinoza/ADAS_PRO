@@ -3,8 +3,8 @@
 // Deploy: supabase functions deploy notify
 // Env vars necessárias: RESEND_API_KEY, ADMIN_EMAIL, SITE_URL
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  Deno.env.get('SITE_URL') || 'https://adaspro.com.br',

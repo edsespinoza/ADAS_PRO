@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-01 (Fix #34 — Auditoria OWASP: demoEnabled=false, senhas produção removidas do código, XSS email-config)  
+**Última atualização:** 2026-05-07 (Fix #51 — Demo mode quebrado: await ausente em enterDemoMode)  
 **Responsável:** AutoTech Service
 
 ---
@@ -403,6 +403,18 @@
   - **[F-15]** `supabase.min.js` sem hash SRI (`login.html:180` · `mfa-verify.html:164`)
   - **[L-03]** `build-config.js` interpola env vars sem escape — substituir por `JSON.stringify(url)` (`scripts/build-config.js:33`)
   - **[L-06]** `_legacyDjb2` provavelmente dead code em produção — confirmar e remover (`auth.js:263`)
+
+---
+
+## 🟡 MÉDIO — Fixes 2026-05-07
+
+- [x] **#51 — Demo mode quebrado quando Supabase offline** ✅ 2026-05-07
+  - **Causa raiz:** `enterDemoMode()` em `js/auth.js` chamava `_seedDefaultUsersLocal()` e `_localLogin()` sem `await`.
+  - `_seedDefaultUsersLocal()` é async (usa `crypto.subtle.deriveBits` via PBKDF2) — sem `await`, `_users['admin']` ainda não existia quando `_localLogin` era chamado → login falhava com "E-mail ou senha inválidos".
+  - `_localLogin()` também é async — sem `await`, `result` era uma Promise pendente; `result.ok` era `undefined` → `localStorage.setItem('adaspro_demo', '1')` nunca executava → ao redirecionar para `admin.html`, `AUTH.init()` não detectava o flag e tentava Supabase novamente (timeout 5s) → redirecionava de volta ao login em loop.
+  - **Fix:** `await` adicionado nas duas chamadas em `enterDemoMode()` (`auth.js:696` e `auth.js:701`).
+  - **Testado:** demo admin e demo membro funcionando com Supabase offline.
+  - **Arquivo:** `js/auth.js` — função `enterDemoMode()`
 
 ---
 

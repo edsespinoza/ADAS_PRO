@@ -709,3 +709,41 @@
   .stats-row { grid-template-columns: 1fr; }
   .auth-card { padding: 32px 24px; }
 }
+
+/* ─── Back link (substitui onmouseover/onmouseout inline) ─── */
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .78rem;
+  color: rgba(255,255,255,.35);
+  text-decoration: none;
+  margin-bottom: 20px;
+  transition: color .2s;
+}
+.auth-back:hover { color: rgba(255,255,255,.7); }
+
+/* ─── Demo buttons (substitui estilos inline + onmouseover) ─── */
+.demo-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: background .3s ease;
+}
+.demo-btn-admin {
+  background: rgba(0,180,216,.12);
+  border: 1px solid rgba(0,180,216,.3);
+  color: #00B4D8;
+  margin-bottom: 8px;
+}
+.demo-btn-admin:hover { background: rgba(0,180,216,.22); }
+.demo-btn-membro {
+  background: rgba(255,107,53,.1);
+  border: 1px solid rgba(255,107,53,.25);
+  color: #FF6B35;
+}
+.demo-btn-membro:hover { background: rgba(255,107,53,.2); }

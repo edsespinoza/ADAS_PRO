@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-07 (Fix #53–#60 + #45 — segurança admin, auditoria, expiração, downloads, UX, biblioteca superadmin, PBKDF2)  
+**Última atualização:** 2026-05-07 (Fix #45 + #46-fase1 — PBKDF2, migração handlers auth pages)  
 **Responsável:** AutoTech Service
 
 ---
@@ -370,11 +370,13 @@
   - `_localRegister`, `createUserDirect`, `seedDemoData` atualizados para `await hashPassword()`.
   - **Arquivo:** `js/auth.js`
 
-- [ ] **#46 — [F-05 / L-05] CSP `unsafe-inline` — migrar event handlers inline para `addEventListener`**
+- [~] **#46 — [F-05 / L-05] CSP `unsafe-inline` — migrar event handlers inline para `addEventListener`** ⚠️ Parcial 2026-05-07
   - **Validado por ambos os agents.**
   - `'unsafe-inline'` em `script-src` e `style-src` neutraliza toda proteção XSS da CSP.
-  - **Fix:** Migrar `onclick`, `onsubmit`, `onmouseover` inline dos HTMLs para `addEventListener` em arquivos JS separados; usar nonce CSP via Vercel Edge Middleware nos `<script>` restantes.
-  - **Arquivos:** `vercel.json:27` · `login.html` · `admin.html` · `membros.html` · `superadmin.html`
+  - **Fase 1 concluída:** `login.html`, `mfa-verify.html`, `reset-password.html` migrados para `js/login.js`, `js/mfa-verify.js`, `js/reset-password.js`. Todos os inline handlers convertidos para `addEventListener`. CSS `.auth-back`, `.demo-btn-admin`, `.demo-btn-membro` adicionados a `auth.css`.
+  - **Fase 2 pendente:** `admin.html` (79 handlers, 54 em template strings), `membros.html` (51 handlers, 32 dinâmicos), `superadmin.html` (113 handlers, 51 dinâmicos), `email-config.html` (19 handlers, 9 dinâmicos). Handlers em strings JS exigem event delegation — refatoração de alta complexidade.
+  - **CSP update:** depende da conclusão da Fase 2. Atualizar `vercel.json` script-src para remover `'unsafe-inline'` apenas após migrar todos os 262 handlers restantes.
+  - **Arquivos Fase 2:** `admin.html` · `membros.html` · `superadmin.html` · `email-config.html` · `vercel.json:27`
 
 - [ ] **#47 — [F-06] `RESEND_API_KEY` armazenada em localStorage plaintext**
   - Exfiltrável via XSS — permite spam e phishing via domínio `adaspro.com.br`.

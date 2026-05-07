@@ -246,35 +246,15 @@ const AUTH = (function () {
     const digest = Array.from(new Uint8Array(bits), x => x.toString(16).padStart(2,'0')).join('');
     return `$pbk$${s}$${digest}`;
   }
-  // Mantido para verificar hashes $2a$ já armazenados no localStorage
-  function hashSimple(str, salt) {
-    const s   = salt || _genSalt();
-    const raw = s + str;
-    let h1 = 0x811c9dc5, h2 = 5381;
-    for (let i = 0; i < raw.length; i++) {
-      const c = raw.charCodeAt(i);
-      h1 = Math.imul(h1 ^ c, 0x01000193);
-      h2 = ((h2 << 5) + h2) ^ c;
-    }
-    for (let r = 0; r < 500; r++) {
-      h1 = Math.imul(h1 ^ (h2 & 0xff), 0x01000193);
-      h2 = Math.imul((h2 << 5) ^ h1, 0x9e3779b9) | 0;
-    }
-    const digest = (Math.abs(h1) >>> 0).toString(16).padStart(8,'0')
-                 + (Math.abs(h2) >>> 0).toString(16).padStart(8,'0');
-    return `$2a$${s}$${digest}`;
-  }
+  // Alias para hashPassword — mantido por compatibilidade com callers existentes
+  async function hashSimple(str, salt) { return hashPassword(str, salt); }
   async function checkHash(plain, hashed) {
     if (!hashed) return false;
     if (hashed.startsWith('$pbk$')) {
       const salt = hashed.split('$')[2];
       return (await hashPassword(plain.trim(), salt)) === hashed;
     }
-    if (hashed.startsWith('$2a$')) {
-      const salt = hashed.split('$')[2];
-      return hashSimple(plain.trim(), salt) === hashed;
-    }
-    return false; // Formato de hash desconhecido — rejeitar
+    return false; // Hashes $2a$ (FNV/DJB2 legados) não são mais aceitos — re-login necessário
   }
   function _secureToken() {
     const b = crypto.getRandomValues(new Uint8Array(32));
@@ -637,13 +617,13 @@ const AUTH = (function () {
       }
     }
 
-    return _localRegister({ name:nameSafe, email:emailClean, password:passClean, level });
+    return await _localRegister({ name:nameSafe, email:emailClean, password:passClean, level });
   }
 
-  function _localRegister({ name, email, password, level }) {
+  async function _localRegister({ name, email, password, level }) {
     if (Object.values(_users).find(u => u.email.toLowerCase() === email)) return { ok:false, msg:'Se este e-mail não estiver cadastrado, você receberá uma confirmação em breve.' };
     const id   = 'user_' + _secureToken().slice(0,12);
-    const user = { id, name, email, passwordHash:hashSimple(password), role:'membro', status:'pending', level:level||'tecnico', permissions:[], plan:'free', accessType:'trial', accessExpires:null, boughtModules:[], createdAt:Date.now(), approvedAt:null, approvedBy:null };
+    const user = { id, name, email, passwordHash: await hashPassword(password), role:'membro', status:'pending', level:level||'tecnico', permissions:[], plan:'free', accessType:'trial', accessExpires:null, boughtModules:[], createdAt:Date.now(), approvedAt:null, approvedBy:null };
     _users[id] = user;
     _saveUsersLocal();
     addNotification({ type:'new_user', userId:id, userName:name, message:`Novo cadastro aguardando aprovação: ${name}` });
@@ -718,13 +698,14 @@ const AUTH = (function () {
   /* ════════════════════════════════════════════
      SEED DEMO DATA
   ════════════════════════════════════════════ */
-  function seedDemoData() {
+  async function seedDemoData() {
     const now = Date.now();
-    if (!_users['demo_pending'])  _users['demo_pending']  = { id:'demo_pending', name:'Carlos Eduardo Silva',email:'carlos.silva@oficina.com.br',passwordHash:hashSimple('Demo@123'),role:'membro',status:'pending',level:'tecnico',permissions:[],plan:'free',accessType:'trial',accessExpires:null,boughtModules:[],createdAt:now-3600000,approvedAt:null,approvedBy:null };
-    if (!_users['demo_pending2']) _users['demo_pending2'] = { id:'demo_pending2',name:'André Luiz Costa',    email:'andre.costa@multimarcas.com.br',passwordHash:hashSimple('Demo@123'),role:'membro',status:'pending',level:'autocenter',permissions:[],plan:'free',accessType:'trial',accessExpires:null,boughtModules:[],createdAt:now-900000,approvedAt:null,approvedBy:null };
-    if (!_users['demo_pro'])      _users['demo_pro']      = { id:'demo_pro',     name:'Fernanda Oliveira',   email:'fernanda@autocenter.com',passwordHash:hashSimple('Demo@123'),role:'membro',status:'active',level:'autocenter',permissions:['honda','toyota','nissan'],plan:'pro',accessType:'subscription',accessExpires:null,boughtModules:[],createdAt:now-86400000*5,approvedAt:now-86400000*4,approvedBy:'admin' };
-    if (!_users['demo_modulo'])   _users['demo_modulo']   = { id:'demo_modulo',  name:'Roberto Mendes',      email:'roberto@parabrisa.com',passwordHash:hashSimple('Demo@123'),role:'membro',status:'active',level:'parabrisa',permissions:['toyota'],plan:'modulo',accessType:'subscription',accessExpires:null,boughtModules:['toyota'],createdAt:now-86400000*10,approvedAt:now-86400000*9,approvedBy:'admin' };
-    if (!_users['demo_premium'])  _users['demo_premium']  = { id:'demo_premium', name:'Marcelo Teixeira',    email:'marcelo@premiumauto.com.br',passwordHash:hashSimple('Demo@123'),role:'membro',status:'active',level:'gestor',permissions:CATEGORIES.map(c=>c.id),plan:'premium',accessType:'subscription',accessExpires:null,boughtModules:[],createdAt:now-86400000*30,approvedAt:now-86400000*29,approvedBy:'admin' };
+    const demoHash = await hashPassword('Demo@123');
+    if (!_users['demo_pending'])  _users['demo_pending']  = { id:'demo_pending', name:'Carlos Eduardo Silva',email:'carlos.silva@oficina.com.br',passwordHash:demoHash,role:'membro',status:'pending',level:'tecnico',permissions:[],plan:'free',accessType:'trial',accessExpires:null,boughtModules:[],createdAt:now-3600000,approvedAt:null,approvedBy:null };
+    if (!_users['demo_pending2']) _users['demo_pending2'] = { id:'demo_pending2',name:'André Luiz Costa',    email:'andre.costa@multimarcas.com.br',passwordHash:demoHash,role:'membro',status:'pending',level:'autocenter',permissions:[],plan:'free',accessType:'trial',accessExpires:null,boughtModules:[],createdAt:now-900000,approvedAt:null,approvedBy:null };
+    if (!_users['demo_pro'])      _users['demo_pro']      = { id:'demo_pro',     name:'Fernanda Oliveira',   email:'fernanda@autocenter.com',passwordHash:demoHash,role:'membro',status:'active',level:'autocenter',permissions:['honda','toyota','nissan'],plan:'pro',accessType:'subscription',accessExpires:null,boughtModules:[],createdAt:now-86400000*5,approvedAt:now-86400000*4,approvedBy:'admin' };
+    if (!_users['demo_modulo'])   _users['demo_modulo']   = { id:'demo_modulo',  name:'Roberto Mendes',      email:'roberto@parabrisa.com',passwordHash:demoHash,role:'membro',status:'active',level:'parabrisa',permissions:['toyota'],plan:'modulo',accessType:'subscription',accessExpires:null,boughtModules:['toyota'],createdAt:now-86400000*10,approvedAt:now-86400000*9,approvedBy:'admin' };
+    if (!_users['demo_premium'])  _users['demo_premium']  = { id:'demo_premium', name:'Marcelo Teixeira',    email:'marcelo@premiumauto.com.br',passwordHash:demoHash,role:'membro',status:'active',level:'gestor',permissions:CATEGORIES.map(c=>c.id),plan:'premium',accessType:'subscription',accessExpires:null,boughtModules:[],createdAt:now-86400000*30,approvedAt:now-86400000*29,approvedBy:'admin' };
 
     const tkt1='demo_tkt_1';
     if (!_tickets[tkt1]) _tickets[tkt1] = { id:tkt1,userId:'demo_pro',userName:'Fernanda Oliveira',userEmail:'fernanda@autocenter.com',title:'Calibração AVM 360° Toyota RAV4 2022 — câmera traseira descalibrada',category:'duvida-tecnica',priority:'high',status:'in-progress',messages:[{id:'msg_d1',authorId:'demo_pro',authorName:'Fernanda Oliveira',role:'member',message:'Olá! Estou com dificuldade na calibração da câmera traseira do Toyota RAV4 2022. Após troca de para-choque, o sistema AVM 360° continua apresentando linhas desalinhadas. Já tentei o procedimento pelo scanner mas sem sucesso. O erro exibido é C1A87.',createdAt:now-7200000},{id:'msg_d2',authorId:'admin',authorName:'Administrador ADAS PRO',role:'admin',message:'Olá Fernanda! Para o RAV4 2022, o target correto é o Toyota AVM de 180°. Certifique-se que o piso está perfeitamente nivelado (tolerância ±2mm) e que os 4 targets estão posicionados a exatamente 1,5m dos centros das rodas. O erro C1A87 indica desalinhamento lateral — verifique se o target traseiro não está rotacionado. Qual scanner está utilizando?',createdAt:now-5400000},{id:'msg_d3',authorId:'demo_pro',authorName:'Fernanda Oliveira',role:'member',message:'Estou usando o Autel MaxiSys Ultra. Vou verificar novamente o posicionamento dos targets com o nível e refazer o procedimento.',createdAt:now-3600000},{id:'msg_d4',authorId:'admin',authorName:'Administrador ADAS PRO',role:'admin',message:'Perfeito! Com o Autel, acesse: ADAS → Toyota → AVM → Camera Calibration → Rear. Confirme que o veículo está com pneus calibrados e sem carga no porta-malas. Aguardamos o resultado!',createdAt:now-1800000}],createdAt:now-7200000,updatedAt:now-1800000,resolvedAt:null };
@@ -888,7 +869,7 @@ const AUTH = (function () {
     const id = 'usr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
     _users[id] = {
       id, name: name.trim(), email: emailLc,
-      passwordHash: hashSimple(password),
+      passwordHash: await hashPassword(password),
       role: safeRole, status, permissions, plan, level,
       accessType: plan === 'free' ? 'trial' : 'subscription',
       accessExpires: null, boughtModules: [],

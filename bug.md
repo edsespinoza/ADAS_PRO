@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-07 (Fix #53–#60 — segurança admin, auditoria, expiração, downloads, UX, biblioteca superadmin)  
+**Última atualização:** 2026-05-07 (Fix #53–#60 + #45 — segurança admin, auditoria, expiração, downloads, UX, biblioteca superadmin, PBKDF2)  
 **Responsável:** AutoTech Service
 
 ---
@@ -364,11 +364,11 @@
 
 ## 🟡 MÉDIO — Auditoria VoltAgent 2026-05-04
 
-- [ ] **#45 — [F-04 / M-01] `hashSimple` não é bcrypt — substituir por PBKDF2 no fallback local**
-  - **Validado por ambos os agents.**
-  - Algoritmo atual: FNV-1a + DJB2, 500 iter, digest 64 bits — brute-force trivial se localStorage exfiltrado.
-  - **Fix:** Usar `crypto.subtle.deriveBits` com PBKDF2 (≥100.000 iter, SHA-256) para o fallback local, ou desabilitar login local completamente quando `_sbConfigured = true`.
-  - **Arquivo:** `js/auth.js:237–253`
+- [x] **#45 — [F-04 / M-01] `hashSimple` não é bcrypt — substituir por PBKDF2 no fallback local** ✅ 2026-05-07
+  - `hashSimple` convertida em alias async para `hashPassword` (PBKDF2, 100k iter, SHA-256).
+  - `checkHash` removeu branch `$2a$` — hashes legados FNV/DJB2 rejeitados, re-login obrigatório.
+  - `_localRegister`, `createUserDirect`, `seedDemoData` atualizados para `await hashPassword()`.
+  - **Arquivo:** `js/auth.js`
 
 - [ ] **#46 — [F-05 / L-05] CSP `unsafe-inline` — migrar event handlers inline para `addEventListener`**
   - **Validado por ambos os agents.**

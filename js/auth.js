@@ -1218,8 +1218,22 @@ const AUTH = (function () {
     const redirectTo = (window.SUPABASE_CONFIG?.siteUrl || window.location.origin) + '/reset-password.html';
     const { error } = await _sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
     if (error) return { ok:false, msg:'Erro ao enviar email de recuperação.' };
-    await logAudit('reset_password_requested', null, { email: email.trim().toLowerCase() });
+    const target = getUserByEmail(email.trim().toLowerCase());
+    await logAudit('reset_password_requested', target?.id || null, { email: email.trim().toLowerCase() });
     return { ok:true };
+  }
+
+  async function getRecentResets(hours = 24) {
+    if (_mode !== 'supabase' || !_sb) return new Set();
+    try {
+      const since = new Date(Date.now() - hours * 3600000).toISOString();
+      const { data } = await _sb.from('audit_logs')
+        .select('target_id')
+        .eq('action', 'reset_password_requested')
+        .gte('created_at', since)
+        .not('target_id', 'is', null);
+      return new Set((data || []).map(r => r.target_id));
+    } catch { return new Set(); }
   }
 
   async function updatePassword(newPassword) {
@@ -1275,7 +1289,7 @@ const AUTH = (function () {
     exportData, importData, resetToDefaults, getStats,
     getUserPlan, isAccessValid, setUserPlan,
     getUserAccessLevel, canViewContent, canDownloadContent, trackDownload,
-    setAccessExpiry, getUserDownloads,
+    setAccessExpiry, getUserDownloads, getRecentResets,
     verifyMFA, logAudit, getAuditLogs, resetPassword, updatePassword,
     uploadFile, getSignedUrl, callEdgeFunction,
     onAuthStateChange: (cb) => { if (_sb) _sb.auth.onAuthStateChange(cb); },

@@ -507,6 +507,22 @@
 .status-locked { background: rgba(108,117,125,.12); color: #adb5bd; }
 .status-locked::before { background: var(--text-muted); }
 
+/* Empty States */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 24px; text-align: center;
+}
+.empty-state-icon { font-size: 2.2rem; margin-bottom: 14px; opacity: .45; }
+.empty-state-title { font-family: var(--font-h); font-size: .95rem; font-weight: 600; color: rgba(255,255,255,.5); margin-bottom: 6px; }
+.empty-state-sub { font-size: .8rem; color: rgba(255,255,255,.28); line-height: 1.6; max-width: 300px; margin-bottom: 18px; }
+.empty-state-cta { padding: 8px 22px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: rgba(255,255,255,.6); font-size: .82rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
+.empty-state-cta:hover { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); }
+
+/* Skeleton Loader */
+@keyframes skeleton-pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+.skeleton-row { animation: skeleton-pulse 1.5s ease infinite; }
+.skeleton-cell { height: 13px; border-radius: 4px; background: rgba(255,255,255,.07); display: inline-block; }
+
 /* Action Buttons */
 .action-btns { display: flex; gap: 6px; }
 .action-btn {

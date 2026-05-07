@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-07 (Fix #53–#57 — segurança admin, auditoria, expiração, downloads)  
+**Última atualização:** 2026-05-07 (Fix #53–#59 — segurança admin, auditoria, expiração, downloads, UX)  
 **Responsável:** AutoTech Service
 
 ---
@@ -430,15 +430,15 @@
 
 ## 🔵 BAIXO — Melhorias de UX Admin
 
-- [ ] **#58 — Indicador visual de "reset solicitado" no card do usuário**
-  - Após fix #53, o audit log registra resets, mas o painel não exibe visualmente quando foi o último reset solicitado.
-  - **Fix:** Badge "🔑 Reset enviado em DD/MM" no card do usuário quando `audit_logs` tiver entrada `reset_password_requested` nas últimas 24h para aquele userId.
-  - **Arquivo:** `admin.html` — card de usuário
+- [x] **#58 — Indicador visual de "reset solicitado" no card do usuário** ✅ 2026-05-07
+  - `resetPassword()` corrigido para usar `getUserByEmail()` e passar o userId real como `target_id` no audit log. Adicionado `AUTH.getRecentResets(hours)` que retorna um `Set` de userIds com reset nas últimas N horas. `loadUsuarios()` tornou-se `async`, chama `getRecentResets(24)` e armazena em `window._recentResets`. Badge "🔑 Reset" ciano exibido na coluna e-mail de cada usuário que teve reset nas últimas 24h.
+  - **Arquivo:** `js/auth.js` — `resetPassword()`, `getRecentResets()` · `admin.html` — `loadUsuarios()`, `filterUsers()`
 
-- [ ] **#59 — Revisão de layout e UX dos painéis usando design guidelines**
-  - Painéis admin/membros/superadmin têm inconsistências visuais: espaçamentos, hierarquia tipográfica, densidade de informação e feedback de estado (loading, empty states, erros).
-  - **Fix:** Auditoria de UX usando `web-design-guidelines` e `frontend-design` skills. Priorizar: (a) empty states com CTA; (b) loading skeletons nas tabelas; (c) consistência de cores de status entre painéis.
-  - **Arquivo:** `css/auth.css` + painéis HTML
+- [x] **#59 — Revisão de layout e UX dos painéis usando design guidelines** ✅ 2026-05-07
+  - **(a) Empty states com CTA:** Classes `.empty-state`, `.empty-state-icon/title/sub/cta` adicionadas a `auth.css`. Helper `emptyState(icon, title, sub, ctaHtml)` adicionado ao admin.html. Todos os empty states inline substituídos: tickets abertos, aprovações pendentes, tabela de usuários, tabela de suporte, lista de gestores, biblioteca (com CTA "＋ Adicionar material"), log de auditoria.
+  - **(b) Loading skeletons:** `@keyframes skeleton-pulse`, `.skeleton-row`, `.skeleton-cell` adicionados a `auth.css`. Helper `skeletonTable(cols, rows)` no admin.html. `loadAuditoria()` usa skeleton de 5 colunas × 6 linhas durante carregamento.
+  - **(c) Consistência de status:** `statusBadge()` em admin.html simplificado — emojis redundantes removidos (o dot CSS `::before` já indica estado); labels agora são "Ativo / Pendente / Bloqueado" consistentes com as classes `.status-active/pending/blocked` de `auth.css`.
+  - **Arquivo:** `css/auth.css` + `admin.html`
 
 ---
 

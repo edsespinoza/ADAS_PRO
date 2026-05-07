@@ -780,9 +780,21 @@ function fmtDateTime(ts) {
   return new Date(ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
 }
 function statusBadge(s) {
-  const m = { active:['status-active','✅ Ativo'], pending:['status-pending','⏳ Pendente'], blocked:['status-blocked','🚫 Bloqueado'] };
-  const [cls,lbl] = m[s] || ['',s];
+  const m = { active:['status-active','Ativo'], pending:['status-pending','Pendente'], blocked:['status-blocked','Bloqueado'] };
+  const [cls,lbl] = m[s] || ['status-locked', s];
   return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+function emptyState(icon, title, sub = '', ctaHtml = '') {
+  return `<div class="empty-state">
+    <div class="empty-state-icon">${icon}</div>
+    <div class="empty-state-title">${title}</div>
+    ${sub ? `<div class="empty-state-sub">${sub}</div>` : ''}
+    ${ctaHtml}
+  </div>`;
+}
+function skeletonTable(cols, rows = 5) {
+  const cells = Array.from({length: cols}, (_,i) => `<td><span class="skeleton-cell" style="width:${55+i*13}%"></span></td>`).join('');
+  return `<table class="data-table"><tbody>${Array.from({length: rows}, () => `<tr class="skeleton-row">${cells}</tr>`).join('')}</tbody></table>`;
 }
 function ticketStatusBadge(s) {
   const m = { open:['status-pending','Aberto'], 'in-progress':['status-active','Em andamento'], resolved:['status-locked','Resolvido'], closed:['status-locked','Fechado'] };
@@ -901,7 +913,7 @@ async function loadDashboard() {
       <div style="flex:1;min-width:0"><div class="ticket-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</div><div class="ticket-meta">${esc(t.userName)} · ${fmtDate(t.updatedAt)}</div></div>
       ${ticketStatusBadge(t.status)}
     </div>`).join('') :
-    '<div style="padding:24px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3)">Nenhum ticket aberto. ✅</div>';
+    emptyState('🎫', 'Nenhum ticket aberto', 'Todos os chamados foram resolvidos.');
 
   // Pendentes dash
   const pend = AUTH.getAllUsers().filter(u=>u.status==='pending').slice(0,3);
@@ -913,13 +925,14 @@ async function loadDashboard() {
         <button class="action-btn action-btn-edit" onclick="openPermModal('${u.id}')" title="Configurar">⚙</button>
       </div>
     </div>`).join('') :
-    '<div style="padding:24px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3)">Nenhum cadastro pendente. ✅</div>';
+    emptyState('✅', 'Nenhuma aprovação pendente', 'Todos os novos cadastros foram processados.');
 }
 
 /* ─── Usuários ─── */
-function loadUsuarios() {
+async function loadUsuarios() {
   const all = AUTH.getAllUsers();
   document.getElementById('userCountLbl').textContent = `${all.length} usuário(s)`;
+  window._recentResets = await AUTH.getRecentResets(24);
   filterUsers();
   updateBadges();
 }
@@ -943,6 +956,9 @@ function filterUsers() {
     const perms = u.permissions?.length
       ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-size:.72rem;color:rgba(255,255,255,.6);font-weight:600">${u.permissions.length}</span><span style="font-size:.68rem;color:rgba(255,255,255,.3)">/ ${CATS.length} cats</span></div>`
       : `<span style="font-size:.72rem;color:rgba(255,255,255,.2)">sem acesso</span>`;
+    const resetBadge = window._recentResets?.has(u.id)
+      ? `<span style="font-size:.65rem;background:rgba(0,180,216,.12);color:#00B4D8;padding:1px 6px;border-radius:3px;margin-left:4px;white-space:nowrap" title="Reset de senha enviado nas últimas 24h">🔑 Reset</span>`
+      : '';
     const expMs = u.accessExpires ? new Date(u.accessExpires).getTime() : null;
     const expiryBadge = expMs && u.status === 'active'
       ? (expMs < _now
@@ -956,7 +972,7 @@ function filterUsers() {
         <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0" class="${rc.avatarCls}">${init}</div>
         <div><div style="color:#fff;font-weight:600;font-size:.88rem">${esc(u.name)}</div><div style="font-size:.7rem;color:rgba(255,255,255,.3)">${u.level||'—'}</div></div>
       </div></td>
-      <td style="font-size:.8rem;font-family:monospace">${esc(u.email)}</td>
+      <td style="font-size:.8rem;font-family:monospace">${esc(u.email)}${resetBadge}</td>
       <td><span class="role-badge ${rc.cls}">${rc.icon} ${rc.label}</span></td>
       <td style="white-space:nowrap">${statusBadge(u.status)}${expiryBadge}</td>
       <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${fmtDate(u.createdAt)}</td>
@@ -967,7 +983,7 @@ function filterUsers() {
         `<button class="action-btn action-btn-approve" title="Ativar" onclick="adminAction('unblock','${u.id}',this)">✓</button>`}
         ${u.role!=='admin'?`<button class="action-btn action-btn-delete" title="Excluir" onclick="confirmAction('Excluir usuário?','Esta ação é permanente e não pode ser desfeita.',()=>adminAction('delete','${u.id}',null))">🗑</button>`:''}
       </div></td></tr>`;
-  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3)">Nenhum usuário encontrado.</td></tr>';
+  }).join('') : `<tr><td colspan="7">${emptyState('👥', 'Nenhum usuário encontrado', 'Tente ajustar os filtros de busca ou termo digitado.')}</td></tr>`;
 }
 
 /* ─── Pendentes ─── */
@@ -987,7 +1003,7 @@ function loadPendentes() {
           <button class="action-btn action-btn-block" onclick="adminAction('block','${u.id}',this)" title="Recusar">✕ Recusar</button>
         </div></td></tr>`).join('')}
     </tbody></table>` :
-    '<div style="padding:40px;text-align:center;font-size:.9rem;color:rgba(255,255,255,.3)">🎉 Nenhum cadastro pendente!</div>';
+    emptyState('🎉', 'Nenhuma aprovação pendente!', 'Todos os novos cadastros foram processados.');
 }
 
 /* ─── Suporte (Tickets) ─── */
@@ -1016,7 +1032,7 @@ function renderTicketList() {
         <span style="font-size:.7rem;color:rgba(255,255,255,.25)">${(t.messages || []).length} msg</span>
       </div>
     </div>`).join('') :
-    '<div style="padding:32px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.35)">Nenhum ticket encontrado.</div>';
+    emptyState('🎫', 'Nenhum ticket encontrado', 'Ainda não há tickets de suporte registrados.');
 }
 
 function selectTicket(id) {
@@ -1087,6 +1103,10 @@ function filterContent() {
     (!catF || c.cat === catF));
 
   document.getElementById('contentCountLbl').textContent = `${items.length} materiais`;
+  if (!items.length) {
+    document.getElementById('contentTbody').innerHTML = `<tr><td colspan="5">${emptyState('📚', 'Nenhum material encontrado', 'Adicione conteúdos à biblioteca ou ajuste os filtros.', '<button class="empty-state-cta" onclick="openEditContentModal()">＋ Adicionar material</button>')}</td></tr>`;
+    return;
+  }
   document.getElementById('contentTbody').innerHTML = items.map(c => {
     const cat = CATS.find(x=>x.id===c.cat) || { label:c.cat, icon:'📄' };
     const cnt = users.filter(u=>(u.permissions||[]).includes(c.cat)||u.role==='admin'||u.role==='gestor').length;
@@ -1246,14 +1266,14 @@ function togglePlanCat(el, planId, catId) {
 
 function loadGestores() {
   const gestores = AUTH.getAllUsers().filter(u=>u.role==='admin'||u.role==='gestor');
-  document.getElementById('gestoresGrid').innerHTML = gestores.map(u => {
+  document.getElementById('gestoresGrid').innerHTML = gestores.length ? gestores.map(u => {
     const init = u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
     return `<div class="gestor-card">
       <div class="gestor-card-avatar">${init}</div>
       <div><div class="gestor-info-name">${esc(u.name)}</div><div class="gestor-info-role">${esc(u.role)}</div><div class="gestor-info-email">${esc(u.email)}</div></div>
       ${u.role!=='admin'?`<button class="action-btn action-btn-block" onclick="confirmAction('Remover gestor?','${u.name} voltará a ser membro.',async()=>{await AUTH.updateUserRole('${u.id}','membro');refresh();showToast('Permissão removida.')})" style="margin-left:auto" title="Remover">↓</button>`:''}
     </div>`;
-  }).join('');
+  }).join('') : emptyState('🛡️', 'Nenhum gestor cadastrado', 'Promova um membro abaixo para dar acesso ao painel.');
 
   // Select de promoção
   const membros = AUTH.getAllUsers().filter(u=>u.role==='membro'&&u.status==='active');
@@ -1442,7 +1462,7 @@ async function toggleUserDownloads() {
   wrap.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,.3);font-size:.8rem">Carregando...</div>';
   const result = await AUTH.getUserDownloads(editingUserId);
   if (!result.ok || !result.data.length) {
-    wrap.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,.25);font-size:.8rem">Nenhum download registrado.</div>';
+    wrap.innerHTML = '<div style="padding:14px;text-align:center;color:rgba(255,255,255,.25);font-size:.8rem">Nenhum download registrado.</div>';
     return;
   }
   const content = AUTH.getContent();
@@ -1487,20 +1507,20 @@ async function loadAuditoria() {
   const wrap = document.getElementById('auditTableWrap');
   const countEl = document.getElementById('auditCount');
   if (!wrap) return;
-  wrap.innerHTML = '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.35);font-size:.82rem">Carregando...</div>';
+  wrap.innerHTML = skeletonTable(5, 6);
 
   const filter = document.getElementById('auditFilter')?.value || '';
   const result = await AUTH.getAuditLogs(filter, 100);
 
   if (!result.ok) {
-    wrap.innerHTML = `<div style="padding:24px;text-align:center;color:rgba(255,100,100,.6);font-size:.82rem">⚠️ ${result.msg}</div>`;
+    wrap.innerHTML = emptyState('⚠️', 'Erro ao carregar auditoria', result.msg);
     return;
   }
   const logs = result.data;
   if (countEl) countEl.textContent = logs.length + ' registro' + (logs.length !== 1 ? 's' : '');
 
   if (!logs.length) {
-    wrap.innerHTML = '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.3);font-size:.82rem">Nenhum registro encontrado.</div>';
+    wrap.innerHTML = emptyState('📋', 'Nenhum registro encontrado', 'Ainda não há entradas de auditoria para o filtro selecionado.');
     return;
   }
 

@@ -59,8 +59,6 @@ function dramaticCounter(el, target, suffix = '', duration = 2000) {
 
 /* ─── Init ─── */
 document.addEventListener('DOMContentLoaded', () => {
-  animateProgressBars();
-
   typeWriter('heroTyping', [
     'Calibração de câmeras LKAS',
     'Sistemas AVM 360°',
@@ -69,17 +67,4 @@ document.addEventListener('DOMContentLoaded', () => {
     'LIDAR Audi VAS6430-12',
     'Night Vision Infrared',
   ]);
-
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.querySelectorAll('[data-dramatic]').forEach(el => {
-          dramaticCounter(el, parseInt(el.dataset.target), el.dataset.suffix || '');
-        });
-        obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.3 });
-
-  document.querySelectorAll('.dramatic-section').forEach(s => obs.observe(s));
 });

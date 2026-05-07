@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-07 (Fix #51 — Demo mode quebrado: await ausente em enterDemoMode)  
+**Última atualização:** 2026-05-07 (Fix #53–#57 — segurança admin, auditoria, expiração, downloads)  
 **Responsável:** AutoTech Service
 
 ---
@@ -381,15 +381,64 @@
   - **Fix:** Exigir digitação da chave a cada sessão de teste (não persistir); adicionar aviso explícito e limpeza automática ao fechar `email-config.html`.
   - **Arquivo:** `email-config.html:598–606`
 
-- [ ] **#48 — [M-03 + M-04 + M-06] Correções menores no sistema de rate limiting e notificações**
-  - **M-03:** Mensagem "Aguarde 15 minutos" com janela real de 10 min — corrigir texto (`auth.js:418`).
-  - **M-04:** Chaves `adaspro_rl_*` expiradas nunca removidas do localStorage — acúmulo indefinido. Fix: `localStorage.removeItem(key)` quando expirado (`auth.js:279–283`).
-  - **M-06:** `clearAllNotifs` usa `.neq('id', '__none__')` artificial sem `await` — substituir por `.eq('userId', userId)` com await (`auth.js:1020`).
+- [x] **#48 — [M-03 + M-04 + M-06] Correções menores no sistema de rate limiting e notificações** ✅ 2026-05-07
+  - **M-03:** Mensagem "Aguarde 15 minutos" com janela real de 10 min — corrigido para "10 minutos" (`auth.js`).
+  - **M-04:** Chaves `adaspro_rl_*` expiradas nunca removidas do localStorage — adicionado `localStorage.removeItem(key)` quando entrada expirada (`auth.js:_checkRateLimit`).
+  - **M-06:** `clearAllNotifs` usava `.neq('id', '__none__')` artificial — substituído por `.eq('user_id', _session?.userId)` (`auth.js`).
 
-- [ ] **#49 — [M-08 + M-09 + M-10] Dead code em animations.js e observers paralelos em app.js**
-  - **M-08:** `animations.js:34–85` — `animateProgressBars`, observers e `dramaticCounter` sem elementos HTML correspondentes. Remover ou comentar com `// TODO: ativar quando seção X for adicionada`.
-  - **M-09:** Dois `IntersectionObserver` em `app.js:73–84` podem chamar `animateCounter` duas vezes no mesmo elemento — consolidar em um único observer.
-  - **M-10:** `AUTH.getSession()` em `app.js:156` sem aguardar `AUTH.init()` — pode retornar null para usuário logado em conexões lentas.
+- [x] **#49 — [M-08 + M-09 + M-10] Dead code em animations.js e observers paralelos em app.js** ✅ 2026-05-07
+  - **M-08:** Removido bloco `animateProgressBars()` e observer `.dramatic-section` do DOMContentLoaded em `animations.js` — sem elementos HTML correspondentes. Funções `animateProgressBars` e `dramaticCounter` preservadas para uso futuro.
+  - **M-09:** `animateCounter` agora guarda `el.dataset.animated = '1'` antes de executar — previne dupla animação quando `revealObserver` e `counterObserver` observam o mesmo elemento (`app.js`).
+  - **M-10:** `AUTH.getSession()` em `app.js` agora executado dentro de `AUTH.init().then()` — garante sessão carregada antes de atualizar botão "Minha Área".
+
+- [x] **#52 — Atualização de build e documentação de manutenção** ✅ 2026-05-07
+  - Build desatualizado em 5 locais após ciclo de manutenção de 2026-04-23/24/25.
+  - `superadmin.html` (3 ocorrências): `v3.0.0 · build 20260424` → `v3.0.0 · build 20260507`
+  - `admin.html`: `v2.2.0 · build 20260423` → `v2.2.0 · build 20260507`
+  - `membros.html`: `v2.2.0 · build 20260423` → `v2.2.0 · build 20260507`
+  - `js/auth.js`: `v4.0.0 build 20260425` → `v4.0.1 build 20260507` (patch bump pelos fixes #48, #49, #51)
+
+---
+
+## 🟠 ALTA — Segurança e Controle Admin 2026-05-07
+
+- [x] **#53 — Registrar reset de senha em audit_logs** ✅ 2026-05-07
+  - `AUTH.resetPassword()` agora chama `await logAudit('reset_password_requested', null, { email })` após sucesso. Se chamado por admin autenticado, `actor_id` captura o admin; se self-service (sem sessão), `actor_id` fica null.
+  - **Arquivo:** `js/auth.js` — função `resetPassword()`
+
+- [x] **#54 — Botão "Enviar reset de senha" para usuário no painel admin** ✅ 2026-05-07
+  - Botão "🔑 Reset de senha" adicionado no rodapé do modal `permModal`. Chama `sendPasswordResetToUser()` → `AUTH.resetPassword(user.email)` com feedback de toast e estado de loading. Registrado automaticamente em audit_logs via #53.
+  - **Arquivo:** `admin.html` — footer do permModal + função `sendPasswordResetToUser()`
+
+- [x] **#55 — Aba "Auditoria" no painel admin** ✅ 2026-05-07
+  - Nova seção "📋 Auditoria" no sidebar (Sistema). Página `pageAuditoria` com filtro por tipo de ação e tabela das últimas 100 entradas de `audit_logs`: data/hora, ação rotulada, executor, alvo (nome do usuário se encontrado) e detalhes JSON. Função `AUTH.getAuditLogs(filter, limit)` adicionada ao módulo AUTH e exportada na API pública.
+  - **Arquivo:** `admin.html` + `js/auth.js` — `getAuditLogs()` + `loadAuditoria()`
+
+---
+
+## 🟡 MÉDIO — Controle Operacional Admin
+
+- [x] **#56 — Data de expiração de acesso por usuário** ✅ 2026-05-07
+  - Campo `accessExpires` adicionado ao permModal (input date "Expiração de acesso"). `saveUserPerms` chama `AUTH.setAccessExpiry(userId, timestamp)` que usa `approve-user` Edge Function action:`update`. No init Supabase: se `_isAccessExpired(user)`, o sistema auto-bloqueia (status→blocked), registra em audit_logs e faz signOut. Badge "⏱" na coluna Status: vermelho se expirado, laranja se expira em <7 dias, cinza com data se futuro.
+  - **Arquivo:** `js/auth.js` — `_isAccessExpired()`, `setAccessExpiry()`, fluxo init · `admin.html` — permModal + filterUsers
+
+- [x] **#57 — Histórico de downloads por usuário no painel admin** ✅ 2026-05-07
+  - Seção colapsável "📥 Histórico de downloads" adicionada ao rodapé do permModal. Ao expandir, carrega os últimos 20 registros de `audit_logs` (action:`download_content`, actor_id=userId) via `AUTH.getUserDownloads(userId)`. Exibe título do conteúdo (buscado em `getContent()`) e data/hora. Colapsa e limpa ao abrir novo usuário.
+  - **Arquivo:** `js/auth.js` — `getUserDownloads()` · `admin.html` — toggleUserDownloads()
+
+---
+
+## 🔵 BAIXO — Melhorias de UX Admin
+
+- [ ] **#58 — Indicador visual de "reset solicitado" no card do usuário**
+  - Após fix #53, o audit log registra resets, mas o painel não exibe visualmente quando foi o último reset solicitado.
+  - **Fix:** Badge "🔑 Reset enviado em DD/MM" no card do usuário quando `audit_logs` tiver entrada `reset_password_requested` nas últimas 24h para aquele userId.
+  - **Arquivo:** `admin.html` — card de usuário
+
+- [ ] **#59 — Revisão de layout e UX dos painéis usando design guidelines**
+  - Painéis admin/membros/superadmin têm inconsistências visuais: espaçamentos, hierarquia tipográfica, densidade de informação e feedback de estado (loading, empty states, erros).
+  - **Fix:** Auditoria de UX usando `web-design-guidelines` e `frontend-design` skills. Priorizar: (a) empty states com CTA; (b) loading skeletons nas tabelas; (c) consistência de cores de status entre painéis.
+  - **Arquivo:** `css/auth.css` + painéis HTML
 
 ---
 

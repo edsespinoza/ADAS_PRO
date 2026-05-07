@@ -3,7 +3,7 @@
    ================================================
    Empresa:     AutoTech Service
    Produto:     ADAS PRO Platform
-   Versão:      4.0.0  build 20260425
+   Versão:      4.0.1  build 20260507
    Modos:       1) Supabase Auth + PostgreSQL
                 2) localStorage (demo/local fallback)
    Copyright:   © 2024-2026 AutoTech Service
@@ -12,9 +12,9 @@
 const AUTH = (function () {
 
   const VERSION = {
-    major:4,minor:0,patch:0,build:'20260425',codename:'Supabase',
-    company:'AutoTech Service',product:'ADAS PRO Platform',full:'v4.0.0',
-    display:'v4.0.0 build 20260425',stamp:'v4.0.0-20260425',
+    major:4,minor:0,patch:1,build:'20260507',codename:'Supabase',
+    company:'AutoTech Service',product:'ADAS PRO Platform',full:'v4.0.1',
+    display:'v4.0.1 build 20260507',stamp:'v4.0.1-20260507',
   };
 
   /* ─── Chaves localStorage ─── */
@@ -295,6 +295,7 @@ const AUTH = (function () {
     try {
       const d = JSON.parse(localStorage.getItem(key));
       if (d && (Date.now() - d.since) < RATE_WINDOW) return d;
+      if (d) localStorage.removeItem(key);
     } catch {}
     return { count: 0, since: Date.now(), blocked: false };
   }
@@ -358,13 +359,23 @@ const AUTH = (function () {
               const user = await _sbLoadUser(session.user.id);
               if (_cancelled) return;
               if (user && user.status === 'active') {
-                if (['admin','gestor','superadmin'].includes(user.role)) {
-                  await _sbLoadAll();
+                if (_isAccessExpired(user)) {
+                  // Acesso expirado — bloqueia automaticamente
+                  await _sbDirectUpdate('users', user.id, { status: 'blocked' });
+                  if (_users[user.id]) _users[user.id].status = 'blocked';
+                  await logAudit('auto_block_expired', user.id, { accessExpires: user.accessExpires });
+                  if (_cancelled) return;
+                  await _sb.auth.signOut();
+                  localStorage.removeItem(SESSION_KEY);
                 } else {
-                  await _sbLoadMemberData(session.user.id);
+                  if (['admin','gestor','superadmin'].includes(user.role)) {
+                    await _sbLoadAll();
+                  } else {
+                    await _sbLoadMemberData(session.user.id);
+                  }
+                  if (_cancelled) return;
+                  _currentSession = _buildSession(user, session.user.id, session.access_token, session.expires_at * 1000);
                 }
-                if (_cancelled) return;
-                _currentSession = _buildSession(user, session.user.id, session.access_token, session.expires_at * 1000);
               } else {
                 if (_cancelled) return;
                 await _sb.auth.signOut();
@@ -437,7 +448,7 @@ const AUTH = (function () {
     if (!emailClean||!passClean) return { ok:false, msg:'Preencha todos os campos.' };
 
     const rate = _checkRateLimit(emailClean);
-    if (rate.blocked) return { ok:false, msg:'Muitas tentativas. Aguarde 15 minutos.' };
+    if (rate.blocked) return { ok:false, msg:'Muitas tentativas. Aguarde 10 minutos.' };
 
     // Se demo mode ativo mas Supabase disponível, limpa o flag para tentar login real
     if (_demo && _sbConfigured && _sb) {
@@ -809,6 +820,26 @@ const AUTH = (function () {
     _users[id].role=role; _sbUpsertUser(_users[id]); return true;
   }
 
+  function _isAccessExpired(user) {
+    return user.accessExpires != null && Date.now() > new Date(user.accessExpires).getTime();
+  }
+
+  async function setAccessExpiry(userId, expiresAt) {
+    const val = expiresAt || null;
+    if (_mode === 'supabase' && _sb && !_demo) {
+      const r = await callEdgeFunction('approve-user', { action:'update', targetId:userId, updates:{ accessExpires: val } });
+      if (!r.ok) {
+        const ok = await _sbDirectUpdate('users', userId, { accessExpires: val });
+        if (!ok) return false;
+      }
+      if (_users[userId]) _users[userId].accessExpires = val;
+      await logAudit('set_access_expiry', userId, { accessExpires: val });
+      return true;
+    }
+    if (!_users[userId]) return false;
+    _users[userId].accessExpires = val; _sbUpsertUser(_users[userId]); return true;
+  }
+
   async function deleteUser(id) {
     if (!_users[id] || _users[id].role==='admin' || _users[id].role==='superadmin') return false;
     if (_mode === 'supabase' && _sb && !_demo) {
@@ -1036,7 +1067,7 @@ const AUTH = (function () {
   function clearAllNotifs() {
     _notifications = [];
     if (_mode==='supabase' && _sb && !_demo) {
-      _sb.from('notifications').delete().neq('id', '__none__').then(() => {});
+      _sb.from('notifications').delete().eq('user_id', _session?.userId).then(() => {});
     } else { _saveNotifsLocal(); }
   }
 
@@ -1151,6 +1182,34 @@ const AUTH = (function () {
     } catch (e) { console.error('[AUTH] logAudit falhou:', action, e.message); }
   }
 
+  async function getUserDownloads(userId, limit = 20) {
+    if (_mode !== 'supabase' || !_sb) return { ok:false, data:[], msg:'Supabase não disponível.' };
+    try {
+      const { data, error } = await _sb.from('audit_logs')
+        .select('id,target_id,details,created_at')
+        .eq('actor_id', userId)
+        .eq('action', 'download_content')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) return { ok:false, data:[], msg: error.message };
+      return { ok:true, data: data || [] };
+    } catch(e) { return { ok:false, data:[], msg: e.message }; }
+  }
+
+  async function getAuditLogs(actionFilter, limit = 100) {
+    if (_mode !== 'supabase' || !_sb) return { ok:false, data:[], msg:'Supabase não disponível.' };
+    try {
+      let q = _sb.from('audit_logs')
+        .select('id,action,actor_id,target_id,details,created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (actionFilter) q = q.eq('action', actionFilter);
+      const { data, error } = await q;
+      if (error) return { ok:false, data:[], msg: error.message };
+      return { ok:true, data: data || [] };
+    } catch(e) { return { ok:false, data:[], msg: e.message }; }
+  }
+
   /* ════════════════════════════════════════════
      RECUPERAÇÃO DE SENHA
   ════════════════════════════════════════════ */
@@ -1159,6 +1218,7 @@ const AUTH = (function () {
     const redirectTo = (window.SUPABASE_CONFIG?.siteUrl || window.location.origin) + '/reset-password.html';
     const { error } = await _sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
     if (error) return { ok:false, msg:'Erro ao enviar email de recuperação.' };
+    await logAudit('reset_password_requested', null, { email: email.trim().toLowerCase() });
     return { ok:true };
   }
 
@@ -1215,7 +1275,8 @@ const AUTH = (function () {
     exportData, importData, resetToDefaults, getStats,
     getUserPlan, isAccessValid, setUserPlan,
     getUserAccessLevel, canViewContent, canDownloadContent, trackDownload,
-    verifyMFA, logAudit, resetPassword, updatePassword,
+    setAccessExpiry, getUserDownloads,
+    verifyMFA, logAudit, getAuditLogs, resetPassword, updatePassword,
     uploadFile, getSignedUrl, callEdgeFunction,
     onAuthStateChange: (cb) => { if (_sb) _sb.auth.onAuthStateChange(cb); },
     isOfflineMode: () => _offlineMode,

@@ -249,6 +249,7 @@
 
     <div class="sidebar-nav-section">Sistema</div>
     <a class="sidebar-nav-item" onclick="showPage('configuracoes',this)"><span class="nav-icon">⚙️</span>Configurações</a>
+    <a class="sidebar-nav-item" onclick="showPage('auditoria',this)"><span class="nav-icon">📋</span>Auditoria</a>
     <a class="sidebar-nav-item" href="email-config.html" style="color:rgba(0,180,216,.8);"><span class="nav-icon">✉️</span>E-mails Transacionais<span style="font-size:.6rem;background:rgba(0,180,216,.2);color:#00B4D8;padding:1px 6px;border-radius:3px;margin-left:auto;">NOVO</span></a>
     <a class="sidebar-nav-item" href="membros.html"><span class="nav-icon">👤</span>Ver como membro</a>
     <a class="sidebar-nav-item" href="index.html"><span class="nav-icon">🌐</span>Landing page</a>
@@ -257,7 +258,7 @@
   <div class="sidebar-footer">
     <div style="padding:10px 14px 6px;border-top:1px solid rgba(255,255,255,.05);margin-bottom:6px;">
       <div style="font-size:.58rem;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">AutoTech Service</div>
-      <div id="sbVersionLabel" style="font-size:.6rem;color:rgba(255,255,255,.14);font-family:monospace;">v2.2.0 · build 20260423</div>
+      <div id="sbVersionLabel" style="font-size:.6rem;color:rgba(255,255,255,.14);font-family:monospace;">v2.2.0 · build 20260507</div>
     </div>
     <button class="sidebar-logout" onclick="AUTH.logout();location.href='login.html'"><span>🚪</span>Sair</button>
   </div>
@@ -574,6 +575,33 @@
 </div>
 
 <!-- Botão mobile -->
+<!-- ─── AUDITORIA ─── -->
+<div class="page" id="pageAuditoria">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <select class="config-input" id="auditFilter" style="max-width:230px" onchange="loadAuditoria()">
+      <option value="">Todas as ações</option>
+      <option value="approve_user">Aprovações</option>
+      <option value="block_user">Bloqueios</option>
+      <option value="unblock_user">Desbloqueios</option>
+      <option value="create_user">Criações de conta</option>
+      <option value="delete_user">Exclusões</option>
+      <option value="update_role">Mudança de role</option>
+      <option value="update_permissions">Permissões</option>
+      <option value="download_content">Downloads</option>
+      <option value="reset_password_requested">Reset de senha</option>
+      <option value="reply_ticket">Respostas de ticket</option>
+    </select>
+    <button onclick="loadAuditoria()" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">🔄 Atualizar</button>
+    <span id="auditCount" style="font-size:.75rem;color:rgba(255,255,255,.35);margin-left:auto"></span>
+  </div>
+  <div class="table-card">
+    <div class="table-card-header">
+      <div class="table-card-title">Log de Auditoria</div>
+    </div>
+    <div id="auditTableWrap"></div>
+  </div>
+</div>
+
 <button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
 
 <!-- ─── Modal de permissões ─── -->
@@ -590,6 +618,8 @@
     <select id="pStatus" class="config-input" style="margin-bottom:16px">
       <option value="active">✅ Ativo</option><option value="pending">⏳ Pendente</option><option value="blocked">🚫 Bloqueado</option>
     </select>
+    <div class="modal-section-title">Expiração de acesso <span style="font-size:.72rem;color:rgba(255,255,255,.35);font-weight:400">(opcional — bloqueia automaticamente na data)</span></div>
+    <input type="date" class="config-input" id="pAccessExpires" style="margin-bottom:16px;max-width:220px"/>
     <div class="modal-section-title">Nível de acesso</div>
     <div class="role-ladder" id="roleLadder">
       <div class="role-ladder-item rl-admin" data-role="admin" onclick="selectRole('admin')">
@@ -620,9 +650,19 @@
     <input type="hidden" id="pRole" value="membro"/>
     <div class="modal-section-title">Categorias liberadas</div>
     <div class="permissions-grid" id="pPerms"></div>
-    <div class="modal-footer">
-      <button class="modal-btn modal-btn-secondary" onclick="closeModal('permModal')">Cancelar</button>
-      <button class="modal-btn modal-btn-primary" id="btnSavePerms" onclick="saveUserPerms()">Salvar alterações</button>
+    <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.06);padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleUserDownloads()">
+        <span style="font-size:.78rem;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.06em">📥 Histórico de downloads</span>
+        <span id="downloadsToggleIcon" style="font-size:.72rem;color:rgba(255,255,255,.3)">▼ ver</span>
+      </div>
+      <div id="userDownloadsWrap" style="display:none;margin-top:10px"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <button class="modal-btn modal-btn-warn" id="btnResetPwd" onclick="sendPasswordResetToUser()">🔑 Reset de senha</button>
+      <div style="display:flex;gap:10px">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal('permModal')">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" id="btnSavePerms" onclick="saveUserPerms()">Salvar alterações</button>
+      </div>
     </div>
   </div>
 </div>
@@ -896,12 +936,21 @@ function filterUsers() {
     gestor: { label:'Gestor', cls:'role-gestor', avatarCls:'role-avatar-gestor', icon:'⚙️' },
     membro: { label:'Membro', cls:'role-membro', avatarCls:'role-avatar-membro', icon:'👤' },
   };
+  const _now = Date.now();
   document.getElementById('usersTbody').innerHTML = users.length ? users.map(u => {
     const init  = u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
     const rc    = ROLE_CFG[u.role] || ROLE_CFG.membro;
     const perms = u.permissions?.length
       ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-size:.72rem;color:rgba(255,255,255,.6);font-weight:600">${u.permissions.length}</span><span style="font-size:.68rem;color:rgba(255,255,255,.3)">/ ${CATS.length} cats</span></div>`
       : `<span style="font-size:.72rem;color:rgba(255,255,255,.2)">sem acesso</span>`;
+    const expMs = u.accessExpires ? new Date(u.accessExpires).getTime() : null;
+    const expiryBadge = expMs && u.status === 'active'
+      ? (expMs < _now
+          ? `<span style="font-size:.65rem;background:rgba(255,100,100,.15);color:#ff6b6b;padding:1px 6px;border-radius:3px;margin-left:4px;white-space:nowrap">⏱ Expirado</span>`
+          : (expMs - _now < 7*864e5
+              ? `<span style="font-size:.65rem;background:rgba(244,162,97,.15);color:#f4a261;padding:1px 6px;border-radius:3px;margin-left:4px;white-space:nowrap">⏱ ${Math.ceil((expMs-_now)/864e5)}d</span>`
+              : `<span style="font-size:.65rem;background:rgba(255,255,255,.07);color:rgba(255,255,255,.3);padding:1px 6px;border-radius:3px;margin-left:4px;white-space:nowrap">⏱ ${new Date(expMs).toLocaleDateString('pt-BR')}</span>`))
+      : '';
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:10px">
         <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0" class="${rc.avatarCls}">${init}</div>
@@ -909,7 +958,7 @@ function filterUsers() {
       </div></td>
       <td style="font-size:.8rem;font-family:monospace">${esc(u.email)}</td>
       <td><span class="role-badge ${rc.cls}">${rc.icon} ${rc.label}</span></td>
-      <td>${statusBadge(u.status)}</td>
+      <td style="white-space:nowrap">${statusBadge(u.status)}${expiryBadge}</td>
       <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${fmtDate(u.createdAt)}</td>
       <td>${perms}</td>
       <td><div class="action-btns">
@@ -1301,12 +1350,19 @@ function openPermModal(userId) {
   ).join('');
 
   document.getElementById('pStatus').value = user.status;
+  const ae = user.accessExpires ? new Date(user.accessExpires).toISOString().slice(0,10) : '';
+  document.getElementById('pAccessExpires').value = ae;
   // Seletor hierárquico
   selectRole(user.role || 'membro');
 
   document.getElementById('pPerms').innerHTML = CATS.map(c =>
     `<label class="permission-item"><input type="checkbox" value="${c.id}" ${(user.permissions||[]).includes(c.id)?'checked':''}/>${c.icon} ${c.label}</label>`
   ).join('');
+  // Colapsa histórico de downloads ao abrir novo usuário
+  const dlWrap = document.getElementById('userDownloadsWrap');
+  const dlIcon = document.getElementById('downloadsToggleIcon');
+  if (dlWrap) { dlWrap.style.display='none'; dlWrap.innerHTML=''; }
+  if (dlIcon) dlIcon.textContent = '▼ ver';
   openModal('permModal');
 }
 function applyPlan(userId, planId) {
@@ -1323,14 +1379,17 @@ function applyPlan(userId, planId) {
 }
 async function saveUserPerms() {
   if (!editingUserId) return;
-  const status = document.getElementById('pStatus').value;
-  const role   = document.getElementById('pRole').value;
-  const perms  = [...document.querySelectorAll('#pPerms input:checked')].map(i=>i.value);
+  const status      = document.getElementById('pStatus').value;
+  const role        = document.getElementById('pRole').value;
+  const perms       = [...document.querySelectorAll('#pPerms input:checked')].map(i=>i.value);
+  const expiresVal  = document.getElementById('pAccessExpires').value;
+  const accessExpires = expiresVal ? new Date(expiresVal).getTime() : null;
   const btn = document.getElementById('btnSavePerms');
   if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
   try {
     await AUTH.updateUserPermissions(editingUserId, perms);
     await AUTH.updateUserRole(editingUserId, role);
+    await AUTH.setAccessExpiry(editingUserId, accessExpires);
     if (status === 'active') {
       const currentUser = AUTH.getUserById(editingUserId);
       if (currentUser?.status === 'pending') {
@@ -1370,6 +1429,104 @@ async function adminAction(action, userId, btn) {
   } finally {
     if (btn) { btn.disabled=false; btn.textContent=original; }
   }
+}
+
+/* ─── Downloads do usuário ─── */
+async function toggleUserDownloads() {
+  const wrap = document.getElementById('userDownloadsWrap');
+  const icon = document.getElementById('downloadsToggleIcon');
+  if (wrap.style.display !== 'none') {
+    wrap.style.display = 'none'; icon.textContent = '▼ ver'; return;
+  }
+  wrap.style.display = 'block'; icon.textContent = '▲ fechar';
+  wrap.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,.3);font-size:.8rem">Carregando...</div>';
+  const result = await AUTH.getUserDownloads(editingUserId);
+  if (!result.ok || !result.data.length) {
+    wrap.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,.25);font-size:.8rem">Nenhum download registrado.</div>';
+    return;
+  }
+  const content = AUTH.getContent();
+  const rows = result.data.map(d => {
+    const item = content.find(c => c.id === d.target_id);
+    const title = item ? esc(item.title) : esc(d.target_id || '—');
+    const dt = new Date(d.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.78rem">
+      <span style="color:rgba(255,255,255,.7)">${title}</span>
+      <span style="color:rgba(255,255,255,.3);white-space:nowrap;margin-left:12px">${dt}</span>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div style="max-height:180px;overflow-y:auto">${rows}</div>`;
+}
+
+/* ─── Reset de senha pelo admin ─── */
+async function sendPasswordResetToUser() {
+  const user = AUTH.getUserById(editingUserId);
+  if (!user) return;
+  const btn = document.getElementById('btnResetPwd');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  const result = await AUTH.resetPassword(user.email);
+  if (result.ok) {
+    showToast('✅ Link de reset enviado para ' + user.email);
+  } else {
+    showToast('⛔ ' + result.msg);
+  }
+  btn.disabled = false; btn.textContent = original;
+}
+
+/* ─── Auditoria ─── */
+const AUDIT_LABELS = {
+  approve_user:'✅ Aprovação', block_user:'🚫 Bloqueio', unblock_user:'✓ Desbloqueio',
+  create_user:'➕ Criação', delete_user:'🗑 Exclusão', update_role:'🔄 Role',
+  update_permissions:'🔐 Permissões', download_content:'⬇️ Download',
+  reset_password_requested:'🔑 Reset senha', reply_ticket:'💬 Ticket',
+  delete_ticket:'🗑 Ticket excluído',
+};
+
+async function loadAuditoria() {
+  const wrap = document.getElementById('auditTableWrap');
+  const countEl = document.getElementById('auditCount');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.35);font-size:.82rem">Carregando...</div>';
+
+  const filter = document.getElementById('auditFilter')?.value || '';
+  const result = await AUTH.getAuditLogs(filter, 100);
+
+  if (!result.ok) {
+    wrap.innerHTML = `<div style="padding:24px;text-align:center;color:rgba(255,100,100,.6);font-size:.82rem">⚠️ ${result.msg}</div>`;
+    return;
+  }
+  const logs = result.data;
+  if (countEl) countEl.textContent = logs.length + ' registro' + (logs.length !== 1 ? 's' : '');
+
+  if (!logs.length) {
+    wrap.innerHTML = '<div style="padding:24px;text-align:center;color:rgba(255,255,255,.3);font-size:.82rem">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  const rows = logs.map(l => {
+    const actor = AUTH.getUserById(l.actor_id);
+    const actorTxt = actor ? esc(actor.name) : (l.actor_id ? l.actor_id.slice(0,8)+'…' : '—');
+    const target = AUTH.getUserById(l.target_id);
+    const targetTxt = target ? esc(target.name) : (l.target_id && l.target_id.length > 2 ? esc(l.target_id.slice(0,20)) : '—');
+    const label = AUDIT_LABELS[l.action] || l.action;
+    const details = l.details ? JSON.stringify(l.details).slice(0,60) : '';
+    const dt = new Date(l.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td style="font-size:.75rem;color:rgba(255,255,255,.4);white-space:nowrap">${dt}</td>
+      <td><span style="font-size:.76rem;background:rgba(0,180,216,.12);color:#00B4D8;padding:2px 8px;border-radius:4px;white-space:nowrap">${label}</span></td>
+      <td style="font-size:.8rem;color:rgba(255,255,255,.7)">${actorTxt}</td>
+      <td style="font-size:.8rem;color:rgba(255,255,255,.5)">${targetTxt}</td>
+      <td style="font-size:.72rem;color:rgba(255,255,255,.3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(details)}">${esc(details)}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table class="data-table" style="font-size:.8rem">
+    <thead><tr>
+      <th>Data/Hora</th><th>Ação</th><th>Executado por</th><th>Alvo</th><th>Detalhes</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 /* ─── Modal de confirmação ─── */
@@ -1416,6 +1573,7 @@ function showPage(page, navEl) {
     biblioteca:     ['pageBiblioteca',   'Biblioteca de Conteúdo',   'Adicione e organize os materiais'],
     acesso:         ['pageAcesso',       'Controle de Acesso',       'Gerencie módulos e permissões de conteúdo'],
     configuracoes:  ['pageConfiguracoes','Configurações',            'Configure o sistema completo'],
+    auditoria:      ['pageAuditoria',   'Auditoria',                'Histórico de ações administrativas'],
   };
   const [elId, title, sub] = map[page] || ['pageDashboard','Painel',''];
   document.getElementById(elId)?.classList.add('active');
@@ -1423,7 +1581,7 @@ function showPage(page, navEl) {
   document.getElementById('tbSub').textContent   = sub;
   navEl?.classList.add('active');
 
-  const loaders = { dashboard:loadDashboard, usuarios:loadUsuarios, suporte:loadSuporte, biblioteca:loadBiblioteca, acesso:loadAcesso, configuracoes:loadConfiguracoes };
+  const loaders = { dashboard:loadDashboard, usuarios:loadUsuarios, suporte:loadSuporte, biblioteca:loadBiblioteca, acesso:loadAcesso, configuracoes:loadConfiguracoes, auditoria:loadAuditoria };
   loaders[page]?.();
   updateBadges();
 }

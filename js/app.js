@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── Counter animation ─── */
   function animateCounter(el) {
+    if (el.dataset.animated) return;
+    el.dataset.animated = '1';
     const target = parseInt(el.dataset.target, 10);
     const suffix = el.dataset.suffix || '';
     const duration = 1800;
@@ -155,13 +157,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ─── Redirect para área de membros se já logado ─── */
   if (typeof AUTH !== 'undefined') {
-    const session = AUTH.getSession();
-    const memberBtn = document.querySelector('.btn-members');
-    if (session && memberBtn) {
-      memberBtn.textContent = 'Minha Área';
-      memberBtn.href = session.role === 'admin' || session.role === 'gestor'
-        ? 'admin.html'
-        : 'membros.html';
-    }
+    AUTH.init().then(() => {
+      const session = AUTH.getSession();
+      const memberBtn = document.querySelector('.btn-members');
+      if (session && memberBtn) {
+        memberBtn.textContent = 'Minha Área';
+        memberBtn.href = session.role === 'admin' || session.role === 'gestor'
+          ? 'admin.html'
+          : 'membros.html';
+      }
+    });
   }
 });

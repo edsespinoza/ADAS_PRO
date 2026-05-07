@@ -663,6 +663,9 @@
 .modal-btn-primary:hover { background: var(--accent-hover); }
 .modal-btn-secondary { background: rgba(255,255,255,.07); color: rgba(255,255,255,.7); }
 .modal-btn-secondary:hover { background: rgba(255,255,255,.12); }
+.modal-btn-warn { background: rgba(244,162,97,.15); color: #f4a261; border: 1px solid rgba(244,162,97,.3); }
+.modal-btn-warn:hover { background: rgba(244,162,97,.25); }
+.modal-btn-warn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Mobile sidebar */
 .sidebar-toggle-mobile {

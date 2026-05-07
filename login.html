@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADAS PRO — Login / Cadastro</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <style>
+    :root {
+      --primary: #1B2B4D; --primary-dark: #0D1821;
+      --accent: #FF6B35; --accent-hover: #e55824;
+      --tech: #00B4D8; --success: #06A77D; --warning: #F4A261;
+      --white: #FFFFFF; --text: #1A1A2E;
+      --font-h: 'Poppins', sans-serif; --font-b: 'Inter', sans-serif;
+      --transition: all .3s ease; --radius: 12px;
+    }
+  </style>
+  <!-- Vercel Analytics & Speed Insights -->
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-grid-bg"></div>
+
+  <div class="auth-card">
+
+    <!-- Voltar para o site -->
+    <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:rgba(255,255,255,.35);text-decoration:none;margin-bottom:16px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">
+      ← Voltar ao site
+    </a>
+
+    <!-- Logo -->
+    <a href="index.html" class="auth-logo" style="text-decoration:none;cursor:pointer" title="Voltar à página principal">
+      <div class="logo-hex">AP</div>
+      <span>ADAS<strong>PRO</strong></span>
+    </a>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Entrar</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Cadastrar</button>
+    </div>
+
+    <!-- Alertas -->
+    <div class="alert alert-error" id="alertError"></div>
+    <div class="alert alert-success" id="alertSuccess"></div>
+
+    <!-- Aguardando aprovação -->
+    <div class="pending-card" id="pendingCard">
+      <div class="pending-icon">⏳</div>
+      <h3>Cadastro em análise</h3>
+      <p>Seu cadastro foi recebido e está aguardando aprovação do administrador. Você será notificado quando o acesso for liberado.</p>
+    </div>
+
+    <!-- ─── Form Login ─── -->
+    <form class="auth-form active" id="formLogin" onsubmit="doLogin(event)">
+      <h2 class="auth-form-title">Bem-vindo de volta</h2>
+      <p class="auth-form-sub">Acesse sua conta para ver o material técnico exclusivo.</p>
+
+      <div class="form-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="loginEmail" placeholder="seu@email.com" required autocomplete="email" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="loginPassword" placeholder="Sua senha" required autocomplete="current-password" />
+          <span class="toggle-password" onclick="togglePwd('loginPassword', this)">👁</span>
+        </div>
+      </div>
+
+      <div class="form-options">
+        <label>
+          <input type="checkbox" id="rememberMe" />
+          Lembrar minha sessão
+        </label>
+        <a href="#" onclick="doResetPassword(event)">Esqueci a senha</a>
+      </div>
+
+      <button type="submit" class="auth-btn" id="btnLogin">
+        Entrar na plataforma →
+      </button>
+
+      <p class="auth-footer-link">
+        Não tem conta? <a href="#" onclick="switchTab('register')">Cadastre-se aqui</a>
+      </p>
+    </form>
+
+    <!-- ─── Form Cadastro ─── -->
+    <form class="auth-form" id="formRegister" onsubmit="doRegister(event)">
+      <h2 class="auth-form-title">Solicitar acesso</h2>
+      <p class="auth-form-sub">Preencha seus dados. Após revisão, o administrador libera seu acesso.</p>
+
+      <div class="form-group">
+        <label>Nome completo *</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="regName" placeholder="Seu nome completo" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>E-mail *</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="regEmail" placeholder="seu@email.com" required autocomplete="email" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Senha *</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="regPassword" placeholder="Mínimo 8 caracteres, 1 maiúscula e 1 número" required autocomplete="new-password" />
+          <span class="toggle-password" onclick="togglePwd('regPassword', this)">👁</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar senha *</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="regPassword2" placeholder="Repita a senha" required autocomplete="new-password" />
+          <span class="toggle-password" onclick="togglePwd('regPassword2', this)">👁</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Seu perfil profissional</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔧</span>
+          <select id="regLevel">
+            <option value="tecnico">Técnico automotivo</option>
+            <option value="oficina">Proprietário de oficina</option>
+            <option value="autocenter">Auto center / Multimarcas</option>
+            <option value="parabrisa">Loja de parabrisa</option>
+            <option value="gestor">Gestor técnico</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-btn" id="btnRegister">
+        Solicitar cadastro →
+      </button>
+
+      <p class="auth-footer-link">
+        Já tem conta? <a href="#" onclick="switchTab('login')">Faça login</a>
+      </p>
+    </form>
+
+    <!-- ─── Modo Demo (controlado por SUPABASE_CONFIG.demoEnabled) ─── -->
+    <div id="demoSection" style="display:none;border-top:1px solid rgba(255,255,255,.07);margin-top:8px;padding-top:16px;text-align:center">
+      <p style="font-size:.75rem;color:rgba(255,255,255,.3);margin-bottom:10px">Ou acesse o sistema em modo demonstração</p>
+      <button onclick="enterDemoMode('admin')" style="width:100%;padding:11px;background:rgba(0,180,216,.12);border:1px solid rgba(0,180,216,.3);border-radius:10px;color:#00B4D8;font-family:'Poppins',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .3s ease;margin-bottom:8px" onmouseover="this.style.background='rgba(0,180,216,.22)'" onmouseout="this.style.background='rgba(0,180,216,.12)'">
+        🎯 Entrar como Admin — DEMO
+      </button>
+      <button onclick="enterDemoMode('membro')" style="width:100%;padding:11px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);border-radius:10px;color:#FF6B35;font-family:'Poppins',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .3s ease" onmouseover="this.style.background='rgba(255,107,53,.2)'" onmouseout="this.style.background='rgba(255,107,53,.1)'">
+        👤 Entrar como Membro — DEMO
+      </button>
+      <p style="font-size:.65rem;color:rgba(255,255,255,.2);margin-top:8px">Dados de demonstração — não requer cadastro</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── Firebase SDK (compat v9) ─── -->
+<script src="js/supabase.min.js"></script>
+<!-- ─── ADAS PRO Scripts ─── -->
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  try { history.replaceState({}, document.title, '/'); } catch(e) {}
+  /* ─── Troca de abas ─── */
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.getElementById('pendingCard').classList.remove('show');
+    clearAlerts();
+    if (tab === 'login') {
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('formLogin').classList.add('active');
+    } else {
+      document.getElementById('tabRegister').classList.add('active');
+      document.getElementById('formRegister').classList.add('active');
+    }
+  }
+
+  /* ─── Alertas ─── */
+  function showAlert(type, msg) {
+    clearAlerts();
+    const el = document.getElementById(type === 'error' ? 'alertError' : 'alertSuccess');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 6000);
+  }
+  function clearAlerts() {
+    document.getElementById('alertError').classList.remove('show');
+    document.getElementById('alertSuccess').classList.remove('show');
+  }
+
+  /* ─── Toggle senha ─── */
+  function togglePwd(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁'; }
+  }
+
+  /* ─── Login (async — suporta Firebase Auth) ─── */
+  async function doLogin(e) {
+    e.preventDefault();
+    clearAlerts();
+    const email    = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const btn      = document.getElementById('btnLogin');
+
+    btn.textContent = 'Verificando...';
+    btn.disabled = true;
+
+    try {
+      const result = await AUTH.login(email, password);
+      if (!result.ok) {
+        if (result.msg === 'pending') {
+          document.getElementById('formLogin').classList.remove('active');
+          document.getElementById('pendingCard').classList.add('show');
+        } else if (result.msg === 'mfa_required') {
+          window.location.href = 'mfa-verify.html';
+        } else {
+          showAlert('error', result.msg);
+        }
+        return;
+      }
+      const role = result.session.role;
+      if (role === 'superadmin') {
+        window.location.href = 'superadmin.html';
+      } else if (role === 'admin' || role === 'gestor') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'membros.html';
+      }
+    } catch(err) {
+      showAlert('error', 'Erro inesperado. Tente novamente.');
+      console.error('[login]', err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Entrar na plataforma →';
+    }
+  }
+
+  /* ─── Recuperação de senha ─── */
+  async function doResetPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) { showAlert('error', 'Digite seu e-mail no campo acima antes de solicitar a recuperação.'); return; }
+    const btn = document.getElementById('btnLogin');
+    const originalText = btn.textContent;
+    btn.textContent = 'Enviando...'; btn.disabled = true;
+    try {
+      const result = await AUTH.resetPassword(email);
+      if (result.ok) {
+        showAlert('success', 'Se este e-mail estiver cadastrado, você receberá o link de recuperação em instantes.');
+      } else {
+        showAlert('error', result.msg || 'Erro ao enviar email de recuperação.');
+      }
+    } catch(err) {
+      showAlert('error', 'Erro inesperado. Tente novamente.');
+    } finally {
+      btn.disabled = false; btn.textContent = originalText;
+    }
+  }
+
+  /* ─── Registro (async — suporta Firebase Auth) ─── */
+  async function doRegister(e) {
+    e.preventDefault();
+    clearAlerts();
+    const name      = document.getElementById('regName').value;
+    const email     = document.getElementById('regEmail').value;
+    const password  = document.getElementById('regPassword').value;
+    const password2 = document.getElementById('regPassword2').value;
+    const level     = document.getElementById('regLevel').value;
+    const btn       = document.getElementById('btnRegister');
+
+    if (password !== password2) { showAlert('error', 'As senhas não coincidem.'); return; }
+
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+
+    try {
+      const result = await AUTH.register({ name, email, password, level });
+      if (!result.ok) { showAlert('error', result.msg); return; }
+      document.getElementById('formRegister').classList.remove('active');
+      document.getElementById('tabRegister').classList.remove('active');
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('pendingCard').classList.add('show');
+    } catch(err) {
+      showAlert('error', 'Erro inesperado. Tente novamente.');
+      console.error('[register]', err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Solicitar cadastro →';
+    }
+  }
+
+  /* ─── Inicialização ─── */
+  AUTH.init().catch(err => console.warn('[ADAS PRO] init error:', err));
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'register') switchTab('register');
+
+  /* Exibe seção demo apenas se demoEnabled = true no supabase-config.js */
+  if (typeof SUPABASE_CONFIG !== 'undefined' && SUPABASE_CONFIG.demoEnabled === true) {
+    document.getElementById('demoSection').style.display = 'block';
+  }
+
+  /* ─── Modo Demo ─── */
+  async function enterDemoMode(role) {
+    const btn = role === 'admin'
+      ? document.querySelector('button[onclick*="admin"]')
+      : document.querySelector('button[onclick*="membro"]');
+    if (btn) { btn.textContent = 'Carregando demo...'; btn.disabled = true; }
+
+    try {
+      await AUTH.init();
+      const result = await AUTH.enterDemoMode(role);
+      if (result.ok) {
+        const r = result.session.role;
+        window.location.href = r === 'superadmin' ? 'superadmin.html'
+          : (r === 'admin' || r === 'gestor') ? 'admin.html' : 'membros.html';
+      } else {
+        showAlert('error', 'Erro ao entrar no modo demo: ' + result.msg);
+        if (btn) btn.disabled = false;
+        if (btn) btn.textContent = role === 'admin' ? '🎯 Entrar como Admin — DEMO' : '👤 Entrar como Membro — DEMO';
+      }
+    } catch(err) {
+      showAlert('error', 'Erro ao inicializar o sistema.');
+      console.error('[demo]', err);
+      if (btn) btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

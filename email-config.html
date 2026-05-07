@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-mails Transacionais — ADAS PRO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/auth.css">
+  <style>
+    :root {
+      --primary: #1B2B4D;
+      --primary-dark: #0D1821;
+      --accent: #FF6B35;
+      --tech: #00B4D8;
+      --success: #06A77D;
+      --warning: #F4A261;
+      --danger: #EF4444;
+      --white: #FFFFFF;
+      --card: rgba(255,255,255,.04);
+      --border: rgba(255,255,255,.08);
+      --muted: rgba(255,255,255,.35);
+      --text: rgba(255,255,255,.85);
+    }
+
+    body { background: #080f18; color: var(--text); font-family: 'Poppins', sans-serif; }
+
+    /* ── Layout ── */
+    .ec-layout { display: flex; min-height: 100vh; }
+    .ec-main   { flex: 1; margin-left: 260px; padding: 32px; max-width: 900px; }
+
+    /* ── Topbar ── */
+    .ec-topbar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 32px;
+    }
+    .ec-topbar-back {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .8rem; color: var(--muted); text-decoration: none;
+      padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .ec-topbar-back:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+    .ec-topbar-title { font-size: 1.15rem; font-weight: 600; }
+    .ec-topbar-sub   { font-size: .78rem; color: var(--muted); margin-left: 4px; }
+
+    /* ── Mode badge ── */
+    .mode-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px; font-size: .72rem;
+      font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+      margin-left: auto;
+    }
+    .mode-badge.offline { background: rgba(244,162,97,.15); color: var(--warning); border: 1px solid rgba(244,162,97,.25); }
+    .mode-badge.online  { background: rgba(6,167,125,.15);  color: var(--success);  border: 1px solid rgba(6,167,125,.25); }
+    .mode-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .mode-badge.offline .mode-dot { background: var(--warning); }
+    .mode-badge.online  .mode-dot { background: var(--success); animation: pulse-dot 1.4s infinite; }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; transform: scale(1); }
+      50%      { opacity:.5; transform: scale(1.4); }
+    }
+
+    /* ── Cards de seção ── */
+    .ec-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; margin-bottom: 20px; overflow: hidden;
+    }
+    .ec-card-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+    }
+    .ec-card-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .ec-card-icon.orange  { background: rgba(255,107,53,.15); }
+    .ec-card-icon.cyan    { background: rgba(0,180,216,.15); }
+    .ec-card-icon.green   { background: rgba(6,167,125,.15); }
+    .ec-card-icon.purple  { background: rgba(139,92,246,.15); }
+    .ec-card-label { font-size: .88rem; font-weight: 600; }
+    .ec-card-desc  { font-size: .75rem; color: var(--muted); margin-top: 1px; }
+    .ec-card-body  { padding: 24px; }
+
+    /* ── Form elements ── */
+    .ec-field { margin-bottom: 18px; }
+    .ec-field label {
+      display: block; font-size: .78rem; font-weight: 500;
+      color: var(--muted); margin-bottom: 6px; letter-spacing: .03em;
+    }
+    .ec-field .field-row { display: flex; gap: 10px; align-items: center; }
+    .ec-input {
+      width: 100%; padding: 10px 14px;
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: .88rem;
+      font-family: 'Courier New', monospace; outline: none;
+      transition: border-color .2s;
+      box-sizing: border-box;
+    }
+    .ec-input:focus { border-color: var(--tech); }
+    .ec-input.key   { letter-spacing: .08em; }
+    .ec-input-hint  { font-size: .72rem; color: rgba(255,255,255,.25); margin-top: 5px; }
+
+    /* ── Botões ── */
+    .btn-ec {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 7px; font-size: .82rem;
+      font-weight: 600; cursor: pointer; border: none; transition: all .2s;
+      font-family: 'Poppins', sans-serif; white-space: nowrap;
+    }
+    .btn-ec-primary  { background: var(--accent);  color: #fff; }
+    .btn-ec-primary:hover  { background: #e55824; }
+    .btn-ec-tech     { background: rgba(0,180,216,.15); color: var(--tech); border: 1px solid rgba(0,180,216,.3); }
+    .btn-ec-tech:hover     { background: rgba(0,180,216,.25); }
+    .btn-ec-success  { background: rgba(6,167,125,.15); color: var(--success); border: 1px solid rgba(6,167,125,.3); }
+    .btn-ec-success:hover  { background: rgba(6,167,125,.25); }
+    .btn-ec-ghost    { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ec-ghost:hover    { color: var(--text); border-color: rgba(255,255,255,.2); }
+    .btn-ec-sm       { padding: 6px 12px; font-size: .75rem; }
+    .btn-ec:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Status salvo ── */
+    .save-status {
+      font-size: .75rem; padding: 6px 12px; border-radius: 6px;
+      display: none; align-items: center; gap: 5px;
+    }
+    .save-status.ok  { display: inline-flex; background: rgba(6,167,125,.15); color: var(--success); }
+    .save-status.err { display: inline-flex; background: rgba(239,68,68,.15);  color: var(--danger); }
+
+    /* ── Evento cards ── */
+    .event-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    @media(max-width:720px) { .event-grid { grid-template-columns: 1fr; } }
+    .event-card {
+      border-radius: 10px; border: 1px solid var(--border);
+      overflow: hidden; transition: border-color .2s;
+    }
+    .event-card:hover { border-color: rgba(255,255,255,.15); }
+    .event-card-top {
+      height: 4px;
+    }
+    .event-card-body { padding: 16px; }
+    .event-card-name {
+      font-size: .7rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; margin-bottom: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .event-card-desc { font-size: .78rem; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .event-card-dest { font-size: .7rem; color: rgba(255,255,255,.25); margin-bottom: 12px; font-family: 'Courier New', monospace; }
+    .event-card-actions { display: flex; flex-direction: column; gap: 7px; }
+
+    /* ── Deploy guide ── */
+    .deploy-steps { counter-reset: step; }
+    .deploy-step {
+      display: flex; gap: 14px; padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .deploy-step:last-child { border-bottom: none; }
+    .deploy-step-num {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(0,180,216,.15); color: var(--tech);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 700; margin-top: 1px;
+    }
+    .deploy-step-content { flex: 1; }
+    .deploy-step-title { font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
+    .deploy-step-body  { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+    .deploy-step-body code {
+      background: rgba(0,180,216,.1); color: var(--tech);
+      padding: 1px 6px; border-radius: 4px;
+      font-family: 'Courier New', monospace; font-size: .82em;
+    }
+    .deploy-step-body .cmd {
+      display: block; background: rgba(0,0,0,.4); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 12px; margin-top: 8px;
+      font-family: 'Courier New', monospace; font-size: .8rem; color: #a8d8ea;
+    }
+
+    /* ── Preview modal ── */
+    .preview-overlay {
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,.85); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px; opacity: 0; pointer-events: none; transition: opacity .25s;
+    }
+    .preview-overlay.open { opacity: 1; pointer-events: all; }
+    .preview-box {
+      background: #111827; border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 640px;
+      max-height: 90vh; display: flex; flex-direction: column;
+      transform: translateY(16px); transition: transform .25s;
+    }
+    .preview-overlay.open .preview-box { transform: translateY(0); }
+    .preview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .preview-title { font-size: .88rem; font-weight: 600; }
+    .preview-close {
+      width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .preview-close:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+    .preview-iframe-wrap {
+      flex: 1; overflow: auto; padding: 20px; background: #E8EAF0; border-radius: 0 0 14px 14px;
+    }
+    .preview-iframe-wrap iframe {
+      width: 100%; height: 100%; min-height: 500px; border: none;
+      border-radius: 4px;
+    }
+
+    /* ── Toast ── */
+    .ec-toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      padding: 12px 20px; border-radius: 8px; font-size: .82rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(20px); opacity: 0; transition: all .3s;
+      pointer-events: none;
+    }
+    .ec-toast.show { transform: translateY(0); opacity: 1; }
+    .ec-toast.ok   { background: rgba(6,167,125,.9);  color: #fff; }
+    .ec-toast.err  { background: rgba(239,68,68,.9);  color: #fff; }
+    .ec-toast.info { background: rgba(0,180,216,.9);  color: #fff; }
+
+    /* ── Sidebar mini (standalone) ── */
+    .ec-sidebar {
+      width: 260px; background: #0a1019;
+      border-right: 1px solid rgba(255,255,255,.06);
+      position: fixed; top: 0; bottom: 0; left: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .ec-sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .ec-sidebar-logo .hex {
+      width: 32px; height: 32px; background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; color: #fff;
+      clip-path: polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+    }
+    .ec-sidebar-logo span { font-size: .95rem; font-weight: 700; }
+    .ec-sidebar-logo strong { color: var(--accent); }
+    .ec-sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .ec-snav-section {
+      font-size: .65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .1em; color: rgba(255,255,255,.25);
+      padding: 10px 8px 5px;
+    }
+    .ec-snav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 11px; border-radius: 7px; font-size: .84rem;
+      color: rgba(255,255,255,.45); text-decoration: none;
+      transition: all .2s; margin-bottom: 2px; cursor: pointer;
+    }
+    .ec-snav-item:hover  { background: rgba(255,255,255,.05); color: rgba(255,255,255,.8); }
+    .ec-snav-item.active { background: rgba(0,180,216,.12); color: var(--tech); }
+    .ec-sidebar-footer { padding: 14px 16px; border-top: 1px solid rgba(255,255,255,.05); }
+    .ec-sidebar-footer span { font-size: .68rem; color: rgba(255,255,255,.2); font-family: monospace; }
+  </style>
+  <script src="js/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+</head>
+<body>
+<div class="ec-layout">
+
+  <!-- ─── Sidebar ─────────────────────────────────────────── -->
+  <aside class="ec-sidebar">
+    <div class="ec-sidebar-logo">
+      <div class="hex">AP</div>
+      <span>ADAS<strong>PRO</strong></span>
+    </div>
+    <nav class="ec-sidebar-nav">
+      <div class="ec-snav-section">E-mails</div>
+      <a class="ec-snav-item active" onclick="scrollTo(0,0)">
+        <span>⚙️</span>Configuração
+      </a>
+      <a class="ec-snav-item" onclick="document.getElementById('sec-events').scrollIntoView({behavior:'smooth'})">
+        <span>📨</span>Eventos
+      </a>
+      <a class="ec-snav-item" onclick="document.getElementById('sec-test').scrollIntoView({behavior:'smooth'})">
+        <span>🧪</span>Testes
+      </a>
+      <a class="ec-snav-item" onclick="document.getElementById('sec-deploy').scrollIntoView({behavior:'smooth'})">
+        <span>🚀</span>Deploy
+      </a>
+      <div class="ec-snav-section" style="margin-top:12px">Navegar</div>
+      <a class="ec-snav-item" href="admin.html"><span>🛡️</span>Painel Admin</a>
+      <a class="ec-snav-item" href="superadmin.html"><span>👑</span>Super Admin</a>
+    </nav>
+    <div class="ec-sidebar-footer">
+      <span id="sbVersion">v4.2.0 · email-config</span>
+    </div>
+  </aside>
+
+  <!-- ─── Main ─────────────────────────────────────────────── -->
+  <main class="ec-main">
+
+    <!-- Topbar -->
+    <div class="ec-topbar">
+      <a class="ec-topbar-back" href="admin.html">← Admin</a>
+      <div>
+        <span class="ec-topbar-title">E-mails Transacionais</span>
+        <span class="ec-topbar-sub">/ Resend API</span>
+      </div>
+      <div id="modeBadge" class="mode-badge offline">
+        <span class="mode-dot"></span>
+        <span id="modeLabel">MODO OFFLINE</span>
+      </div>
+    </div>
+
+    <!-- ─── 1. Credenciais ───────────────────────────────────── -->
+    <div class="ec-card">
+      <div class="ec-card-header">
+        <div class="ec-card-icon cyan">🔑</div>
+        <div>
+          <div class="ec-card-label">Credenciais Resend</div>
+          <div class="ec-card-desc">Salvas localmente para teste offline — inserir no Supabase antes do deploy</div>
+        </div>
+      </div>
+      <div class="ec-card-body">
+        <div class="ec-field">
+          <label>RESEND_API_KEY</label>
+          <div class="field-row">
+            <input class="ec-input key" type="password" id="cfgApiKey"
+                   placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+            <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="toggleKey()">👁</button>
+          </div>
+          <p class="ec-input-hint">Gerar em: resend.com/api-keys — nunca exposta no frontend de produção</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="ec-field" style="margin:0">
+            <label>ADMIN_EMAIL</label>
+            <input class="ec-input" type="email" id="cfgAdminEmail"
+                   placeholder="superadmin@adaspro.com.br">
+          </div>
+          <div class="ec-field" style="margin:0">
+            <label>SITE_URL</label>
+            <input class="ec-input" type="url" id="cfgSiteUrl"
+                   placeholder="https://adaspro.com.br">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:20px;">
+          <button class="btn-ec btn-ec-primary" onclick="saveConfig()">💾 Salvar configuração</button>
+          <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="clearConfig()">Limpar</button>
+          <span class="save-status" id="saveStatus"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── 2. Eventos ──────────────────────────────────────── -->
+    <div id="sec-events" class="ec-card">
+      <div class="ec-card-header">
+        <div class="ec-card-icon cyan">📨</div>
+        <div>
+          <div class="ec-card-label">Eventos configurados</div>
+          <div class="ec-card-desc">3 eventos implementados na Edge Function <code style="font-size:.8em;background:rgba(0,180,216,.1);color:#00B4D8;padding:1px 6px;border-radius:3px;">notify/index.ts</code></div>
+        </div>
+      </div>
+      <div class="ec-card-body">
+        <div class="event-grid">
+
+          <!-- new_user -->
+          <div class="event-card">
+            <div class="event-card-top" style="background:#FF6B35;"></div>
+            <div class="event-card-body">
+              <div class="event-card-name" style="color:#FF6B35;">new_user</div>
+              <div class="event-card-desc">Notifica admin quando um novo usuário se cadastra</div>
+              <div class="event-card-dest">➜ ADMIN_EMAIL</div>
+              <div class="event-card-actions">
+                <button class="btn-ec btn-ec-tech btn-ec-sm" onclick="previewEmail('new_user')">👁 Pré-visualizar</button>
+                <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="openTest('new_user')">🧪 Testar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- user_approved -->
+          <div class="event-card">
+            <div class="event-card-top" style="background:#06A77D;"></div>
+            <div class="event-card-body">
+              <div class="event-card-name" style="color:#06A77D;">user_approved</div>
+              <div class="event-card-desc">Notifica membro quando sua conta é aprovada</div>
+              <div class="event-card-dest">➜ e-mail do usuário</div>
+              <div class="event-card-actions">
+                <button class="btn-ec btn-ec-tech btn-ec-sm" onclick="previewEmail('user_approved')">👁 Pré-visualizar</button>
+                <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="openTest('user_approved')">🧪 Testar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ticket_reply -->
+          <div class="event-card">
+            <div class="event-card-top" style="background:#00B4D8;"></div>
+            <div class="event-card-body">
+              <div class="event-card-name" style="color:#00B4D8;">ticket_reply</div>
+              <div class="event-card-desc">Notifica membro quando mentor responde seu ticket</div>
+              <div class="event-card-dest">➜ e-mail do usuário</div>
+              <div class="event-card-actions">
+                <button class="btn-ec btn-ec-tech btn-ec-sm" onclick="previewEmail('ticket_reply')">👁 Pré-visualizar</button>
+                <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="openTest('ticket_reply')">🧪 Testar</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── 3. Painel de teste ──────────────────────────────── -->
+    <div id="sec-test" class="ec-card">
+      <div class="ec-card-header">
+        <div class="ec-card-icon orange">🧪</div>
+        <div>
+          <div class="ec-card-label">Painel de Teste</div>
+          <div class="ec-card-desc">Modo offline: renderiza o template localmente. Modo online: dispara email real via Supabase Edge Function.</div>
+        </div>
+      </div>
+      <div class="ec-card-body">
+
+        <!-- Seletor de evento -->
+        <div class="ec-field">
+          <label>Evento a testar</label>
+          <select class="ec-input" id="testEvent" onchange="updateTestForm()" style="font-family:'Poppins',sans-serif;">
+            <option value="new_user">new_user — Novo cadastro</option>
+            <option value="user_approved">user_approved — Acesso aprovado</option>
+            <option value="ticket_reply">ticket_reply — Resposta no ticket</option>
+          </select>
+        </div>
+
+        <!-- Campos dinâmicos -->
+        <div id="testFields"></div>
+
+        <!-- Ações -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+          <button class="btn-ec btn-ec-tech" onclick="runPreview()">👁 Pré-visualizar email</button>
+          <button class="btn-ec btn-ec-success" id="btnSendReal" onclick="runSendReal()" disabled>
+            📤 Enviar email real
+          </button>
+          <span id="realHint" style="font-size:.74rem;color:var(--muted);align-self:center;">
+            Configure credenciais e modo online para enviar
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── 4. Deploy guide ─────────────────────────────────── -->
+    <div id="sec-deploy" class="ec-card">
+      <div class="ec-card-header">
+        <div class="ec-card-icon green">🚀</div>
+        <div>
+          <div class="ec-card-label">Guia de Deploy</div>
+          <div class="ec-card-desc">Passos para ativar os emails em produção</div>
+        </div>
+      </div>
+      <div class="ec-card-body">
+        <div class="deploy-steps">
+
+          <div class="deploy-step">
+            <div class="deploy-step-num">1</div>
+            <div class="deploy-step-content">
+              <div class="deploy-step-title">Criar conta e chave no Resend</div>
+              <div class="deploy-step-body">
+                Acesse <code>resend.com</code>, crie uma conta gratuita e gere uma API Key em
+                <code>API Keys → Create API Key</code>. Copie a chave (<code>re_xxxx...</code>) e salve no campo acima.
+              </div>
+            </div>
+          </div>
+
+          <div class="deploy-step">
+            <div class="deploy-step-num">2</div>
+            <div class="deploy-step-content">
+              <div class="deploy-step-title">Verificar domínio adaspro.com.br no Resend</div>
+              <div class="deploy-step-body">
+                Em <code>Domains → Add Domain</code>, adicione <code>adaspro.com.br</code>.
+                O Resend fornecerá registros DNS (TXT + DKIM + MX). Adicione-os no painel do seu provedor de domínio.
+                Aguarde propagação (até 48h).
+              </div>
+            </div>
+          </div>
+
+          <div class="deploy-step">
+            <div class="deploy-step-num">3</div>
+            <div class="deploy-step-content">
+              <div class="deploy-step-title">Configurar env vars na Edge Function</div>
+              <div class="deploy-step-body">
+                No Supabase Dashboard: <code>Edge Functions → notify → Secrets</code>, adicione:
+                <span class="cmd">RESEND_API_KEY = re_xxxxxxxxxxxxxxxxxxxxxx</span>
+                <span class="cmd">ADMIN_EMAIL    = superadmin@adaspro.com.br</span>
+                <span class="cmd">SITE_URL       = https://adaspro.com.br</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="deploy-step">
+            <div class="deploy-step-num">4</div>
+            <div class="deploy-step-content">
+              <div class="deploy-step-title">Re-deploy da Edge Function (template redesenhado)</div>
+              <div class="deploy-step-body">
+                O template HTML foi redesenhado em 2026-04-30. Execute o deploy para aplicar:
+                <span class="cmd">supabase functions deploy notify --project-ref zqydyyticvtmirjzskly</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="deploy-step">
+            <div class="deploy-step-num">5</div>
+            <div class="deploy-step-content">
+              <div class="deploy-step-title">Testar os 3 eventos em produção</div>
+              <div class="deploy-step-body">
+                Após o deploy, ative <strong>Modo Online</strong> nesta página e use o Painel de Teste
+                para disparar cada evento real. Verifique a inbox do admin e dos usuários demo.
+                <br><br>
+                Sequência recomendada: <code>new_user</code> → <code>user_approved</code> → <code>ticket_reply</code>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Botão de modo online -->
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <button class="btn-ec btn-ec-success" onclick="toggleOnlineMode()" id="btnToggleMode">
+            ▶ Ativar Modo Online
+          </button>
+          <span style="font-size:.78rem;color:var(--muted);">Requer credenciais salvas e Supabase configurado</span>
+        </div>
+      </div>
+    </div>
+
+  </main><!-- /ec-main -->
+</div><!-- /ec-layout -->
+
+<!-- ─── Preview modal ─────────────────────────────────────── -->
+<div class="preview-overlay" id="previewOverlay" onclick="closePreview(event)">
+  <div class="preview-box">
+    <div class="preview-header">
+      <span class="preview-title" id="previewTitle">Pré-visualização</span>
+      <button class="preview-close" onclick="closePreview()">✕</button>
+    </div>
+    <div class="preview-iframe-wrap">
+      <iframe id="previewFrame" title="Email preview" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ──────────────────────────────────────────────── -->
+<div class="ec-toast" id="ecToast"></div>
+
+<!-- ─── Scripts ───────────────────────────────────────────── -->
+<script>
+// ── Chave de persistência local ───────────────────────────────────────────────
+const EC_KEY       = 'adaspro_email_config';
+const EC_MODE      = 'adaspro_email_mode';    // 'offline' | 'online'
+const SESSION_KEY  = 'adaspro_session';
+
+// ── Verificação de sessão via AUTH.requireAuth (verifica role em ambos os modos) ──
+AUTH.init().then(() => {
+  if (!AUTH.requireAuth('admin')) return;
+}).catch(() => { location.href = 'login.html'; });
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+let isOnline = false;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  isOnline = localStorage.getItem(EC_MODE) === 'online';
+  updateModeUI();
+  updateTestForm();
+
+  // Preencher version label com sessão atual
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (s) document.getElementById('sbVersion').textContent =
+      'v4.2.0 · ' + (s.name || s.email || 'admin');
+  } catch {}
+});
+
+// ── Config: salvar / carregar / limpar ────────────────────────────────────────
+function saveConfig() {
+  const cfg = {
+    apiKey:     document.getElementById('cfgApiKey').value.trim(),
+    adminEmail: document.getElementById('cfgAdminEmail').value.trim(),
+    siteUrl:    document.getElementById('cfgSiteUrl').value.trim() || 'https://adaspro.com.br',
+  };
+  if (!cfg.apiKey || !cfg.adminEmail) {
+    showStatus('saveStatus', 'Preencha API Key e Admin Email', false);
+    return;
+  }
+  localStorage.setItem(EC_KEY, JSON.stringify(cfg));
+  showStatus('saveStatus', 'Configuração salva localmente ✓', true);
+  updateModeUI();
+  toast('Configuração salva!', 'ok');
+}
+
+function loadConfig() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(EC_KEY) || '{}');
+    if (cfg.apiKey)     document.getElementById('cfgApiKey').value     = cfg.apiKey;
+    if (cfg.adminEmail) document.getElementById('cfgAdminEmail').value = cfg.adminEmail;
+    if (cfg.siteUrl)    document.getElementById('cfgSiteUrl').value    = cfg.siteUrl;
+  } catch(e) {}
+}
+
+function clearConfig() {
+  localStorage.removeItem(EC_KEY);
+  document.getElementById('cfgApiKey').value     = '';
+  document.getElementById('cfgAdminEmail').value = '';
+  document.getElementById('cfgSiteUrl').value    = '';
+  showStatus('saveStatus', 'Configuração removida', true);
+}
+
+function toggleKey() {
+  const el = document.getElementById('cfgApiKey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// ── Modo offline / online ─────────────────────────────────────────────────────
+function toggleOnlineMode() {
+  const cfg = JSON.parse(localStorage.getItem(EC_KEY) || '{}');
+  if (!isOnline && (!cfg.apiKey || !cfg.adminEmail)) {
+    toast('Salve as credenciais antes de ativar o modo online', 'err');
+    return;
+  }
+  isOnline = !isOnline;
+  localStorage.setItem(EC_MODE, isOnline ? 'online' : 'offline');
+  updateModeUI();
+  toast(isOnline ? 'Modo Online ativado — emails reais serão disparados' : 'Modo Offline ativado', isOnline ? 'ok' : 'info');
+}
+
+function updateModeUI() {
+  const badge  = document.getElementById('modeBadge');
+  const label  = document.getElementById('modeLabel');
+  const btnSend = document.getElementById('btnSendReal');
+  const hint   = document.getElementById('realHint');
+  const btnToggle = document.getElementById('btnToggleMode');
+
+  badge.className = 'mode-badge ' + (isOnline ? 'online' : 'offline');
+  label.textContent = isOnline ? 'MODO ONLINE' : 'MODO OFFLINE';
+  btnSend.disabled = !isOnline;
+  hint.style.display = isOnline ? 'none' : 'inline';
+  btnToggle.textContent = isOnline ? '⏹ Desativar Modo Online' : '▶ Ativar Modo Online';
+  btnToggle.className   = isOnline ? 'btn-ec btn-ec-ghost' : 'btn-ec btn-ec-success';
+}
+
+// ── Formulário de teste dinâmico ──────────────────────────────────────────────
+const testForms = {
+  new_user: [
+    { id: 'td_userName',  label: 'Nome do usuário',  type: 'text',  placeholder: 'João Silva',                default: 'João Silva' },
+    { id: 'td_userEmail', label: 'E-mail do usuário', type: 'email', placeholder: 'joao@oficina.com.br',      default: 'joao@oficina.com.br' },
+    { id: 'td_level',     label: 'Perfil',            type: 'text',  placeholder: 'Técnico Automotivo',        default: 'Técnico Automotivo' },
+  ],
+  user_approved: [
+    { id: 'td_userName',  label: 'Nome do usuário',  type: 'text',  placeholder: 'João Silva',                default: 'João Silva' },
+    { id: 'td_userEmail', label: 'E-mail do usuário', type: 'email', placeholder: 'joao@oficina.com.br',      default: 'joao@oficina.com.br' },
+  ],
+  ticket_reply: [
+    { id: 'td_userName',    label: 'Nome do usuário',    type: 'text',  placeholder: 'João Silva',            default: 'João Silva' },
+    { id: 'td_userEmail',   label: 'E-mail do usuário',  type: 'email', placeholder: 'joao@oficina.com.br',  default: 'joao@oficina.com.br' },
+    { id: 'td_ticketTitle', label: 'Título do ticket',   type: 'text',  placeholder: 'Honda Civic LKAS não calibra', default: 'Honda Civic LKAS não calibra' },
+    { id: 'td_ticketId',    label: 'ID do ticket',       type: 'text',  placeholder: '42',                   default: '42' },
+    { id: 'td_message',     label: 'Mensagem da resposta', type: 'textarea', placeholder: 'Verifique o alinhamento do target a 2,8m da câmera...', default: 'Verifique o alinhamento do target a 2,8m da câmera frontal. O erro B1247 indica que o coeficiente de desvio angular está fora do range ±0.5°.' },
+  ],
+};
+
+function updateTestForm() {
+  const event = document.getElementById('testEvent').value;
+  const fields = testForms[event] || [];
+  const container = document.getElementById('testFields');
+  container.innerHTML = '';
+  fields.forEach(f => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'ec-field';
+    const label = document.createElement('label');
+    label.textContent = f.label;
+    let input;
+    if (f.type === 'textarea') {
+      input = document.createElement('textarea');
+      input.className = 'ec-input';
+      input.id = f.id;
+      input.placeholder = f.placeholder;
+      input.rows = 3;
+      input.style.cssText = "font-family:'Poppins',sans-serif;resize:vertical;";
+      input.textContent = f.default;
+    } else {
+      input = document.createElement('input');
+      input.className = 'ec-input';
+      input.type = f.type;
+      input.id = f.id;
+      input.placeholder = f.placeholder;
+      input.value = f.default;
+    }
+    wrapper.appendChild(label);
+    wrapper.appendChild(input);
+    container.appendChild(wrapper);
+  });
+}
+
+function getTestData() {
+  const event = document.getElementById('testEvent').value;
+  const fields = testForms[event] || [];
+  const data = {};
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) {
+      const key = f.id.replace('td_', '');
+      data[key] = el.value.trim() || el.placeholder;
+    }
+  });
+  return { event, data };
+}
+
+// ── Pré-visualização ──────────────────────────────────────────────────────────
+function runPreview() {
+  const { event, data } = getTestData();
+  previewEmail(event, data);
+}
+
+function previewEmail(event, data) {
+  const cfg = JSON.parse(localStorage.getItem(EC_KEY) || '{}');
+  const siteUrl = cfg.siteUrl || 'https://adaspro.com.br';
+
+  // Preenche dados demo se não fornecidos
+  if (!data) {
+    data = {
+      userName:    'João Silva',
+      userEmail:   'joao@oficina.com.br',
+      level:       'Técnico Automotivo',
+      ticketTitle: 'Honda Civic LKAS não calibra',
+      ticketId:    '42',
+      message:     'Verifique o alinhamento do target a 2,8m da câmera frontal.',
+    };
+  }
+
+  const titles = {
+    new_user:      'new_user — Novo cadastro (admin)',
+    user_approved: 'user_approved — Acesso aprovado (membro)',
+    ticket_reply:  'ticket_reply — Resposta no ticket (membro)',
+  };
+
+  document.getElementById('previewTitle').textContent = titles[event] || event;
+  const frame = document.getElementById('previewFrame');
+  frame.srcdoc = buildEmailHTML(event, data, siteUrl);
+  document.getElementById('previewOverlay').classList.add('open');
+}
+
+function closePreview(e) {
+  if (!e || e.target === document.getElementById('previewOverlay')) {
+    document.getElementById('previewOverlay').classList.remove('open');
+  }
+}
+
+// ── Envio real (Edge Function) ────────────────────────────────────────────────
+async function runSendReal() {
+  if (!isOnline) { toast('Ative o modo online primeiro', 'err'); return; }
+
+  const { event, data } = getTestData();
+  const cfg = JSON.parse(localStorage.getItem(EC_KEY) || '{}');
+
+  if (!cfg.siteUrl) { toast('Configure o SITE_URL antes de enviar', 'err'); return; }
+
+  // Chama a Edge Function Supabase
+  // URL do Supabase: config salva pelo usuário → fallback projeto
+  const supaUrl = cfg.supabaseUrl || 'https://zqydyyticvtmirjzskly.supabase.co';
+
+  // Token de autorização: sessão Supabase (online) ou token local
+  let authToken = '';
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    authToken = s?.access_token || s?.token || '';
+  } catch {}
+
+  if (!supaUrl) { toast('Configure a URL do Supabase antes de enviar', 'err'); return; }
+
+  const btn = document.getElementById('btnSendReal');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando...';
+
+  try {
+    const res = await fetch(`${supaUrl}/functions/v1/notify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+      },
+      body: JSON.stringify({ event, data }),
+    });
+    const json = await res.json();
+    if (json.ok) {
+      toast('Email enviado com sucesso! Verifique a inbox.', 'ok');
+    } else {
+      toast('Erro: ' + (json.error || 'resposta inesperada'), 'err');
+    }
+  } catch(e) {
+    toast('Falha na requisição: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 Enviar email real';
+  }
+}
+
+// ── Abrir painel de teste com evento pré-selecionado ─────────────────────────
+function openTest(event) {
+  document.getElementById('testEvent').value = event;
+  updateTestForm();
+  document.getElementById('sec-test').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Utilitários ───────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/[<>&"']/g, c =>
+    ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;' }[c] || c)
+  );
+}
+
+function showStatus(id, msg, ok) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'save-status ' + (ok ? 'ok' : 'err');
+  setTimeout(() => { el.className = 'save-status'; }, 3000);
+}
+
+function toast(msg, type = 'info') {
+  const el = document.getElementById('ecToast');
+  el.textContent = msg;
+  el.className = 'ec-toast show ' + type;
+  setTimeout(() => { el.className = 'ec-toast ' + type; }, 3200);
+}
+
+// ── Construção dos templates HTML (mirror de notify/index.ts) ─────────────────
+function buildEmailHTML(event, data, siteUrl) {
+  if (event === 'new_user')      return tplNewUser(data, siteUrl);
+  if (event === 'user_approved') return tplUserApproved(data, siteUrl);
+  if (event === 'ticket_reply')  return tplTicketReply(data, siteUrl);
+  return '<p>Evento inválido</p>';
+}
+
+function baseWrapper(accentColor, accentLabel, previewText, body) {
+  const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>ADAS PRO</title>
+<style>
+body,table,td,p,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
+table,td{border-collapse:collapse;}
+body{margin:0;padding:0;background-color:#ECEEF2;font-family:Georgia,'Times New Roman',serif;}
+</style></head><body>
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#ECEEF2;">${esc(previewText)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ECEEF2;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10);">
+<tr><td style="height:4px;background:${accentColor};font-size:0;">&nbsp;</td></tr>
+<tr><td style="background:#0D1821;padding:28px 36px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:-.5px;">ADAS <span style="color:${accentColor};">PRO</span></span></td>
+    <td align="right"><span style="display:inline-block;background:${accentColor};color:#fff;font-family:'Courier New',monospace;font-size:9px;font-weight:700;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase;">${accentLabel}</span></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:36px 36px 28px;">${body}</td></tr>
+<tr><td style="padding:0 36px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="height:1px;background:#E8EAF0;font-size:0;">&nbsp;</td></tr></table></td></tr>
+<tr><td style="padding:20px 36px 28px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><p style="margin:0;font-family:'Courier New',monospace;font-size:10px;color:#9AA0B0;letter-spacing:.5px;">© 2026 AutoTech Service &nbsp;·&nbsp; adaspro.com.br</p>
+    <p style="margin:6px 0 0;font-family:Georgia,serif;font-size:10px;color:#B0B8CC;">Este é um email automático. Não responda diretamente.</p></td>
+    <td align="right" valign="middle"><span style="font-family:'Courier New',monospace;font-size:9px;color:#C8D0DC;letter-spacing:1px;">${now}</span></td>
+  </tr></table>
+</td></tr>
+<tr><td style="height:3px;background:linear-gradient(90deg,${accentColor} 0%,#0D1821 100%);font-size:0;">&nbsp;</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+function tplNewUser(d, siteUrl) {
+  const body = `
+<h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0D1821;letter-spacing:-.3px;">Novo cadastro pendente</h1>
+<p style="margin:0 0 28px;font-family:Georgia,serif;font-size:14px;color:#6B7385;line-height:1.5;">Um técnico solicitou acesso à plataforma e aguarda sua aprovação.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F8FA;border-left:3px solid #FF6B35;border-radius:0 4px 4px 0;margin-bottom:28px;"><tr><td style="padding:20px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:5px 0;width:90px;"><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:1.5px;color:#9AA0B0;text-transform:uppercase;">NOME</span></td><td style="padding:5px 0;"><span style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#1B2B4D;">${esc(d.userName)}</span></td></tr>
+    <tr><td style="padding:5px 0;"><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:1.5px;color:#9AA0B0;text-transform:uppercase;">E-MAIL</span></td><td style="padding:5px 0;"><span style="font-family:'Courier New',monospace;font-size:12px;color:#4A5568;">${esc(d.userEmail)}</span></td></tr>
+    <tr><td style="padding:5px 0;"><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:1.5px;color:#9AA0B0;text-transform:uppercase;">PERFIL</span></td><td style="padding:5px 0;"><span style="font-family:'Courier New',monospace;font-size:12px;color:#4A5568;">${esc(d.level||'Técnico')}</span></td></tr>
+  </table>
+</td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:3px;background:#FF6B35;"><a href="${siteUrl}/admin.html" style="display:inline-block;padding:14px 28px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff;text-decoration:none;text-transform:uppercase;">Acessar Painel Admin &rarr;</a></td></tr></table>`;
+  return baseWrapper('#FF6B35', 'NOVO CADASTRO', `${d.userName} solicitou acesso à plataforma ADAS PRO`, body);
+}
+
+function tplUserApproved(d, siteUrl) {
+  const firstName = esc((d.userName || '').split(' ')[0]);
+  const body = `
+<h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0D1821;letter-spacing:-.3px;">Acesso liberado, ${firstName}.</h1>
+<p style="margin:0 0 28px;font-family:Georgia,serif;font-size:14px;color:#6B7385;line-height:1.5;">Seu cadastro na plataforma ADAS PRO foi aprovado. Você já pode acessar os materiais técnicos exclusivos.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F0FBF7;border-left:3px solid #06A77D;border-radius:0 4px 4px 0;margin-bottom:28px;"><tr><td style="padding:20px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:4px 0;"><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;color:#06A77D;text-transform:uppercase;">&#10003;&nbsp;STATUS</span>&nbsp;&nbsp;<span style="font-family:'Courier New',monospace;font-size:11px;color:#0D1821;font-weight:700;">ATIVO</span></td></tr>
+    <tr><td style="padding:4px 0;"><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;color:#9AA0B0;text-transform:uppercase;">PLATAFORMA</span>&nbsp;&nbsp;<span style="font-family:'Courier New',monospace;font-size:11px;color:#4A5568;">adaspro.com.br</span></td></tr>
+    <tr><td style="padding:4px 0;"><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;color:#9AA0B0;text-transform:uppercase;">ACESSO</span>&nbsp;&nbsp;<span style="font-family:'Courier New',monospace;font-size:11px;color:#4A5568;">Biblioteca técnica · Suporte · Boletins</span></td></tr>
+  </table>
+</td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:3px;background:#06A77D;"><a href="${siteUrl}/login.html" style="display:inline-block;padding:14px 28px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff;text-decoration:none;text-transform:uppercase;">Acessar Plataforma &rarr;</a></td></tr></table>`;
+  return baseWrapper('#06A77D', 'ACESSO APROVADO', `Bem-vindo à plataforma ADAS PRO, ${d.userName}`, body);
+}
+
+function tplTicketReply(d, siteUrl) {
+  const ticketId = d.ticketId ? 'TKT-' + String(d.ticketId).padStart(3,'0') : 'TKT';
+  const body = `
+<h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#0D1821;letter-spacing:-.3px;">Resposta no suporte</h1>
+<p style="margin:0 0 28px;font-family:Georgia,serif;font-size:14px;color:#6B7385;line-height:1.5;">Seu ticket recebeu uma resposta do mentor técnico.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px;"><tr><td><span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;color:#00B4D8;text-transform:uppercase;">${ticketId}</span></td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="border-bottom:2px solid #00B4D8;padding-bottom:10px;"><span style="font-family:Georgia,serif;font-size:15px;font-weight:700;color:#1B2B4D;">${esc(d.ticketTitle)}</span></td></tr></table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4FAFD;border-left:3px solid #00B4D8;border-radius:0 4px 4px 0;margin-bottom:28px;"><tr><td style="padding:6px 24px 4px;"><span style="font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#00B4D8;text-transform:uppercase;">RESPOSTA DO MENTOR</span></td></tr><tr><td style="padding:4px 24px 20px;"><p style="margin:0;font-family:Georgia,serif;font-size:14px;color:#2D3748;line-height:1.7;">${esc(d.message)}</p></td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:3px;background:#00B4D8;"><a href="${siteUrl}/membros.html" style="display:inline-block;padding:14px 28px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff;text-decoration:none;text-transform:uppercase;">Ver Ticket Completo &rarr;</a></td></tr></table>`;
+  return baseWrapper('#00B4D8', 'SUPORTE TÉCNICO', `Resposta no ticket: ${d.ticketTitle}`, body);
+}
+</script>
+</body>
+</html>

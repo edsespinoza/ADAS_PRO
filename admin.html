@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADAS PRO — Painel de Controle</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/auth.css"/>
+  <style>
+    :root {
+      --primary:#1B2B4D;--primary-dark:#0D1821;--accent:#FF6B35;--accent-hover:#e55824;
+      --tech:#00B4D8;--success:#06A77D;--warning:#F4A261;--white:#FFFFFF;
+      --font-h:'Poppins',sans-serif;--font-b:'Inter',sans-serif;
+      --transition:all .3s ease;--radius:12px;--radius-lg:20px;
+    }
+    body{background:#0f1923;color:rgba(255,255,255,.85);font-family:var(--font-b);margin:0;}
+
+    /* ─── Topbar melhorado ─── */
+    .notif-btn{position:relative;width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition);font-size:.95rem;}
+    .notif-btn:hover{background:rgba(255,255,255,.12);}
+    .notif-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--accent);display:none;}
+    .notif-dot.active{display:block;}
+
+    /* ─── Tabs dentro de páginas ─── */
+    .page-tabs{display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:50px;padding:4px;margin-bottom:24px;width:fit-content;}
+    .page-tab{padding:8px 20px;border-radius:50px;font-size:.82rem;font-weight:600;color:rgba(255,255,255,.45);cursor:pointer;transition:var(--transition);}
+    .page-tab.active{background:rgba(255,107,53,.15);color:var(--accent);}
+    .page-tab-content{display:none;}
+    .page-tab-content.active{display:block;}
+
+    /* ─── Chat de ticket ─── */
+    .ticket-chat{display:flex;flex-direction:column;gap:12px;padding:20px;max-height:380px;overflow-y:auto;}
+    .chat-msg{max-width:75%;padding:10px 14px;border-radius:12px;font-size:.86rem;line-height:1.6;}
+    .chat-msg.member{background:rgba(255,255,255,.07);border-bottom-left-radius:4px;align-self:flex-start;}
+    .chat-msg.admin{background:rgba(255,107,53,.12);border:1px solid rgba(255,107,53,.2);border-bottom-right-radius:4px;align-self:flex-end;text-align:right;}
+    .chat-meta{font-size:.7rem;color:rgba(255,255,255,.35);margin-top:4px;}
+    .chat-input-area{display:flex;gap:10px;padding:16px 20px;border-top:1px solid rgba(255,255,255,.06);}
+    .chat-input{flex:1;padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:.88rem;outline:none;transition:var(--transition);resize:none;max-height:100px;}
+    .chat-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,107,53,.12);}
+    .chat-send{padding:10px 20px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer;transition:var(--transition);white-space:nowrap;}
+    .chat-send:hover{background:var(--accent-hover);}
+
+    /* ─── Ticket list ─── */
+    .ticket-list-item{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:14px;cursor:pointer;transition:var(--transition);}
+    .ticket-list-item:hover{background:rgba(255,255,255,.03);}
+    .ticket-list-item.selected{background:rgba(255,107,53,.06);}
+    .ticket-priority{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .p-urgent{background:#ff3b3b;} .p-high{background:#ff6b35;} .p-medium{background:#f4a261;} .p-low{background:#06a77d;}
+    .ticket-title{font-size:.88rem;font-weight:600;color:#fff;margin-bottom:3px;}
+    .ticket-meta{font-size:.74rem;color:rgba(255,255,255,.35);}
+    .ticket-unread{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:auto;flex-shrink:0;}
+
+    /* ─── Configurações ─── */
+    .config-section{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;}
+    .config-section-title{font-family:var(--font-h);font-size:.88rem;font-weight:600;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+    .config-section-sub{font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:20px;}
+    .config-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .config-field label{display:block;font-size:.78rem;font-weight:500;color:rgba(255,255,255,.55);margin-bottom:6px;}
+    .config-input{width:100%;padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:.88rem;outline:none;transition:var(--transition);}
+    .config-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,107,53,.12);}
+    .config-input::placeholder{color:rgba(255,255,255,.25);}
+    .config-textarea{resize:vertical;min-height:80px;font-family:var(--font-b);}
+    .config-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+    .config-toggle:last-child{border-bottom:none;}
+    .config-toggle-label{font-size:.88rem;color:rgba(255,255,255,.7);}
+    .config-toggle-sub{font-size:.75rem;color:rgba(255,255,255,.3);}
+    .toggle-sw{position:relative;width:42px;height:22px;cursor:pointer;}
+    .toggle-sw input{opacity:0;width:0;height:0;}
+    .toggle-track{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:50px;transition:var(--transition);}
+    .toggle-track::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:var(--transition);}
+    .toggle-sw input:checked~.toggle-track{background:var(--accent);}
+    .toggle-sw input:checked~.toggle-track::after{transform:translateX(20px);}
+
+    .plan-config-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:16px 20px;margin-bottom:12px;}
+    .plan-config-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .plan-config-name{font-family:var(--font-h);font-weight:600;color:#fff;}
+    .plan-config-cats{display:flex;flex-wrap:wrap;gap:6px;}
+    .plan-cat-chip{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:50px;font-size:.72rem;cursor:pointer;transition:var(--transition);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);}
+    .plan-cat-chip.active{background:rgba(0,180,216,.15);border-color:rgba(0,180,216,.35);color:var(--tech);}
+    .plan-cat-chip:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8);}
+
+    /* ─── Biblioteca CRUD ─── */
+    .content-filters{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .content-search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 14px;}
+    .content-search input{background:none;border:none;outline:none;color:#fff;font-size:.85rem;width:180px;}
+    .content-search input::placeholder{color:rgba(255,255,255,.3);}
+    .cat-filter-select{padding:8px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#fff;font-size:.85rem;outline:none;}
+    .cat-filter-select option{background:#0D1821;}
+
+    /* ─── Gestores grid ─── */
+    .gestores-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .gestor-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;}
+    .gestor-card-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--tech));display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:700;color:#fff;flex-shrink:0;}
+    .gestor-info-name{font-size:.88rem;font-weight:600;color:#fff;}
+    .gestor-info-role{font-size:.72rem;color:var(--tech);text-transform:uppercase;letter-spacing:.06em;}
+    .gestor-info-email{font-size:.75rem;color:rgba(255,255,255,.35);}
+
+    /* Sistema info */
+    .sys-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+    .sys-info-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:16px;}
+    .sys-info-label{font-size:.72rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+    .sys-info-value{font-family:var(--font-h);font-weight:700;color:#fff;}
+    .danger-zone{background:rgba(220,53,69,.05);border:1px solid rgba(220,53,69,.2);border-radius:var(--radius);padding:20px;}
+    .danger-title{font-family:var(--font-h);font-size:.9rem;font-weight:600;color:#ff6b7a;margin-bottom:6px;}
+    .danger-sub{font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:16px;}
+    .danger-btns{display:flex;gap:10px;flex-wrap:wrap;}
+    .danger-btn{padding:9px 20px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;transition:var(--transition);}
+    .danger-btn-warn{background:rgba(244,162,97,.12);color:var(--warning);border:1px solid rgba(244,162,97,.25);}
+    .danger-btn-warn:hover{background:rgba(244,162,97,.2);}
+    .danger-btn-red{background:rgba(220,53,69,.12);color:#ff6b7a;border:1px solid rgba(220,53,69,.25);}
+    .danger-btn-red:hover{background:rgba(220,53,69,.2);}
+
+    /* Save button fixed */
+    .save-bar{position:sticky;bottom:0;background:rgba(10,16,25,.9);backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.06);padding:14px 28px;display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0 -28px;z-index:10;}
+    .save-btn{padding:10px 32px;background:var(--accent);color:#fff;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:.88rem;cursor:pointer;transition:var(--transition);}
+    .save-btn:hover{background:var(--accent-hover);transform:translateY(-1px);}
+    .save-msg{font-size:.82rem;color:var(--success);opacity:0;transition:opacity .3s;}
+    .save-msg.show{opacity:1;}
+
+    /* ─── Controle de Acesso ─── */
+    .module-access-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    .module-access-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: var(--radius); padding: 18px 20px; }
+    .module-acc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .module-acc-info { display: flex; align-items: center; gap: 10px; }
+    .module-acc-icon { font-size: 1.3rem; }
+    .module-acc-name { font-family: var(--font-h); font-weight: 600; color: #fff; font-size: .88rem; }
+    .module-acc-count { font-size: .72rem; color: rgba(255,255,255,.35); margin-top: 2px; }
+    .module-acc-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06); }
+    .module-level-select { padding: 6px 10px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; color: #fff; font-size: .78rem; outline: none; cursor: pointer; }
+    .module-level-select option { background: #0D1821; }
+
+    /* Access table */
+    .acc-table { width: 100%; border-collapse: collapse; }
+    .acc-table th { text-align: left; font-size: .72rem; font-weight: 600; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .06em; padding: 0 14px 12px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .acc-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: .83rem; color: rgba(255,255,255,.7); vertical-align: middle; }
+    .acc-table tr:hover td { background: rgba(255,255,255,.02); }
+    .acc-level-badge { display: inline-flex; padding: 2px 9px; border-radius: 4px; font-size: .68rem; font-weight: 700; border: 1px solid; }
+    .acc-level-1 { color: #9CA3AF; border-color: rgba(156,163,175,.3); background: rgba(156,163,175,.08); }
+    .acc-level-2 { color: var(--tech); border-color: rgba(0,180,216,.3); background: rgba(0,180,216,.08); }
+    .acc-level-3 { color: var(--accent); border-color: rgba(255,107,53,.3); background: rgba(255,107,53,.08); }
+    .acc-level-4 { color: var(--warning); border-color: rgba(244,162,97,.3); background: rgba(244,162,97,.08); }
+    .acc-file-path { font-family: monospace; font-size: .72rem; color: rgba(255,255,255,.35); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .acc-edit-btn { padding: 5px 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; color: rgba(255,255,255,.5); font-size: .75rem; cursor: pointer; transition: all .2s; }
+    .acc-edit-btn:hover { background: rgba(255,107,53,.1); border-color: rgba(255,107,53,.3); color: var(--accent); }
+    .acc-inline-edit { background: rgba(0,180,216,.04); border: 1px solid rgba(0,180,216,.15); border-radius: 8px; padding: 14px; margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 10px; align-items: end; }
+    .acc-inline-label { font-size: .72rem; color: rgba(255,255,255,.4); margin-bottom: 5px; }
+    .acc-inline-input { padding: 8px 10px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; color: #fff; font-size: .82rem; outline: none; width: 100%; box-sizing: border-box; }
+    .acc-inline-input:focus { border-color: var(--tech); }
+    .acc-save-btn { padding: 8px 16px; background: var(--tech); color: #fff; border-radius: 7px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; transition: all .2s; white-space: nowrap; }
+    .acc-save-btn:hover { opacity: .85; }
+
+    /* Access levels cards */
+    .access-levels-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+    .access-level-card { background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.08); border-radius: var(--radius-lg); padding: 22px 18px; }
+    .level-badge-large { display: inline-flex; padding: 4px 12px; border-radius: 6px; font-size: .7rem; font-weight: 800; letter-spacing: .06em; border: 1px solid; margin-bottom: 10px; }
+    .level-name-lg { font-family: var(--font-h); font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .level-price-lg { font-size: .82rem; color: rgba(255,255,255,.4); margin-bottom: 16px; }
+    .level-permission-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .level-permission-row:last-child { border-bottom: none; }
+    .level-perm-label { font-size: .8rem; color: rgba(255,255,255,.6); }
+
+    /* ─── Role badges + hierarquia ─── */
+    .role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:.67rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid;}
+    .role-admin  {color:#FF6B35;border-color:rgba(255,107,53,.35);background:rgba(255,107,53,.1);}
+    .role-gestor {color:#00B4D8;border-color:rgba(0,180,216,.35);background:rgba(0,180,216,.1);}
+    .role-membro {color:rgba(255,255,255,.45);border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.05);}
+    .role-avatar-admin  {background:linear-gradient(135deg,#FF6B35,#e55824)!important;}
+    .role-avatar-gestor {background:linear-gradient(135deg,#00B4D8,#0099b8)!important;}
+    .role-avatar-membro {background:linear-gradient(135deg,#1B2B4D,#2a3f6f)!important;}
+    /* Seletor hierárquico de função */
+    .role-ladder{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .role-ladder-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;border:2px solid transparent;transition:all .2s;background:rgba(255,255,255,.03);}
+    .role-ladder-item:hover{background:rgba(255,255,255,.07);}
+    .role-ladder-item.selected{border-color:currentColor;}
+    .role-ladder-item.rl-admin  {color:#FF6B35;}
+    .role-ladder-item.rl-admin.selected {background:rgba(255,107,53,.1);}
+    .role-ladder-item.rl-gestor {color:#00B4D8;}
+    .role-ladder-item.rl-gestor.selected{background:rgba(0,180,216,.1);}
+    .role-ladder-item.rl-membro {color:rgba(255,255,255,.45);}
+    .role-ladder-item.rl-membro.selected{background:rgba(255,255,255,.07);}
+    .role-ladder-icon{font-size:1.1rem;width:28px;text-align:center;flex-shrink:0;}
+    .role-ladder-info{flex:1;}
+    .role-ladder-name{font-weight:700;font-size:.82rem;font-family:var(--font-h);}
+    .role-ladder-desc{font-size:.72rem;opacity:.55;margin-top:1px;}
+    .role-ladder-level{font-size:.65rem;font-weight:700;opacity:.5;margin-left:auto;}
+    /* Upload dropzone ─── */
+    .upload-zone{border:2px dashed rgba(255,255,255,.12);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:var(--transition);position:relative;background:rgba(255,255,255,.02);}
+    .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(255,107,53,.04);}
+    .upload-zone-icon{font-size:1.5rem;margin-bottom:5px;}
+    .upload-zone-label{font-size:.8rem;color:rgba(255,255,255,.4);}
+    .upload-zone-label strong{color:var(--accent);}
+    .upload-file-info{display:none;align-items:center;gap:10px;background:rgba(6,167,125,.07);border:1px solid rgba(6,167,125,.2);border-radius:8px;padding:9px 12px;margin-top:8px;}
+    .upload-file-info.show{display:flex;}
+    .upload-file-name{font-size:.8rem;color:rgba(255,255,255,.75);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .upload-remove-btn{font-size:.72rem;color:rgba(255,255,255,.3);cursor:pointer;transition:color .2s;flex-shrink:0;}
+    .upload-remove-btn:hover{color:#ff6b7a;}
+    .upload-progress{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:8px;overflow:hidden;display:none;}
+    .upload-progress.show{display:block;}
+    .upload-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--tech));border-radius:2px;width:0%;transition:width .4s;}
+    .upload-current-path{font-size:.72rem;color:rgba(0,180,216,.6);margin-top:5px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+    @media(max-width:900px){ .module-access-grid{grid-template-columns:repeat(2,1fr);} .access-levels-grid{grid-template-columns:repeat(2,1fr);} .acc-inline-edit{grid-template-columns:1fr 1fr;} }
+
+    @media(max-width:768px){
+      .config-row{grid-template-columns:1fr;}
+      .gestores-grid{grid-template-columns:1fr;}
+      .sys-info-grid{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+  <!-- Vercel Analytics & Speed Insights -->
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+</head>
+<body>
+<div class="dashboard">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-hex">AP</div>
+    <span>ADAS<strong>PRO</strong></span>
+  </div>
+  <div class="sidebar-user">
+    <div class="sidebar-avatar" id="sbAvatar">AD</div>
+    <div>
+      <div class="sidebar-user-name" id="sbName">—</div>
+      <div class="sidebar-user-role" id="sbRole">—</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</a>
+
+    <div class="sidebar-nav-section">Gestão</div>
+    <a class="sidebar-nav-item" onclick="showPage('usuarios',this)">
+      <span class="nav-icon">👥</span>Membros
+      <span class="nav-badge" id="pendBadge" style="display:none">0</span>
+    </a>
+    <a class="sidebar-nav-item" onclick="showPage('suporte',this)">
+      <span class="nav-icon">🎫</span>Suporte
+      <span class="nav-badge" id="ticketBadge" style="display:none">0</span>
+    </a>
+
+    <div class="sidebar-nav-section">Conteúdo</div>
+    <a class="sidebar-nav-item" onclick="showPage('biblioteca',this)"><span class="nav-icon">📚</span>Biblioteca</a>
+    <a class="sidebar-nav-item" onclick="showPage('acesso',this)"><span class="nav-icon">🔐</span>Acesso & Módulos</a>
+
+    <div class="sidebar-nav-section">Sistema</div>
+    <a class="sidebar-nav-item" onclick="showPage('configuracoes',this)"><span class="nav-icon">⚙️</span>Configurações</a>
+    <a class="sidebar-nav-item" href="email-config.html" style="color:rgba(0,180,216,.8);"><span class="nav-icon">✉️</span>E-mails Transacionais<span style="font-size:.6rem;background:rgba(0,180,216,.2);color:#00B4D8;padding:1px 6px;border-radius:3px;margin-left:auto;">NOVO</span></a>
+    <a class="sidebar-nav-item" href="membros.html"><span class="nav-icon">👤</span>Ver como membro</a>
+    <a class="sidebar-nav-item" href="index.html"><span class="nav-icon">🌐</span>Landing page</a>
+    <a class="sidebar-nav-item" id="linkSuperAdmin" href="superadmin.html" style="display:none;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);margin-top:4px"><span class="nav-icon">👑</span>Super Admin</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="padding:10px 14px 6px;border-top:1px solid rgba(255,255,255,.05);margin-bottom:6px;">
+      <div style="font-size:.58rem;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">AutoTech Service</div>
+      <div id="sbVersionLabel" style="font-size:.6rem;color:rgba(255,255,255,.14);font-family:monospace;">v2.2.0 · build 20260423</div>
+    </div>
+    <button class="sidebar-logout" onclick="AUTH.logout();location.href='login.html'"><span>🚪</span>Sair</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main-content">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="tbTitle">Painel de Controle</div>
+      <div class="topbar-sub" id="tbSub">Visão geral do sistema</div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn" onclick="toggleNotifPanel()" title="Notificações">
+        🔔<span class="notif-dot" id="notifDot"></span>
+      </div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.3);padding:0 8px" id="tbClock"></div>
+    </div>
+  </div>
+
+  <!-- Painel de Notificações -->
+  <div id="notifPanel" style="display:none;position:absolute;top:64px;right:16px;width:320px;background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);z-index:200;box-shadow:0 8px 40px rgba(0,0,0,.4)">
+    <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:var(--font-h);font-weight:600;color:#fff;font-size:.88rem">Notificações</span>
+      <button onclick="AUTH.clearAllNotifs();renderNotifs();updateBadges()" style="font-size:.75rem;color:var(--accent);cursor:pointer">Limpar</button>
+    </div>
+    <div id="notifList" style="max-height:300px;overflow-y:auto"></div>
+  </div>
+
+  <!-- ─── DASHBOARD ─── -->
+  <div class="page active" id="pageDashboard">
+    <div class="stats-row" id="statsCards"></div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px">
+      <div class="table-card">
+        <div class="table-card-header">
+          <div><div class="table-card-title">Atividade recente</div><div class="table-card-sub">Últimos eventos no sistema</div></div>
+        </div>
+        <div id="activityFeed"></div>
+      </div>
+      <div>
+        <div class="table-card" style="margin-bottom:16px">
+          <div class="table-card-header"><div class="table-card-title">Tickets abertos</div><div><button class="action-btn action-btn-edit" onclick="showPage('suporte')" style="width:auto;padding:5px 14px;border-radius:6px;font-size:.78rem">Ver todos</button></div></div>
+          <div id="dashTickets"></div>
+        </div>
+        <div class="table-card">
+          <div class="table-card-header"><div class="table-card-title">Usuários pendentes</div><div><button class="action-btn action-btn-edit" onclick="showPage('usuarios');setTimeout(()=>switchMembrosTab('aprovacoes',document.getElementById('tabAprovacoes')),50)" style="width:auto;padding:5px 14px;border-radius:6px;font-size:.78rem">Ver todos</button></div></div>
+          <div id="dashPending"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MEMBROS (Todos + Aprovações + Equipe) ─── -->
+  <div class="page" id="pageUsuarios">
+    <div class="page-tabs">
+      <div class="page-tab active" onclick="switchMembrosTab('todos',this)">👥 Todos os Membros</div>
+      <div class="page-tab" id="tabAprovacoes" onclick="switchMembrosTab('aprovacoes',this)">⏳ Aprovações <span id="pendTabCount" style="background:rgba(244,162,97,.25);color:var(--warning);padding:1px 7px;border-radius:50px;font-size:.65rem;margin-left:4px;font-weight:700"></span></div>
+      <div class="page-tab" onclick="switchMembrosTab('equipe',this)">🛡️ Equipe</div>
+    </div>
+
+    <!-- Tab: Todos os Membros -->
+    <div class="page-tab-content active" id="membrosTabTodos">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="userSearch" placeholder="Buscar por nome ou e-mail..." oninput="filterUsers()"/></div>
+        <select id="statusFilter" class="cat-filter-select" onchange="filterUsers()">
+          <option value="">Todos os status</option>
+          <option value="active">✅ Ativos</option>
+          <option value="pending">⏳ Pendentes</option>
+          <option value="blocked">🚫 Bloqueados</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <div class="table-card-header">
+          <div><div class="table-card-title">Membros da plataforma</div><div class="table-card-sub" id="userCountLbl">—</div></div>
+        </div>
+        <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Usuário</th><th>E-mail</th><th>Função</th><th>Status</th><th>Cadastro</th><th>Permissões</th><th>Ações</th></tr></thead><tbody id="usersTbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- Tab: Aprovações de Cadastro -->
+    <div class="page-tab-content" id="membrosTabAprovacoes">
+      <div class="table-card">
+        <div class="table-card-header">
+          <div><div class="table-card-title">Aprovação de Cadastros</div><div class="table-card-sub">Revise cada solicitação antes de liberar o acesso</div></div>
+        </div>
+        <div id="pendentesBody"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Equipe (Admins & Gestores) -->
+    <div class="page-tab-content" id="membrosTabEquipe">
+      <div class="config-section">
+        <div class="config-section-title">🛡️ Admins & Gestores</div>
+        <div class="config-section-sub">Membros com acesso ao painel de administração.</div>
+        <div class="gestores-grid" id="gestoresGrid"></div>
+      </div>
+      <div class="config-section">
+        <div class="config-section-title">⬆️ Promover membro</div>
+        <div class="config-section-sub">Selecione um membro ativo para conceder acesso administrativo.</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select class="config-input" id="promoteSelect" style="flex:1;min-width:200px"></select>
+          <button onclick="promoteToGestor()" style="padding:10px 24px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap">Promover a Gestor →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SUPORTE ─── -->
+  <div class="page" id="pageSuport">
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;height:calc(100vh - 130px)">
+
+      <!-- Lista de tickets -->
+      <div class="table-card" style="overflow:hidden;display:flex;flex-direction:column">
+        <div class="table-card-header" style="flex-shrink:0;flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="table-card-title">Tickets</div>
+            <span id="ticketCountLabel" style="font-size:.72rem;color:rgba(255,255,255,.3)"></span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <select id="ticketFilter" class="cat-filter-select" onchange="renderTicketList()" style="font-size:.75rem;padding:5px 10px;flex:1">
+              <option value="all">Todos os status</option>
+              <option value="open">🟠 Abertos</option>
+              <option value="in-progress">🔵 Em andamento</option>
+              <option value="resolved">✅ Resolvidos</option>
+              <option value="closed">⬛ Fechados</option>
+            </select>
+            <select id="ticketCatFilter" class="cat-filter-select" onchange="renderTicketList()" style="font-size:.75rem;padding:5px 10px;flex:1">
+              <option value="all">Todas as categorias</option>
+              <option value="duvida-tecnica">🔧 Dúvida técnica</option>
+              <option value="solicitacao-material">📄 Material</option>
+              <option value="upgrade-plano">⬆️ Upgrade</option>
+              <option value="outro">💬 Outro</option>
+            </select>
+          </div>
+        </div>
+        <div id="ticketListEl" style="overflow-y:auto;flex:1"></div>
+      </div>
+
+      <!-- Visualizador de ticket -->
+      <div class="table-card" style="overflow:hidden;display:flex;flex-direction:column" id="ticketViewPanel">
+        <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div id="tvTitle" style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem">Selecione um ticket</div>
+            <div id="tvMeta" style="font-size:.78rem;color:rgba(255,255,255,.35);margin-top:4px"></div>
+          </div>
+          <div id="tvActions" style="display:flex;gap:8px"></div>
+        </div>
+        <div class="ticket-chat" id="tvMessages" style="flex:1"></div>
+        <div class="chat-input-area" id="tvInputArea" style="display:none">
+          <textarea class="chat-input" id="tvReply" placeholder="Escreva sua resposta..." rows="1"></textarea>
+          <button class="chat-send" onclick="sendTicketReply()">Enviar →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── BIBLIOTECA ─── -->
+  <div class="page" id="pageBiblioteca">
+    <div class="content-filters">
+      <div class="content-search"><span>🔍</span><input type="text" id="contentSearch" placeholder="Buscar material..." oninput="filterContent()"/></div>
+      <select id="contentCatFilter" class="cat-filter-select" onchange="filterContent()">
+        <option value="">Todas as categorias</option>
+      </select>
+      <button onclick="openAddContentModal()" style="padding:9px 20px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;transition:var(--transition);margin-left:auto">+ Adicionar material</button>
+    </div>
+    <div class="table-card">
+      <div class="table-card-header">
+        <div><div class="table-card-title">Biblioteca de Conteúdo</div><div class="table-card-sub" id="contentCountLbl">—</div></div>
+      </div>
+      <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Material</th><th>Categoria</th><th>Tipo</th><th>Usuários com acesso</th><th>Ações</th></tr></thead><tbody id="contentTbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ─── CONTROLE DE ACESSO ─── -->
+  <div class="page" id="pageAcesso">
+    <div class="page-tabs">
+      <div class="page-tab active" onclick="switchAcessoTab('modulos',this)">🗂 Módulos & Categorias</div>
+      <div class="page-tab" onclick="switchAcessoTab('conteudo',this)">📄 Acesso por Material</div>
+    </div>
+
+    <!-- Sub-tab Módulos -->
+    <div class="page-tab-content active" id="accTabModulos">
+      <div class="config-section">
+        <div class="config-section-title">🗂 Módulos por Categoria</div>
+        <div class="config-section-sub">Ative ou desative categorias e defina o nível mínimo de acesso para cada módulo.</div>
+        <div class="module-access-grid" id="accModulosGrid"></div>
+      </div>
+    </div>
+
+    <!-- Sub-tab Conteúdo -->
+    <div class="page-tab-content" id="accTabConteudo">
+      <div class="table-card">
+        <div class="table-card-header">
+          <div><div class="table-card-title">Controle de Acesso por Material</div><div class="table-card-sub">Defina nível de visualização, download e caminho do arquivo para cada item.</div></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="acc-table">
+            <thead><tr><th>Título</th><th>Categoria</th><th>Nível Acesso</th><th>Nível Download</th><th>Arquivo</th><th>Ações</th></tr></thead>
+            <tbody id="accContentBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-tab Níveis -->
+    <div class="page-tab-content" id="accTabNiveis">
+      <div class="config-section">
+        <div class="config-section-title">🏆 Configuração dos Níveis de Acesso</div>
+        <div class="config-section-sub">Defina as permissões de visualização e download para cada nível de plano.</div>
+        <div class="access-levels-grid" id="accNiveisGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── CONFIGURAÇÕES ─── -->
+  <div class="page" id="pageConfiguracoes">
+    <div class="page-tabs">
+      <div class="page-tab active" onclick="switchConfigTab('geral',this)">🏠 Geral</div>
+      <div class="page-tab" onclick="switchConfigTab('planos',this)">💼 Planos</div>
+      <div class="page-tab" onclick="switchConfigTab('notificacoes',this)">🔔 Notificações</div>
+      <div class="page-tab" onclick="switchConfigTab('sistema',this)">🔧 Sistema</div>
+    </div>
+
+    <!-- Geral -->
+    <div class="page-tab-content active" id="configGeral">
+      <div class="config-section">
+        <div class="config-section-title">🏠 Informações da Plataforma</div>
+        <div class="config-section-sub">Dados exibidos na landing page e e-mails do sistema.</div>
+        <div class="config-row">
+          <div class="config-field"><label>Nome da plataforma</label><input class="config-input" id="cfgSiteName" placeholder="ADAS PRO"/></div>
+          <div class="config-field"><label>Tagline / Descrição curta</label><input class="config-input" id="cfgTagline" placeholder="Mentoria técnica em Sistemas ADAS"/></div>
+        </div>
+        <div class="config-row">
+          <div class="config-field"><label>E-mail de contato</label><input class="config-input" id="cfgEmail" type="email" placeholder="contato@adaspro.com.br"/></div>
+          <div class="config-field"><label>WhatsApp (número com DDI)</label><input class="config-input" id="cfgWhatsapp" placeholder="5511999999999"/></div>
+        </div>
+        <div class="config-field" style="margin-top:4px">
+          <label>Mensagem de boas-vindas para novos membros</label>
+          <textarea class="config-input config-textarea" id="cfgWelcome" placeholder="Bem-vindo à plataforma..."></textarea>
+        </div>
+        <div class="config-field" style="margin-top:10px">
+          <label>Nota sobre planos/upgrades (exibida no perfil do membro)</label>
+          <textarea class="config-input config-textarea" id="cfgMemberNote" rows="2" placeholder="Para solicitar acesso a novas categorias..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Planos -->
+    <div class="page-tab-content" id="configPlanos">
+      <div class="config-section">
+        <div class="config-section-title">💼 Configuração dos Planos</div>
+        <div class="config-section-sub">Defina os nomes, preços e categorias padrão liberadas em cada plano.</div>
+        <div id="plansConfig"></div>
+      </div>
+    </div>
+
+    <!-- Notificações -->
+    <div class="page-tab-content" id="configNotificacoes">
+      <div class="config-section">
+        <div class="config-section-title">🔔 Notificações do Sistema</div>
+        <div class="config-section-sub">Controle quais alertas você quer receber no painel.</div>
+        <div class="config-toggle">
+          <div><div class="config-toggle-label">Novo cadastro de usuário</div><div class="config-toggle-sub">Alerta quando alguém se cadastra e aguarda aprovação</div></div>
+          <label class="toggle-sw"><input type="checkbox" id="notifNewUser"/><span class="toggle-track"></span></label>
+        </div>
+        <div class="config-toggle">
+          <div><div class="config-toggle-label">Novo ticket de suporte</div><div class="config-toggle-sub">Alerta quando um membro abre um ticket</div></div>
+          <label class="toggle-sw"><input type="checkbox" id="notifNewTicket"/><span class="toggle-track"></span></label>
+        </div>
+        <div class="config-toggle">
+          <div><div class="config-toggle-label">Ticket atualizado</div><div class="config-toggle-sub">Alerta quando um membro responde em um ticket</div></div>
+          <label class="toggle-sw"><input type="checkbox" id="notifTicketReply" checked/><span class="toggle-track"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sistema -->
+    <div class="page-tab-content" id="configSistema">
+      <div class="config-section">
+        <div class="config-section-title">📊 Estatísticas do Sistema</div>
+        <div class="sys-info-grid" id="sysInfoGrid"></div>
+      </div>
+      <div class="config-section">
+        <div class="config-section-title">💾 Backup e Exportação</div>
+        <div class="config-section-sub">Exporte todos os dados do sistema em formato JSON.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button onclick="AUTH.exportData()" style="padding:10px 24px;background:rgba(0,180,216,.12);color:var(--tech);border:1px solid rgba(0,180,216,.25);border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer">⬇️ Exportar backup JSON</button>
+          <label style="padding:10px 24px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12);border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer">
+            ⬆️ Importar backup
+            <input type="file" accept=".json" style="display:none" onchange="importBackup(this)"/>
+          </label>
+        </div>
+      </div>
+      <div class="danger-zone">
+        <div class="danger-title">⚠️ Zona de perigo</div>
+        <div class="danger-sub">Estas ações não podem ser desfeitas. Use com cuidado.</div>
+        <div class="danger-btns">
+          <button class="danger-btn danger-btn-warn" onclick="confirmAction('Restaurar conteúdo padrão?','O conteúdo da biblioteca será restaurado para os 22 materiais originais. Conteúdos personalizados serão perdidos.',()=>{ AUTH.resetToDefaults(); showToast('Conteúdo restaurado!'); refresh(); })">🔄 Restaurar conteúdo padrão</button>
+          <button class="danger-btn danger-btn-red" onclick="confirmAction('Excluir todos os tickets?','Todos os tickets e histórico de suporte serão apagados permanentemente.',()=>{ AUTH.getAllTickets().forEach(t=>AUTH.deleteTicket(t.id)); showToast('Tickets apagados.'); refresh(); })">🗑 Limpar todos os tickets</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save bar -->
+    <div class="save-bar">
+      <span class="save-msg" id="saveMsg">✅ Configurações salvas!</span>
+      <button class="save-btn" onclick="saveConfigurations()">Salvar configurações</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Botão mobile -->
+<button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<!-- ─── Modal de permissões ─── -->
+<div class="modal-overlay" id="permModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Gerenciar acesso do usuário</div>
+      <button class="modal-close" onclick="closeModal('permModal')">✕</button>
+    </div>
+    <div id="permUserInfo" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:20px"></div>
+    <div class="modal-section-title">Plano rápido</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="planQuickBtns"></div>
+    <div class="modal-section-title">Status</div>
+    <select id="pStatus" class="config-input" style="margin-bottom:16px">
+      <option value="active">✅ Ativo</option><option value="pending">⏳ Pendente</option><option value="blocked">🚫 Bloqueado</option>
+    </select>
+    <div class="modal-section-title">Nível de acesso</div>
+    <div class="role-ladder" id="roleLadder">
+      <div class="role-ladder-item rl-admin" data-role="admin" onclick="selectRole('admin')">
+        <span class="role-ladder-icon">🛡️</span>
+        <div class="role-ladder-info">
+          <div class="role-ladder-name">Administrador</div>
+          <div class="role-ladder-desc">Aprova usuários, gerencia conteúdo e tickets</div>
+        </div>
+        <span class="role-ladder-level">Nível 3</span>
+      </div>
+      <div class="role-ladder-item rl-gestor" data-role="gestor" onclick="selectRole('gestor')">
+        <span class="role-ladder-icon">⚙️</span>
+        <div class="role-ladder-info">
+          <div class="role-ladder-name">Gestor</div>
+          <div class="role-ladder-desc">Acesso ao painel e gerenciamento de conteúdo</div>
+        </div>
+        <span class="role-ladder-level">Nível 2</span>
+      </div>
+      <div class="role-ladder-item rl-membro" data-role="membro" onclick="selectRole('membro')">
+        <span class="role-ladder-icon">👤</span>
+        <div class="role-ladder-info">
+          <div class="role-ladder-name">Membro</div>
+          <div class="role-ladder-desc">Acesso apenas aos materiais liberados</div>
+        </div>
+        <span class="role-ladder-level">Nível 1</span>
+      </div>
+    </div>
+    <input type="hidden" id="pRole" value="membro"/>
+    <div class="modal-section-title">Categorias liberadas</div>
+    <div class="permissions-grid" id="pPerms"></div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('permModal')">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" id="btnSavePerms" onclick="saveUserPerms()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal adicionar/editar conteúdo ─── -->
+<div class="modal-overlay" id="contentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="contentModalTitle">Adicionar material</div>
+      <button class="modal-close" onclick="closeModal('contentModal')">✕</button>
+    </div>
+    <div class="config-row">
+      <div class="config-field"><label>Título *</label><input class="config-input" id="cTitle" placeholder="Ex: Honda LKAS Tipo 3"/></div>
+      <div class="config-field">
+        <label>Categoria *</label>
+        <select class="config-input" id="cCat"></select>
+      </div>
+    </div>
+    <div class="config-field" style="margin-bottom:12px"><label>Descrição</label><textarea class="config-input config-textarea" id="cDesc" placeholder="Descreva o conteúdo..."></textarea></div>
+    <div class="config-row">
+      <div class="config-field"><label>Tipo de arquivo</label>
+        <select class="config-input" id="cType">
+          <option value="pdf">PDF</option><option value="video">Vídeo</option><option value="image">Imagem</option><option value="doc">Documento</option>
+        </select>
+      </div>
+      <div class="config-field"><label>Ícone (emoji)</label><input class="config-input" id="cIcon" placeholder="📄" maxlength="4"/></div>
+    </div>
+    <div class="config-field" style="margin-top:4px;margin-bottom:0">
+      <label>Arquivo PDF <span style="font-size:.7rem;color:rgba(255,255,255,.3)">(opcional — enviar ao Supabase Storage)</span></label>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="cFile" accept=".pdf,application/pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="onFileSelected(this)"/>
+        <div class="upload-zone-icon">📁</div>
+        <div class="upload-zone-label">Arraste o PDF ou <strong>clique para selecionar</strong></div>
+      </div>
+      <div class="upload-file-info" id="uploadFileInfo">
+        <span>📄</span>
+        <div class="upload-file-name" id="uploadFileName">—</div>
+        <div class="upload-remove-btn" onclick="clearFileInput()">✕ remover</div>
+      </div>
+      <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
+      <div class="upload-current-path" id="uploadCurrentPath"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('contentModal')">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" id="saveContentBtn" onclick="saveContent()">Salvar material</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal confirmação ─── -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title" id="confTitle">Confirmar</div><button class="modal-close" onclick="closeModal('confirmModal')">✕</button></div>
+    <p id="confText" style="color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.7;margin-bottom:20px"></p>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('confirmModal')">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" id="confBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ─── -->
+<div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:10px 24px;font-size:.85rem;color:#fff;transition:transform .3s ease;z-index:9999;opacity:0"></div>
+
+<!-- ─── Supabase SDK ─── -->
+<script src="js/supabase.min.js"></script>
+<!-- ─── ADAS PRO Scripts ─── -->
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+
+<!-- Overlay de carregamento -->
+<div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
+  <div style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:#fff">ADAS<strong style="color:#FF6B35">PRO</strong></div>
+  <div style="width:40px;height:40px;border:3px solid rgba(255,107,53,.2);border-top-color:#FF6B35;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div id="authLoadingMsg" style="font-size:.82rem;color:rgba(255,255,255,.4)">Conectando ao servidor...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+history.replaceState({}, document.title, '/');
+/* ─── Sanitização XSS — escapa HTML especial antes de inserir no innerHTML ─── */
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/* ─── Auth — aguarda init do Supabase antes de verificar sessão ─── */
+let session = null;
+
+/* ─── Clock ─── */
+function tick() {
+  const now = new Date();
+  document.getElementById('tbClock').textContent =
+    now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+tick(); setInterval(tick, 1000);
+
+/* ─── Utilitários ─── */
+let currentPage = 'dashboard';
+let editingUserId = null, editingContentId = null;
+
+const CATS = AUTH.CATEGORIES;
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+}
+function fmtDateTime(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function statusBadge(s) {
+  const m = { active:['status-active','✅ Ativo'], pending:['status-pending','⏳ Pendente'], blocked:['status-blocked','🚫 Bloqueado'] };
+  const [cls,lbl] = m[s] || ['',s];
+  return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+function ticketStatusBadge(s) {
+  const m = { open:['status-pending','Aberto'], 'in-progress':['status-active','Em andamento'], resolved:['status-locked','Resolvido'], closed:['status-locked','Fechado'] };
+  const [cls,lbl] = m[s] || ['',s];
+  return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+function prioLabel(p) {
+  return { urgent:'🔴 Urgente', high:'🟠 Alta', medium:'🟡 Média', low:'🟢 Baixa' }[p] || p;
+}
+function catName(id) { return CATS.find(c=>c.id===id)?.label || id; }
+function showToast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(80px)'; }, dur);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+['permModal','contentModal','confirmModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(id); });
+});
+
+/* ─── Badges ─── */
+function updateBadges() {
+  const pend = AUTH.getPendingCount();
+  const open = AUTH.getOpenTicketsCount();
+  const unrd = AUTH.getUnreadCount();
+
+  const pb = document.getElementById('pendBadge');
+  pb.textContent = pend; pb.style.display = pend > 0 ? 'inline-block' : 'none';
+
+  const tb = document.getElementById('ticketBadge');
+  tb.textContent = open; tb.style.display = open > 0 ? 'inline-block' : 'none';
+
+  document.getElementById('notifDot').classList.toggle('active', unrd > 0);
+
+  const ptc = document.getElementById('pendTabCount');
+  if (ptc) ptc.textContent = pend > 0 ? pend : '';
+}
+
+/* ─── Notificações ─── */
+function toggleNotifPanel() {
+  const p = document.getElementById('notifPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  renderNotifs();
+}
+function renderNotifs() {
+  const notifs = AUTH.getNotifications();
+  const el     = document.getElementById('notifList');
+  if (!notifs.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3)">Sem notificações</div>';
+    return;
+  }
+  el.innerHTML = notifs.slice(0,10).map(n => `
+    <div onclick="AUTH.markNotifRead('${n.id}');renderNotifs();updateBadges()" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;background:${n.read?'transparent':'rgba(255,107,53,.04)'}">
+      <div style="font-size:.82rem;color:${n.read?'rgba(255,255,255,.45)':'#fff'};margin-bottom:2px">${n.message}</div>
+      <div style="font-size:.7rem;color:rgba(255,255,255,.25)">${fmtDateTime(n.createdAt)}</div>
+    </div>`).join('');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notifPanel') && !e.target.closest('.notif-btn')) {
+    document.getElementById('notifPanel').style.display = 'none';
+  }
+});
+
+/* ─── Dashboard ─── */
+async function loadDashboardStats() {
+  const cfg = (typeof SUPABASE_CONFIG !== 'undefined') ? SUPABASE_CONFIG : null;
+  if (!cfg || !cfg.url || !cfg.anonKey) return AUTH.getStats();
+  try {
+    const sb = window._supabaseAdmin || supabase.createClient(cfg.url, cfg.anonKey);
+    window._supabaseAdmin = sb;
+    const [uTotal, uActive, uPending, tOpen] = await Promise.all([
+      sb.from('users').select('id', { count:'exact', head:true }),
+      sb.from('users').select('id', { count:'exact', head:true }).eq('status','active'),
+      sb.from('users').select('id', { count:'exact', head:true }).eq('status','pending'),
+      sb.from('tickets').select('id', { count:'exact', head:true }).in('status',['open','in-progress']),
+    ]);
+    return {
+      totalUsers:    uTotal.count  ?? 0,
+      activeUsers:   uActive.count ?? 0,
+      pendingUsers:  uPending.count ?? 0,
+      openTickets:   tOpen.count   ?? 0,
+      totalContent:  AUTH.getStats().totalContent,
+    };
+  } catch { return AUTH.getStats(); }
+}
+
+async function loadDashboard() {
+  const s = await loadDashboardStats();
+  document.getElementById('statsCards').innerHTML = `
+    <div class="stat-card"><div class="stat-card-icon">👥</div><div class="stat-card-value">${s.totalUsers}</div><div class="stat-card-label">Total de usuários</div></div>
+    <div class="stat-card"><div class="stat-card-icon">✅</div><div class="stat-card-value" style="color:var(--success)">${s.activeUsers}</div><div class="stat-card-label">Usuários ativos</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🎫</div><div class="stat-card-value" style="color:var(--accent)">${s.openTickets}</div><div class="stat-card-label">Tickets abertos</div></div>
+    <div class="stat-card"><div class="stat-card-icon">📚</div><div class="stat-card-value">${s.totalContent}</div><div class="stat-card-label">Materiais na biblioteca</div></div>`;
+
+  // Activity feed (tickets + usuários recentes)
+  const users   = AUTH.getAllUsers().sort((a,b)=>b.createdAt-a.createdAt).slice(0,4);
+  const tickets = AUTH.getAllTickets().slice(0,3);
+  const events  = [
+    ...users.map(u => ({ ts:u.createdAt, icon:'👤', text:`Novo cadastro: <strong style="color:#fff">${esc(u.name)}</strong>`, sub:esc(u.email) })),
+    ...tickets.map(t => ({ ts:t.createdAt, icon:'🎫', text:`Ticket aberto: <strong style="color:#fff">${esc(t.title)}</strong>`, sub:`por ${esc(t.userName)}` })),
+  ].sort((a,b)=>b.ts-a.ts).slice(0,7);
+
+  document.getElementById('activityFeed').innerHTML = events.length ?
+    events.map(e=>`<div style="padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:12px">
+      <span style="font-size:1.1rem">${e.icon}</span>
+      <div><div style="font-size:.85rem;color:rgba(255,255,255,.7)">${e.text}</div><div style="font-size:.75rem;color:rgba(255,255,255,.3)">${e.sub} · ${fmtDateTime(e.ts)}</div></div>
+    </div>`).join('') :
+    '<div style="padding:24px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3)">Sem atividade recente.</div>';
+
+  // Tickets no dash
+  const openTkts = AUTH.getAllTickets().filter(t=>t.status==='open'||t.status==='in-progress').slice(0,4);
+  document.getElementById('dashTickets').innerHTML = openTkts.length ?
+    openTkts.map(t=>`<div class="ticket-list-item" onclick="showPage('suporte');selectTicket('${t.id}')">
+      <div class="ticket-priority p-${t.priority}"></div>
+      <div style="flex:1;min-width:0"><div class="ticket-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</div><div class="ticket-meta">${esc(t.userName)} · ${fmtDate(t.updatedAt)}</div></div>
+      ${ticketStatusBadge(t.status)}
+    </div>`).join('') :
+    '<div style="padding:24px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3)">Nenhum ticket aberto. ✅</div>';
+
+  // Pendentes dash
+  const pend = AUTH.getAllUsers().filter(u=>u.status==='pending').slice(0,3);
+  document.getElementById('dashPending').innerHTML = pend.length ?
+    pend.map(u=>`<div style="padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:.86rem;color:#fff;font-weight:500">${esc(u.name)}</div><div style="font-size:.75rem;color:rgba(255,255,255,.35)">${esc(u.email)}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="action-btn action-btn-approve" onclick="adminAction('approve','${u.id}',this)" title="Aprovar">✓</button>
+        <button class="action-btn action-btn-edit" onclick="openPermModal('${u.id}')" title="Configurar">⚙</button>
+      </div>
+    </div>`).join('') :
+    '<div style="padding:24px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.3)">Nenhum cadastro pendente. ✅</div>';
+}
+
+/* ─── Usuários ─── */
+function loadUsuarios() {
+  const all = AUTH.getAllUsers();
+  document.getElementById('userCountLbl').textContent = `${all.length} usuário(s)`;
+  filterUsers();
+  updateBadges();
+}
+function filterUsers() {
+  const q      = (document.getElementById('userSearch')?.value || '').toLowerCase();
+  const status = document.getElementById('statusFilter')?.value || '';
+  const users  = AUTH.getAllUsers().filter(u => {
+    const matchQ = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchS = !status || u.status === status;
+    return matchQ && matchS;
+  });
+  const ROLE_CFG = {
+    admin:  { label:'Admin',  cls:'role-admin',  avatarCls:'role-avatar-admin',  icon:'🛡️' },
+    gestor: { label:'Gestor', cls:'role-gestor', avatarCls:'role-avatar-gestor', icon:'⚙️' },
+    membro: { label:'Membro', cls:'role-membro', avatarCls:'role-avatar-membro', icon:'👤' },
+  };
+  document.getElementById('usersTbody').innerHTML = users.length ? users.map(u => {
+    const init  = u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    const rc    = ROLE_CFG[u.role] || ROLE_CFG.membro;
+    const perms = u.permissions?.length
+      ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-size:.72rem;color:rgba(255,255,255,.6);font-weight:600">${u.permissions.length}</span><span style="font-size:.68rem;color:rgba(255,255,255,.3)">/ ${CATS.length} cats</span></div>`
+      : `<span style="font-size:.72rem;color:rgba(255,255,255,.2)">sem acesso</span>`;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0" class="${rc.avatarCls}">${init}</div>
+        <div><div style="color:#fff;font-weight:600;font-size:.88rem">${esc(u.name)}</div><div style="font-size:.7rem;color:rgba(255,255,255,.3)">${u.level||'—'}</div></div>
+      </div></td>
+      <td style="font-size:.8rem;font-family:monospace">${esc(u.email)}</td>
+      <td><span class="role-badge ${rc.cls}">${rc.icon} ${rc.label}</span></td>
+      <td>${statusBadge(u.status)}</td>
+      <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${fmtDate(u.createdAt)}</td>
+      <td>${perms}</td>
+      <td><div class="action-btns">
+        <button class="action-btn action-btn-edit" title="Gerenciar acesso" onclick="openPermModal('${u.id}')">⚙</button>
+        ${u.status==='active'?`<button class="action-btn action-btn-block" title="Bloquear" onclick="confirmAction('Bloquear?','${u.name} perderá acesso.',()=>adminAction('block','${u.id}',this))">🚫</button>`:
+        `<button class="action-btn action-btn-approve" title="Ativar" onclick="adminAction('unblock','${u.id}',this)">✓</button>`}
+        ${u.role!=='admin'?`<button class="action-btn action-btn-delete" title="Excluir" onclick="confirmAction('Excluir usuário?','Esta ação é permanente e não pode ser desfeita.',()=>adminAction('delete','${u.id}',null))">🗑</button>`:''}
+      </div></td></tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:rgba(255,255,255,.3)">Nenhum usuário encontrado.</td></tr>';
+}
+
+/* ─── Pendentes ─── */
+function loadPendentes() {
+  const pend = AUTH.getAllUsers().filter(u=>u.status==='pending');
+  const el   = document.getElementById('pendentesBody');
+  el.innerHTML = pend.length ?
+    `<table class="data-table"><thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Data</th><th>Ações</th></tr></thead><tbody>
+      ${pend.map(u=>`<tr>
+        <td><strong style="color:#fff">${esc(u.name)}</strong></td>
+        <td style="font-size:.82rem">${esc(u.email)}</td>
+        <td style="font-size:.82rem">${esc(u.level)||'—'}</td>
+        <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${fmtDate(u.createdAt)}</td>
+        <td><div class="action-btns">
+          <button class="action-btn action-btn-approve" onclick="adminAction('approve','${u.id}',this)" title="Aprovar">✓ Aprovar</button>
+          <button class="action-btn action-btn-edit" onclick="openPermModal('${u.id}')" title="Configurar e aprovar">⚙ Configurar</button>
+          <button class="action-btn action-btn-block" onclick="adminAction('block','${u.id}',this)" title="Recusar">✕ Recusar</button>
+        </div></td></tr>`).join('')}
+    </tbody></table>` :
+    '<div style="padding:40px;text-align:center;font-size:.9rem;color:rgba(255,255,255,.3)">🎉 Nenhum cadastro pendente!</div>';
+}
+
+/* ─── Suporte (Tickets) ─── */
+let selectedTicketId = null;
+
+function loadSuporte() { renderTicketList(); }
+
+function renderTicketList() {
+  const filter    = document.getElementById('ticketFilter')?.value    || 'all';
+  const catFilter = document.getElementById('ticketCatFilter')?.value || 'all';
+  const tickets = AUTH.getAllTickets().filter(t =>
+    (filter==='all'    || t.status===filter) &&
+    (catFilter==='all' || t.category===catFilter)
+  );
+  const el      = document.getElementById('ticketListEl');
+
+  el.innerHTML = tickets.length ? tickets.map(t => `
+    <div class="ticket-list-item ${selectedTicketId===t.id?'selected':''}" onclick="selectTicket('${t.id}')">
+      <div class="ticket-priority p-${t.priority}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="ticket-title">${esc(t.title)}</div>
+        <div class="ticket-meta">${esc(t.userName)} · ${fmtDate(t.updatedAt)} · ${prioLabel(t.priority)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        ${ticketStatusBadge(t.status)}
+        <span style="font-size:.7rem;color:rgba(255,255,255,.25)">${(t.messages || []).length} msg</span>
+      </div>
+    </div>`).join('') :
+    '<div style="padding:32px;text-align:center;font-size:.82rem;color:rgba(255,255,255,.35)">Nenhum ticket encontrado.</div>';
+}
+
+function selectTicket(id) {
+  selectedTicketId = id;
+  const ticket = AUTH.getTicketById(id);
+  if (!ticket) return;
+  renderTicketList();
+
+  document.getElementById('tvTitle').textContent = ticket.title;
+  document.getElementById('tvMeta').innerHTML =
+    `${ticketStatusBadge(ticket.status)} &nbsp;|&nbsp; ${prioLabel(ticket.priority)} &nbsp;|&nbsp; Aberto por <strong style="color:rgba(255,255,255,.6)">${ticket.userName}</strong> em ${fmtDateTime(ticket.createdAt)}`;
+
+  // Ações
+  const catMap = {'duvida-tecnica':'Dúvida técnica','solicitacao-material':'Solicitar material','upgrade-plano':'Upgrade de plano','outro':'Outro'};
+  document.getElementById('tvActions').innerHTML = `
+    <select onchange="AUTH.updateTicketStatus('${id}',this.value);selectTicket('${id}');renderTicketList();showToast('Status atualizado!')" style="padding:6px 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:.78rem;outline:none">
+      <option value="open" ${ticket.status==='open'?'selected':''}>Aberto</option>
+      <option value="in-progress" ${ticket.status==='in-progress'?'selected':''}>Em andamento</option>
+      <option value="resolved" ${ticket.status==='resolved'?'selected':''}>Resolvido</option>
+      <option value="closed" ${ticket.status==='closed'?'selected':''}>Fechado</option>
+    </select>
+    <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir ticket?','Esta ação não pode ser desfeita.',()=>{AUTH.deleteTicket('${id}');selectedTicketId=null;refresh();showToast('Ticket excluído.')})" title="Excluir">🗑</button>`;
+
+  // Mensagens
+  const chat = document.getElementById('tvMessages');
+  chat.innerHTML = ticket.messages.map(m => `
+    <div class="chat-msg ${m.role==='member'?'member':'admin'}">
+      <div style="font-weight:600;font-size:.78rem;margin-bottom:4px;color:${m.role==='member'?'var(--tech)':'var(--accent)'}">${esc(m.authorName)}</div>
+      <div>${esc(m.message)}</div>
+      <div class="chat-meta">${fmtDateTime(m.createdAt)}</div>
+    </div>`).join('');
+  chat.scrollTop = chat.scrollHeight;
+
+  // Input de resposta
+  const inputArea = document.getElementById('tvInputArea');
+  inputArea.style.display = (ticket.status==='closed') ? 'none' : 'flex';
+  document.getElementById('tvReply').value = '';
+}
+
+function sendTicketReply() {
+  if (!selectedTicketId) return;
+  const msg = document.getElementById('tvReply').value.trim();
+  if (!msg) return;
+  AUTH.replyTicket(selectedTicketId, session.userId, msg);
+  selectTicket(selectedTicketId);
+  renderTicketList();
+  showToast('Resposta enviada!');
+}
+
+/* ─── Biblioteca ─── */
+function loadBiblioteca() {
+  // Preenche filtro de categorias
+  const sel = document.getElementById('contentCatFilter');
+  if (!sel.options.length || sel.options.length < 2) {
+    CATS.forEach(c => {
+      const opt = new Option(`${c.icon} ${c.label}`, c.id);
+      sel.add(opt);
+    });
+  }
+  filterContent();
+}
+function filterContent() {
+  const q      = (document.getElementById('contentSearch')?.value||'').toLowerCase();
+  const catF   = document.getElementById('contentCatFilter')?.value||'';
+  const users  = AUTH.getAllUsers().filter(u=>u.status==='active');
+  const items  = AUTH.getContent().filter(c =>
+    (!q   || c.title.toLowerCase().includes(q) || c.desc?.toLowerCase().includes(q)) &&
+    (!catF || c.cat === catF));
+
+  document.getElementById('contentCountLbl').textContent = `${items.length} materiais`;
+  document.getElementById('contentTbody').innerHTML = items.map(c => {
+    const cat = CATS.find(x=>x.id===c.cat) || { label:c.cat, icon:'📄' };
+    const cnt = users.filter(u=>(u.permissions||[]).includes(c.cat)||u.role==='admin'||u.role==='gestor').length;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><span>${c.icon||'📄'}</span><span style="color:#fff;font-weight:500">${c.title}</span>${c.filePath?`<span style="font-size:.62rem;padding:1px 6px;border-radius:4px;background:rgba(6,167,125,.1);color:var(--success);border:1px solid rgba(6,167,125,.2);white-space:nowrap" title="${c.filePath}">⬆ Storage</span>`:''}</div></td>
+      <td><span class="status-badge" style="background:rgba(0,180,216,.1);color:var(--tech)">${cat.icon} ${cat.label}</span></td>
+      <td style="font-size:.78rem;color:rgba(255,255,255,.45)">${(c.type||'PDF').toUpperCase()}</td>
+      <td><span style="color:var(--success);font-weight:600">${cnt}</span><span style="font-size:.75rem;color:rgba(255,255,255,.35)"> usuário(s)</span></td>
+      <td><div class="action-btns">
+        <button class="action-btn action-btn-edit" onclick="openEditContentModal('${c.id}')" title="Editar">✏️</button>
+        <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir material?','${c.title} será removido.',()=>{AUTH.deleteContent('${c.id}');refresh();showToast('Material excluído.')})" title="Excluir">🗑</button>
+      </div></td></tr>`;
+  }).join('');
+}
+
+/* ─── Modals de conteúdo ─── */
+function populateCatSelect(selId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = CATS.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+}
+function onFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('uploadFileName').textContent = `${file.name} (${(file.size/1024).toFixed(0)} KB)`;
+  document.getElementById('uploadFileInfo').classList.add('show');
+  document.getElementById('uploadCurrentPath').textContent = '';
+  document.getElementById('uploadProgressBar').style.width = '0%';
+  document.getElementById('uploadProgress').classList.remove('show');
+}
+function clearFileInput() {
+  document.getElementById('cFile').value = '';
+  document.getElementById('uploadFileInfo').classList.remove('show');
+  document.getElementById('uploadFileName').textContent = '—';
+}
+function openAddContentModal() {
+  editingContentId = null;
+  document.getElementById('contentModalTitle').textContent = 'Adicionar material';
+  ['cTitle','cDesc','cIcon'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cIcon').value = '📄';
+  populateCatSelect('cCat');
+  clearFileInput();
+  document.getElementById('uploadCurrentPath').textContent = '';
+  document.getElementById('uploadProgress').classList.remove('show');
+  openModal('contentModal');
+}
+function openEditContentModal(id) {
+  const item = AUTH.getContent().find(c=>c.id===id);
+  if (!item) return;
+  editingContentId = id;
+  document.getElementById('contentModalTitle').textContent = 'Editar material';
+  populateCatSelect('cCat');
+  document.getElementById('cTitle').value = item.title || '';
+  document.getElementById('cCat').value   = item.cat || '';
+  document.getElementById('cDesc').value  = item.desc || '';
+  document.getElementById('cType').value  = item.type || 'pdf';
+  document.getElementById('cIcon').value  = item.icon || '📄';
+  clearFileInput();
+  document.getElementById('uploadCurrentPath').textContent = item.filePath ? `Arquivo atual: ${item.filePath}` : '';
+  document.getElementById('uploadProgress').classList.remove('show');
+  openModal('contentModal');
+}
+async function saveContent() {
+  const title = document.getElementById('cTitle').value.trim();
+  const cat   = document.getElementById('cCat').value;
+  const desc  = document.getElementById('cDesc').value.trim();
+  const type  = document.getElementById('cType').value;
+  const icon  = document.getElementById('cIcon').value.trim() || '📄';
+  if (!title || !cat) { showToast('⚠️ Preencha título e categoria.'); return; }
+
+  const fileInput = document.getElementById('cFile');
+  let filePath = editingContentId ? (AUTH.getContent().find(c=>c.id===editingContentId)?.filePath || '') : '';
+
+  if (fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const slug = title.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const storagePath = `${cat}/${slug}.pdf`;
+
+    const btn = document.getElementById('saveContentBtn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    document.getElementById('uploadProgress').classList.add('show');
+    document.getElementById('uploadProgressBar').style.width = '40%';
+
+    const result = await AUTH.uploadFile(file, storagePath);
+
+    btn.disabled = false;
+    btn.textContent = 'Salvar material';
+
+    if (!result.ok) {
+      document.getElementById('uploadProgressBar').style.width = '0%';
+      document.getElementById('uploadProgress').classList.remove('show');
+      showToast(`⚠️ Erro no upload: ${result.msg}`);
+      return;
+    }
+    filePath = result.path;
+    document.getElementById('uploadProgressBar').style.width = '100%';
+    document.getElementById('uploadCurrentPath').textContent = `Salvo em: ${filePath}`;
+  }
+
+  const item = { title, cat, desc, type, icon, ...(filePath && { filePath }) };
+  if (editingContentId) {
+    AUTH.editContent(editingContentId, item);
+    showToast('✅ Material atualizado!');
+  } else {
+    AUTH.addContent(item);
+    showToast('✅ Material adicionado!');
+  }
+  closeModal('contentModal');
+  refresh();
+}
+
+/* ─── Configurações ─── */
+function loadConfiguracoes() {
+  const s = AUTH.getSettings();
+  document.getElementById('cfgSiteName').value    = s.general.siteName   || '';
+  document.getElementById('cfgTagline').value     = s.general.tagline    || '';
+  document.getElementById('cfgEmail').value       = s.general.contactEmail || '';
+  document.getElementById('cfgWhatsapp').value    = s.general.whatsapp   || '';
+  document.getElementById('cfgWelcome').value     = s.general.welcomeMessage || '';
+  document.getElementById('cfgMemberNote').value  = s.general.membershipNote || '';
+  document.getElementById('notifNewUser').checked   = s.notifications?.newUserAlert;
+  document.getElementById('notifNewTicket').checked = s.notifications?.newTicketAlert;
+
+  // Planos
+  const plansEl = document.getElementById('plansConfig');
+  plansEl.innerHTML = s.plans.map(p => `
+    <div class="plan-config-card">
+      <div class="plan-config-header">
+        <div>
+          <input class="config-input" style="width:180px;display:inline-block;margin-right:12px" id="planName_${p.id}" value="${p.name}" placeholder="Nome do plano"/>
+          <input class="config-input" style="width:120px;display:inline-block" id="planPrice_${p.id}" value="${p.price||'Consulte'}" placeholder="Preço"/>
+          <input class="config-input" style="width:120px;display:inline-block;margin-left:8px" id="planPeriod_${p.id}" value="${p.period||'por mês'}" placeholder="Período"/>
+        </div>
+      </div>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-bottom:8px">Categorias padrão incluídas neste plano:</div>
+      <div class="plan-config-cats" id="planCats_${p.id}">
+        ${CATS.map(c => `<div class="plan-cat-chip ${p.defaultCategories.includes(c.id)?'active':''}" onclick="togglePlanCat(this,'${p.id}','${c.id}')">${c.icon} ${c.label}</div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  // Sistema info
+  const st = AUTH.getStats();
+  document.getElementById('sysInfoGrid').innerHTML = `
+    <div class="sys-info-card"><div class="sys-info-label">Versão</div><div class="sys-info-value">1.2.0</div></div>
+    <div class="sys-info-card"><div class="sys-info-label">Usuários</div><div class="sys-info-value">${st.totalUsers}</div></div>
+    <div class="sys-info-card"><div class="sys-info-label">Materiais</div><div class="sys-info-value">${st.totalContent}</div></div>
+    <div class="sys-info-card"><div class="sys-info-label">Tickets totais</div><div class="sys-info-value">${st.totalTickets}</div></div>
+    <div class="sys-info-card"><div class="sys-info-label">Categorias</div><div class="sys-info-value">${st.totalCategories}</div></div>
+    <div class="sys-info-card"><div class="sys-info-label">Armazenamento</div><div class="sys-info-value">${(JSON.stringify(localStorage).length/1024).toFixed(1)} KB</div></div>`;
+}
+
+function togglePlanCat(el, planId, catId) {
+  el.classList.toggle('active');
+}
+
+function loadGestores() {
+  const gestores = AUTH.getAllUsers().filter(u=>u.role==='admin'||u.role==='gestor');
+  document.getElementById('gestoresGrid').innerHTML = gestores.map(u => {
+    const init = u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="gestor-card">
+      <div class="gestor-card-avatar">${init}</div>
+      <div><div class="gestor-info-name">${esc(u.name)}</div><div class="gestor-info-role">${esc(u.role)}</div><div class="gestor-info-email">${esc(u.email)}</div></div>
+      ${u.role!=='admin'?`<button class="action-btn action-btn-block" onclick="confirmAction('Remover gestor?','${u.name} voltará a ser membro.',async()=>{await AUTH.updateUserRole('${u.id}','membro');refresh();showToast('Permissão removida.')})" style="margin-left:auto" title="Remover">↓</button>`:''}
+    </div>`;
+  }).join('');
+
+  // Select de promoção
+  const membros = AUTH.getAllUsers().filter(u=>u.role==='membro'&&u.status==='active');
+  document.getElementById('promoteSelect').innerHTML =
+    `<option value="">Selecione um membro ativo</option>` +
+    membros.map(u=>`<option value="${esc(u.id)}">${esc(u.name)} (${esc(u.email)})</option>`).join('');
+}
+
+async function promoteToGestor() {
+  const id = document.getElementById('promoteSelect').value;
+  if (!id) { showToast('⚠️ Selecione um membro.'); return; }
+  const btn = document.querySelector('button[onclick="promoteToGestor()"]');
+  if (btn) { btn.disabled=true; btn.textContent='Promovendo...'; }
+  const ok = await AUTH.updateUserRole(id, 'gestor');
+  if (btn) { btn.disabled=false; btn.textContent='Promover a Gestor →'; }
+  if (ok === false) { showToast('⛔ Erro ao promover. Verifique as permissões.'); return; }
+  showToast('✅ Membro promovido a Gestor!');
+  loadGestores();
+}
+
+function saveConfigurations() {
+  const s = AUTH.getSettings();
+
+  s.general.siteName        = document.getElementById('cfgSiteName').value;
+  s.general.tagline         = document.getElementById('cfgTagline').value;
+  s.general.contactEmail    = document.getElementById('cfgEmail').value;
+  s.general.whatsapp        = document.getElementById('cfgWhatsapp').value;
+  s.general.welcomeMessage  = document.getElementById('cfgWelcome').value;
+  s.general.membershipNote  = document.getElementById('cfgMemberNote').value;
+
+  s.notifications.newUserAlert   = document.getElementById('notifNewUser').checked;
+  s.notifications.newTicketAlert = document.getElementById('notifNewTicket').checked;
+
+  // Planos
+  s.plans.forEach(p => {
+    const nameEl  = document.getElementById(`planName_${p.id}`);
+    const priceEl = document.getElementById(`planPrice_${p.id}`);
+    const perEl   = document.getElementById(`planPeriod_${p.id}`);
+    if (nameEl)  p.name   = nameEl.value;
+    if (priceEl) p.price  = priceEl.value;
+    if (perEl)   p.period = perEl.value;
+    const chipEls = document.querySelectorAll(`#planCats_${p.id} .plan-cat-chip.active`);
+    p.defaultCategories = [...chipEls].map(el => {
+      const txt = el.textContent.trim();
+      const cat = CATS.find(c => el.textContent.includes(c.label));
+      return cat?.id;
+    }).filter(Boolean);
+  });
+
+  AUTH.saveSettings(s);
+  const msg = document.getElementById('saveMsg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2500);
+}
+
+function switchConfigTab(tab, el) {
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page-tab-content').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  document.getElementById('config'+tab.charAt(0).toUpperCase()+tab.slice(1))?.classList.add('active');
+}
+
+/* ─── Seletor hierárquico de role ─── */
+function selectRole(role) {
+  document.getElementById('pRole').value = role;
+  document.querySelectorAll('.role-ladder-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.role === role);
+  });
+}
+
+/* ─── Modal de permissões ─── */
+function openPermModal(userId) {
+  editingUserId = userId;
+  const user = AUTH.getUserById(userId);
+  if (!user) return;
+
+  const ROLE_CFG = { admin:'role-avatar-admin', gestor:'role-avatar-gestor', membro:'role-avatar-membro' };
+  const avatarCls = ROLE_CFG[user.role] || 'role-avatar-membro';
+  const init = user.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const roleLabels = { admin:'🛡️ Administrador', gestor:'⚙️ Gestor', membro:'👤 Membro' };
+
+  document.getElementById('permUserInfo').innerHTML = `
+    <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0" class="${avatarCls}">${init}</div>
+    <div style="flex:1">
+      <div style="font-family:var(--font-h);font-weight:600;color:#fff">${esc(user.name)}</div>
+      <div style="font-size:.76rem;color:rgba(255,255,255,.4)">${esc(user.email)}</div>
+    </div>
+    <span class="role-badge role-${user.role||'membro'}" style="flex-shrink:0">${roleLabels[user.role]||user.role}</span>`;
+
+  // Plano rápido
+  const s = AUTH.getSettings();
+  document.getElementById('planQuickBtns').innerHTML = s.plans.map(p =>
+    `<button onclick="applyPlan('${userId}','${p.id}')" style="padding:7px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.78rem;cursor:pointer;transition:var(--transition)">📋 ${p.name}</button>`
+  ).join('');
+
+  document.getElementById('pStatus').value = user.status;
+  // Seletor hierárquico
+  selectRole(user.role || 'membro');
+
+  document.getElementById('pPerms').innerHTML = CATS.map(c =>
+    `<label class="permission-item"><input type="checkbox" value="${c.id}" ${(user.permissions||[]).includes(c.id)?'checked':''}/>${c.icon} ${c.label}</label>`
+  ).join('');
+  openModal('permModal');
+}
+function applyPlan(userId, planId) {
+  AUTH.applyPlanToUser(userId, planId);
+  // Atualiza checkboxes
+  const s = AUTH.getSettings();
+  const plan = s.plans.find(p=>p.id===planId);
+  if (plan) {
+    document.querySelectorAll('#pPerms input[type="checkbox"]').forEach(cb => {
+      cb.checked = plan.defaultCategories.includes(cb.value);
+    });
+  }
+  showToast(`✅ Plano "${planId}" aplicado!`);
+}
+async function saveUserPerms() {
+  if (!editingUserId) return;
+  const status = document.getElementById('pStatus').value;
+  const role   = document.getElementById('pRole').value;
+  const perms  = [...document.querySelectorAll('#pPerms input:checked')].map(i=>i.value);
+  const btn = document.getElementById('btnSavePerms');
+  if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
+  try {
+    await AUTH.updateUserPermissions(editingUserId, perms);
+    await AUTH.updateUserRole(editingUserId, role);
+    if (status === 'active') {
+      const currentUser = AUTH.getUserById(editingUserId);
+      if (currentUser?.status === 'pending') {
+        await AUTH.approveUser(editingUserId, session.userId);
+      } else {
+        await AUTH.unblockUser(editingUserId);
+      }
+    } else {
+      await AUTH.blockUser(editingUserId);
+    }
+    closeModal('permModal');
+    showToast('✅ Permissões salvas!');
+    refresh();
+  } catch(e) {
+    showToast('⛔ Erro ao salvar permissões.');
+  } finally {
+    if (btn) { btn.disabled=false; btn.textContent='Salvar alterações'; }
+  }
+}
+
+/* ─── Ação admin centralizada (async + feedback) ─── */
+async function adminAction(action, userId, btn) {
+  const original = btn?.textContent;
+  if (btn) { btn.disabled=true; btn.textContent='...'; }
+  try {
+    let ok;
+    if      (action==='approve') ok = await AUTH.approveUser(userId, session.userId);
+    else if (action==='block')   ok = await AUTH.blockUser(userId);
+    else if (action==='unblock') ok = await AUTH.unblockUser(userId);
+    else if (action==='delete')  ok = await AUTH.deleteUser(userId);
+    if (ok === false) { showToast('⛔ Erro ao executar ação. Verifique as permissões.'); return; }
+    const msgs = { approve:'✅ Usuário aprovado!', block:'🚫 Usuário bloqueado.', unblock:'✅ Usuário reativado!', delete:'🗑 Usuário removido.' };
+    showToast(msgs[action] || '✅ Feito!');
+    refresh();
+  } catch(e) {
+    showToast('⛔ Erro inesperado: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled=false; btn.textContent=original; }
+  }
+}
+
+/* ─── Modal de confirmação ─── */
+function confirmAction(title, text, fn) {
+  document.getElementById('confTitle').textContent = title;
+  document.getElementById('confText').textContent  = text;
+  document.getElementById('confBtn').onclick = () => { fn(); closeModal('confirmModal'); };
+  openModal('confirmModal');
+}
+
+/* ─── Importar backup ─── */
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const r = AUTH.importData(e.target.result);
+    if (r.ok) { showToast('✅ Backup importado com sucesso!'); refresh(); }
+    else showToast('❌ Erro: ' + r.msg);
+  };
+  reader.readAsText(file);
+}
+
+/* ─── Tabs Membros ─── */
+function switchMembrosTab(tab, el) {
+  document.querySelectorAll('#pageUsuarios .page-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#pageUsuarios .page-tab-content').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  const map = { todos:'membrosTabTodos', aprovacoes:'membrosTabAprovacoes', equipe:'membrosTabEquipe' };
+  document.getElementById(map[tab])?.classList.add('active');
+  if (tab === 'aprovacoes') loadPendentes();
+  if (tab === 'equipe')     loadGestores();
+}
+
+/* ─── Navegação ─── */
+function showPage(page, navEl) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(n=>n.classList.remove('active'));
+  const map = {
+    dashboard:      ['pageDashboard',    'Painel de Controle',       'Visão geral do sistema'],
+    usuarios:       ['pageUsuarios',     'Membros',                  'Contas, aprovações e equipe'],
+    suporte:        ['pageSuport',       'Suporte & Atendimento',    'Gerencie tickets e mentorias'],
+    biblioteca:     ['pageBiblioteca',   'Biblioteca de Conteúdo',   'Adicione e organize os materiais'],
+    acesso:         ['pageAcesso',       'Controle de Acesso',       'Gerencie módulos e permissões de conteúdo'],
+    configuracoes:  ['pageConfiguracoes','Configurações',            'Configure o sistema completo'],
+  };
+  const [elId, title, sub] = map[page] || ['pageDashboard','Painel',''];
+  document.getElementById(elId)?.classList.add('active');
+  document.getElementById('tbTitle').textContent = title;
+  document.getElementById('tbSub').textContent   = sub;
+  navEl?.classList.add('active');
+
+  const loaders = { dashboard:loadDashboard, usuarios:loadUsuarios, suporte:loadSuporte, biblioteca:loadBiblioteca, acesso:loadAcesso, configuracoes:loadConfiguracoes };
+  loaders[page]?.();
+  updateBadges();
+}
+
+function refresh() { showPage(currentPage); }
+
+/* ─── Controle de Acesso ─── */
+function loadAcesso() {
+  renderAccessModules();
+  renderAccessContent();
+  renderAccessLevels();
+}
+
+function switchAcessoTab(tab, el) {
+  document.querySelectorAll('#pageAcesso .page-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#pageAcesso .page-tab-content').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  const map = { modulos:'accTabModulos', conteudo:'accTabConteudo' };
+  document.getElementById(map[tab])?.classList.add('active');
+}
+
+/* ─── Controle de Acesso — Módulos ─── */
+function renderAccessModules() {
+  const content = AUTH.getContent();
+  const grid = document.getElementById('accModulosGrid');
+  if (!grid) return;
+  const settings = AUTH.getSettings();
+  grid.innerHTML = AUTH.CATEGORIES.map(cat => {
+    const items = content.filter(c => c.cat === cat.id);
+    const isEnabled = settings.moduleAccess?.[cat.id]?.enabled !== false;
+    const level = settings.moduleAccess?.[cat.id]?.minLevel || 1;
+    return `<div class="module-access-card">
+      <div class="module-acc-header">
+        <div class="module-acc-info">
+          <span class="module-acc-icon">${cat.icon}</span>
+          <div>
+            <div class="module-acc-name">${cat.label}</div>
+            <div class="module-acc-count">${items.length} materiais</div>
+          </div>
+        </div>
+        <label class="toggle-sw">
+          <input type="checkbox" ${isEnabled?'checked':''} onchange="toggleModuleAccess('${cat.id}',this.checked)"/>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="module-acc-footer">
+        <span style="font-size:.75rem;color:rgba(255,255,255,.35)">Nível mínimo</span>
+        <select class="module-level-select" onchange="setModuleLevel('${cat.id}',this.value)">
+          <option value="1" ${level==1?'selected':''}>1 — Free</option>
+          <option value="2" ${level==2?'selected':''}>2 — Módulo</option>
+          <option value="3" ${level==3?'selected':''}>3 — Pro</option>
+          <option value="4" ${level==4?'selected':''}>4 — Premium</option>
+        </select>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleModuleAccess(catId, enabled) {
+  const s = AUTH.getSettings();
+  if (!s.moduleAccess) s.moduleAccess = {};
+  if (!s.moduleAccess[catId]) s.moduleAccess[catId] = {};
+  s.moduleAccess[catId].enabled = enabled;
+  AUTH.saveSettings(s);
+  showToast(enabled ? `Módulo ${catId} ativado` : `Módulo ${catId} desativado`);
+}
+function setModuleLevel(catId, level) {
+  const s = AUTH.getSettings();
+  if (!s.moduleAccess) s.moduleAccess = {};
+  if (!s.moduleAccess[catId]) s.moduleAccess[catId] = {};
+  s.moduleAccess[catId].minLevel = parseInt(level);
+  AUTH.saveSettings(s);
+  showToast(`Nível do módulo ${catId} atualizado`);
+}
+
+/* ─── Controle de Acesso — Conteúdo ─── */
+function renderAccessContent() {
+  const content = AUTH.getContent();
+  const tbody = document.getElementById('accContentBody');
+  if (!tbody) return;
+  tbody.innerHTML = content.map(item => {
+    const cat = AUTH.CATEGORIES.find(c=>c.id===item.cat)||{label:item.cat};
+    const al = item.accessLevel||1;
+    const dl = item.downloadLevel||2;
+    const fp = item.filePath||'—';
+    return `<tr id="row-${item.id}">
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.title}">${item.title}</td>
+      <td>${cat.label}</td>
+      <td><span class="acc-level-badge acc-level-${al}">L${al}</span></td>
+      <td><span class="acc-level-badge acc-level-${dl}">L${dl}</span></td>
+      <td><span class="acc-file-path" title="${fp}">${fp}</span></td>
+      <td><button class="acc-edit-btn" onclick="toggleAccEdit('${item.id}')">Editar</button></td>
+    </tr>
+    <tr id="edit-${item.id}" style="display:none">
+      <td colspan="6">
+        <div class="acc-inline-edit">
+          <div><div class="acc-inline-label">Nível de Acesso</div>
+            <select class="acc-inline-input" id="al-${item.id}">
+              <option value="1" ${al==1?'selected':''}>1 — Free (todos)</option>
+              <option value="2" ${al==2?'selected':''}>2 — Módulo+</option>
+              <option value="3" ${al==3?'selected':''}>3 — Pro+</option>
+              <option value="4" ${al==4?'selected':''}>4 — Premium</option>
+            </select>
+          </div>
+          <div><div class="acc-inline-label">Nível Download</div>
+            <select class="acc-inline-input" id="dl-${item.id}">
+              <option value="1" ${dl==1?'selected':''}>1 — Free (todos)</option>
+              <option value="2" ${dl==2?'selected':''}>2 — Módulo+</option>
+              <option value="3" ${dl==3?'selected':''}>3 — Pro+</option>
+              <option value="4" ${dl==4?'selected':''}>4 — Premium</option>
+            </select>
+          </div>
+          <div><div class="acc-inline-label">Caminho do arquivo</div>
+            <input class="acc-inline-input" id="fp-${item.id}" value="${item.filePath||''}" placeholder="assets/downloads/categoria/arquivo.pdf"/>
+          </div>
+          <div><button class="acc-save-btn" onclick="saveAccEdit('${item.id}')">Salvar</button></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleAccEdit(id) {
+  const row = document.getElementById('edit-'+id);
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+function saveAccEdit(id) {
+  const al = parseInt(document.getElementById('al-'+id).value);
+  const dl = parseInt(document.getElementById('dl-'+id).value);
+  const fp = document.getElementById('fp-'+id).value.trim();
+  AUTH.editContent(id, { accessLevel: al, downloadLevel: dl, filePath: fp });
+  document.getElementById('edit-'+id).style.display = 'none';
+  renderAccessContent();
+  showToast('Configuração salva!');
+}
+
+/* ─── Controle de Acesso — Níveis ─── */
+function renderAccessLevels() {
+  const grid = document.getElementById('accNiveisGrid');
+  if (!grid || !AUTH.PLANS) return;
+  grid.innerHTML = AUTH.PLANS.map((plan,i) => `
+    <div class="access-level-card" style="border-color:${plan.color}22">
+      <div class="level-badge-large" style="color:${plan.color};border-color:${plan.color}44;background:${plan.color}11">${plan.badge}</div>
+      <div class="level-name-lg">${plan.name}</div>
+      <div class="level-price-lg">${plan.price===0?'Gratuito':'R$ '+plan.price+'/'+plan.period}</div>
+      <div class="level-permission-row">
+        <span class="level-perm-label">Visualizar conteúdo</span>
+        <label class="toggle-sw"><input type="checkbox" ${i>=0?'checked':''}/><span class="toggle-track"></span></label>
+      </div>
+      <div class="level-permission-row">
+        <span class="level-perm-label">Baixar arquivos</span>
+        <label class="toggle-sw"><input type="checkbox" ${i>=2?'checked':''}/><span class="toggle-track"></span></label>
+      </div>
+      <div class="level-permission-row">
+        <span class="level-perm-label">Acesso prioritário</span>
+        <label class="toggle-sw"><input type="checkbox" ${i>=3?'checked':''}/><span class="toggle-track"></span></label>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─── Init — aguarda Supabase, depois verifica sessão ─── */
+AUTH.init().then(() => {
+  session = AUTH.requireAuth('gestor');
+  if (!session) return;
+
+  const initials = session.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('sbAvatar').textContent = initials;
+  document.getElementById('sbName').textContent   = session.name;
+  document.getElementById('sbRole').textContent   = {
+    superadmin: 'SuperAdmin — AutoTech Service',
+    admin:      'Administrador',
+    gestor:     'Gestor',
+  }[session.role] || session.role;
+
+  const ver = AUTH.VERSION;
+  document.getElementById('sbVersionLabel').textContent = `${ver.full} · build ${ver.build}`;
+
+  if (session.role === 'superadmin') {
+    const avatar = document.getElementById('sbAvatar');
+    avatar.style.background = 'linear-gradient(135deg,#8B5CF6,#6D28D9)';
+    avatar.style.boxShadow  = '0 0 0 2px rgba(139,92,246,.4)';
+    const lnk = document.getElementById('linkSuperAdmin');
+    if (lnk) lnk.style.display = '';
+  }
+
+  document.getElementById('authLoading').remove();
+
+  if (AUTH.isOfflineMode()) {
+    const banner = document.createElement('div');
+    banner.id = 'offlineBanner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#b45309;color:#fff;text-align:center;padding:6px 16px;font-size:.78rem;font-weight:600;letter-spacing:.03em';
+    banner.textContent = '⚠️ Modo Offline — Supabase inacessível. Dados locais de demonstração. Alterações não serão salvas.';
+    document.body.prepend(banner);
+  }
+
+  updateBadges();
+  loadDashboard();
+  setInterval(updateBadges, 15000);
+}).catch(err => {
+  const el = document.getElementById('authLoadingMsg');
+  if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + err.message +
+    '<br><br><small>Verifique as credenciais em <code>js/supabase-config.js</code></small>';
+});
+</script>
+</body>
+</html>

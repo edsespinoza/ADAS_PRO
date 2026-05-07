@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-video-generation": {
+      "source": "inference-sh/skills",
+      "sourceType": "github",
+      "computedHash": "252481c0dfac98ba3f295cabac881d5a703f0eb161d40e5a11585aadc356e94c"
+    }
+  }
+}

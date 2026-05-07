@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADAS PRO — Área de Membros</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/auth.css"/>
+  <style>
+    :root {
+      --primary:#1B2B4D;--primary-dark:#0D1821;--accent:#FF6B35;--accent-hover:#e55824;
+      --tech:#00B4D8;--success:#06A77D;--warning:#F4A261;--white:#FFFFFF;
+      --font-h:'Poppins',sans-serif;--font-b:'Inter',sans-serif;
+      --transition:all .3s ease;--radius:12px;--radius-lg:20px;
+    }
+    body{background:#0f1923;color:rgba(255,255,255,.85);font-family:var(--font-b);margin:0;}
+
+    /* ─── Progress ring ─── */
+    .progress-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .progress-ring circle{transition:stroke-dashoffset .8s ease;transform:rotate(-90deg);transform-origin:50% 50%;}
+    .progress-ring-label{font-family:var(--font-h);font-weight:700;font-size:.9rem;color:#fff;}
+    .progress-ring-sub{font-size:.7rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;}
+
+    /* ─── Ticket form ─── */
+    .tkt-form-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-lg);padding:28px 32px;}
+    .tkt-header{display:flex;align-items:center;gap:12px;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.07);}
+    .tkt-header-icon{width:40px;height:40px;flex-shrink:0;background:linear-gradient(135deg,rgba(255,107,53,.18),rgba(255,107,53,.06));border-radius:10px;border:1px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;}
+    .tkt-header-icon svg{width:18px;height:18px;color:var(--accent);}
+    .tkt-form-title{font-family:var(--font-h);font-size:1rem;font-weight:700;color:#fff;margin-bottom:2px;}
+    .tkt-form-sub{font-size:.82rem;color:rgba(255,255,255,.38);line-height:1.55;}
+    .tkt-label{display:block;font-size:.76rem;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em;}
+    .req-star{color:var(--accent);margin-left:2px;}
+    .tkt-input{width:100%;padding:11px 14px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:.88rem;outline:none;transition:var(--transition);box-sizing:border-box;}
+    .tkt-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,53,.1);background:rgba(255,255,255,.08);}
+    .tkt-input::placeholder{color:rgba(255,255,255,.2);}
+    .tkt-textarea{resize:vertical;min-height:120px;font-family:var(--font-b);line-height:1.6;}
+    .tkt-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+    .tkt-group{margin-bottom:14px;}
+    .tkt-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#e05820);color:#fff;border-radius:10px;font-family:var(--font-h);font-weight:700;font-size:.95rem;cursor:pointer;transition:var(--transition);margin-top:6px;border:none;box-shadow:0 4px 16px rgba(255,107,53,.25);}
+    .tkt-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,107,53,.35);}
+    .tkt-submit:active{transform:translateY(0);}
+
+    /* ─── Category chips ─── */
+    .cat-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .cat-chip{display:flex;align-items:center;gap:9px;padding:10px 12px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:9px;color:rgba(255,255,255,.5);font-size:.8rem;font-family:var(--font-b);font-weight:500;cursor:pointer;transition:all .2s ease;text-align:left;width:100%;}
+    .cat-chip:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);color:rgba(255,255,255,.8);}
+    .cat-chip svg{width:15px;height:15px;flex-shrink:0;opacity:.6;transition:opacity .2s;}
+    .cat-chip.active{background:rgba(0,180,216,.1);border-color:rgba(0,180,216,.4);color:var(--tech);}
+    .cat-chip.active svg{opacity:1;color:var(--tech);}
+    .cat-chip.active.chip-mat{background:rgba(255,107,53,.08);border-color:rgba(255,107,53,.35);color:var(--accent);}
+    .cat-chip.active.chip-mat svg{color:var(--accent);}
+    .cat-chip.active.chip-up{background:rgba(6,167,125,.08);border-color:rgba(6,167,125,.35);color:var(--success);}
+    .cat-chip.active.chip-up svg{color:var(--success);}
+    .cat-chip.active.chip-other{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.75);}
+
+    /* ─── Priority select ─── */
+    .tkt-prio-wrap{position:relative;}
+    .tkt-prio-dot{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;pointer-events:none;background:#f4a261;transition:background .2s;}
+    .tkt-prio-select{padding-left:30px!important;}
+
+    /* ─── Tips card ─── */
+    .tips-card{background:linear-gradient(135deg,rgba(0,180,216,.06),rgba(0,180,216,.02));border:1px solid rgba(0,180,216,.18);border-radius:var(--radius-lg);padding:22px;margin-bottom:12px;}
+    .tips-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+    .tips-header-icon{width:34px;height:34px;background:rgba(0,180,216,.14);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .tips-header-icon svg{width:16px;height:16px;color:var(--tech);}
+    .tips-title{font-family:var(--font-h);font-weight:700;color:#fff;font-size:.9rem;}
+    .tips-sub{font-size:.73rem;color:rgba(255,255,255,.35);margin-top:1px;}
+    .tip-item{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .tip-item:last-child{border-bottom:none;padding-bottom:0;}
+    .tip-num{width:22px;height:22px;flex-shrink:0;background:linear-gradient(135deg,rgba(0,180,216,.25),rgba(0,180,216,.08));border:1px solid rgba(0,180,216,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:.65rem;font-weight:700;color:var(--tech);}
+    .tip-icon{width:15px;height:15px;flex-shrink:0;color:rgba(0,180,216,.5);margin-top:2px;}
+    .tip-text{font-size:.82rem;color:rgba(255,255,255,.55);line-height:1.5;flex:1;}
+    .tip-text strong{color:rgba(255,255,255,.8);font-weight:600;}
+
+    /* ─── Response card ─── */
+    .response-card{background:rgba(255,107,53,.04);border:1px solid rgba(255,107,53,.16);border-radius:var(--radius);padding:16px 18px;display:flex;gap:13px;align-items:flex-start;}
+    .response-icon{width:36px;height:36px;flex-shrink:0;background:rgba(255,107,53,.12);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+    .response-icon svg{width:17px;height:17px;color:var(--accent);}
+    .response-title{font-family:var(--font-h);font-weight:600;color:var(--accent);font-size:.85rem;margin-bottom:5px;}
+    .response-body{font-size:.79rem;color:rgba(255,255,255,.42);line-height:1.65;}
+    .response-body strong{color:rgba(255,255,255,.78);}
+
+    /* ─── Ticket item ─── */
+    .tkt-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:var(--transition);}
+    .tkt-item:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.06);}
+    .tkt-item-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+    .tkt-prio{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+    .p-urgent{background:#ff3b3b;} .p-high{background:#ff6b35;} .p-medium{background:#f4a261;} .p-low{background:#06a77d;}
+    .tkt-item-title{font-family:var(--font-h);font-weight:600;color:#fff;font-size:.9rem;flex:1;}
+    .tkt-item-meta{font-size:.76rem;color:rgba(255,255,255,.35);display:flex;gap:12px;flex-wrap:wrap;}
+
+    /* ─── Chat ─── */
+    .member-chat{display:flex;flex-direction:column;gap:10px;padding:20px;max-height:320px;overflow-y:auto;}
+    .chat-msg{max-width:78%;padding:10px 14px;border-radius:12px;font-size:.86rem;line-height:1.6;}
+    .chat-msg.member{background:rgba(255,255,255,.07);border-bottom-left-radius:4px;align-self:flex-start;}
+    .chat-msg.admin{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);border-bottom-right-radius:4px;align-self:flex-end;}
+    .chat-meta{font-size:.7rem;color:rgba(255,255,255,.3);margin-top:3px;}
+    .chat-input-area{display:flex;gap:10px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);}
+    .chat-input{flex:1;padding:10px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:.88rem;outline:none;resize:none;transition:var(--transition);}
+    .chat-input:focus{border-color:var(--accent);}
+    .chat-send{padding:10px 18px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;font-size:.83rem;cursor:pointer;transition:var(--transition);}
+    .chat-send:hover{background:var(--accent-hover);}
+
+    /* ─── Welcome banner ─── */
+    .welcome-banner{background:linear-gradient(135deg,rgba(255,107,53,.1),rgba(0,180,216,.08));border:1px solid rgba(255,107,53,.15);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;}
+    .welcome-icon{font-size:2rem;flex-shrink:0;}
+    .welcome-title{font-family:var(--font-h);font-weight:700;color:#fff;margin-bottom:3px;}
+    .welcome-sub{font-size:.85rem;color:rgba(255,255,255,.5);line-height:1.6;}
+
+    /* ─── Content teaser ─── */
+    .content-item.locked{filter:grayscale(.4);pointer-events:none;}
+    .locked-overlay{position:relative;}
+    .locked-overlay::after{content:'🔒 Conteúdo Bloqueado';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,16,25,.7);border-radius:var(--radius);font-size:.8rem;font-weight:600;color:rgba(255,255,255,.5);backdrop-filter:blur(2px);}
+
+    /* ─── Priority chips ─── */
+    .prio-chips { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; }
+    .prio-chip { display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;cursor:pointer;transition:all .2s;font-size:.7rem;font-family:var(--font-b);color:rgba(255,255,255,.4);text-align:center;width:100%; }
+    .prio-chip svg { width:18px;height:18px;opacity:.45;transition:opacity .2s; }
+    .prio-chip-sub { font-size:.62rem;color:rgba(255,255,255,.25);line-height:1.3; }
+    .prio-chip:hover { background:rgba(255,255,255,.07);color:rgba(255,255,255,.65); }
+    .prio-chip[data-val="low"].active { border-color:#06A77D;background:rgba(6,167,125,.1);color:#06A77D; }
+    .prio-chip[data-val="low"].active svg { opacity:1;color:#06A77D; }
+    .prio-chip[data-val="medium"].active { border-color:#F4A261;background:rgba(244,162,97,.1);color:#F4A261; }
+    .prio-chip[data-val="medium"].active svg { opacity:1;color:#F4A261; }
+    .prio-chip[data-val="high"].active { border-color:#FF6B35;background:rgba(255,107,53,.1);color:#FF6B35; }
+    .prio-chip[data-val="high"].active svg { opacity:1;color:#FF6B35; }
+    .prio-chip[data-val="urgent"].active { border-color:#FF3B3B;background:rgba(255,59,59,.1);color:#FF3B3B; }
+    .prio-chip[data-val="urgent"].active svg { opacity:1;color:#FF3B3B; }
+
+    /* ─── Unlock panel no card ─── */
+    .locked-card { pointer-events:auto; }
+    .unlock-panel { border-top:1px solid rgba(255,255,255,.06);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,0,0,.15); }
+    .unlock-panel-info { display:flex;align-items:center;gap:7px;flex:1;min-width:0; }
+    .unlock-panel-info svg { width:13px;height:13px;color:rgba(255,255,255,.3);flex-shrink:0; }
+    .unlock-panel-info span { font-size:.73rem;color:rgba(255,255,255,.35); }
+    .unlock-plan-badge { font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);color:#FF6B35;white-space:nowrap;flex-shrink:0; }
+    .unlock-btn { display:flex;align-items:center;gap:5px;padding:7px 12px;background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.08));border:1px solid rgba(255,107,53,.3);border-radius:7px;color:#FF6B35;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;flex-shrink:0; }
+    .unlock-btn:hover { background:rgba(255,107,53,.25);transform:translateY(-1px); }
+    .unlock-btn svg { width:12px;height:12px; }
+
+    /* ─── Level badges ─── */
+    .lvl-badge{display:inline-flex;align-items:center;gap:4px;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;}
+    .lvl-free{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.38);}
+    .lvl-modulo{background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.28);color:var(--tech);}
+    .lvl-pro{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.28);color:var(--accent);}
+    .lvl-premium{background:rgba(244,162,97,.12);border:1px solid rgba(244,162,97,.3);color:#F4A261;}
+
+    /* ─── Download buttons ─── */
+    .content-item-actions{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+    .content-dl-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,rgba(6,167,125,.18),rgba(6,167,125,.06));border:1px solid rgba(6,167,125,.28);border-radius:7px;color:var(--success);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .2s;border:none;font-family:var(--font-b);}
+    .content-dl-btn:hover{background:rgba(6,167,125,.28);transform:translateY(-1px);box-shadow:0 4px 12px rgba(6,167,125,.2);}
+    .content-dl-btn svg{width:13px;height:13px;}
+    .content-dl-locked{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:rgba(255,255,255,.28);font-size:.76rem;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(--font-b);}
+    .content-dl-locked:hover{border-color:rgba(255,107,53,.3);color:rgba(255,107,53,.65);}
+    .content-dl-locked svg{width:13px;height:13px;}
+
+    /* ─── Upgrade modal ─── */
+    .upgrade-modal-box { background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:24px;width:100%;max-width:860px;max-height:90vh;overflow-y:auto; }
+    .upgrade-modal-header { display:flex;align-items:flex-start;justify-content:space-between;padding:28px 32px 20px;border-bottom:1px solid rgba(255,255,255,.07); }
+    .upgrade-modal-title { font-family:var(--font-h);font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:4px; }
+    .upgrade-modal-sub { font-size:.85rem;color:rgba(255,255,255,.4); }
+    .upgrade-modal-close { width:32px;height:32px;background:rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;border:none; }
+    .upgrade-modal-close:hover { background:rgba(255,255,255,.12); }
+    .upgrade-modal-close svg { width:15px;height:15px;color:rgba(255,255,255,.5); }
+    .upgrade-plans-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:24px 32px; }
+    .upgrade-plan-card { position:relative;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;transition:all .2s; }
+    .upgrade-plan-card:hover { border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06); }
+    .upgrade-plan-card.popular { border-color:rgba(255,107,53,.4);background:rgba(255,107,53,.04); }
+    .popular-badge { position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-family:var(--font-h);font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:50px;white-space:nowrap; }
+    .plan-card-badge { display:inline-flex;padding:3px 9px;border-radius:5px;font-size:.65rem;font-weight:800;letter-spacing:.06em;border:1px solid;width:fit-content; }
+    .plan-card-name { font-family:var(--font-h);font-size:1rem;font-weight:700;color:#fff; }
+    .plan-card-price { display:flex;align-items:baseline;gap:3px; }
+    .price-val { font-family:var(--font-h);font-size:1.6rem;font-weight:800;color:#fff; }
+    .price-period { font-size:.78rem;color:rgba(255,255,255,.4); }
+    .price-free { font-family:var(--font-h);font-size:1.4rem;font-weight:700;color:#06A77D; }
+    .plan-card-features { list-style:none;display:flex;flex-direction:column;gap:7px;flex:1;margin:0;padding:0; }
+    .plan-card-features li { display:flex;align-items:flex-start;gap:7px;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.4; }
+    .plan-card-cta { width:100%;padding:10px;background:linear-gradient(135deg,var(--accent),#e05820);color:#fff;border-radius:9px;font-family:var(--font-h);font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;border:none;box-shadow:0 4px 12px rgba(255,107,53,.2); }
+    .plan-card-cta:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,107,53,.3); }
+    .plan-card-cta.cta-disabled { background:rgba(255,255,255,.07);color:rgba(255,255,255,.3);box-shadow:none;cursor:default; }
+    .plan-card-cta.cta-disabled:hover { transform:none;box-shadow:none; }
+    .upgrade-modal-footer { display:flex;align-items:center;gap:12px;padding:18px 32px;border-top:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02); }
+    .upgrade-modal-footer svg { width:18px;height:18px;color:rgba(0,200,100,.7);flex-shrink:0; }
+    .upgrade-modal-footer span { font-size:.82rem;color:rgba(255,255,255,.45);flex:1; }
+    .upgrade-modal-footer strong { color:rgba(255,255,255,.75); }
+    .upgrade-whatsapp-btn { padding:8px 16px;background:rgba(0,200,100,.15);border:1px solid rgba(0,200,100,.3);border-radius:8px;color:#00C864;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap; }
+    .upgrade-whatsapp-btn:hover { background:rgba(0,200,100,.25); }
+    @media(max-width:700px){ .upgrade-plans-grid{grid-template-columns:repeat(2,1fr);} .upgrade-modal-box{border-radius:16px;} }
+
+    @media(max-width:640px){.tkt-row{grid-template-columns:1fr;}}
+  </style>
+
+  <style>
+  /* ═══════════════════════════════════════════════════
+     ADAS PRO — Tickets & Boletins Técnicos — HUD v1
+     ═══════════════════════════════════════════════════ */
+  @keyframes tkt-entry { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse-new  { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,59,59,.5)} 50%{opacity:.85;box-shadow:0 0 0 5px rgba(255,59,59,0)} }
+  @keyframes tkt-empty-spin { to{transform:rotate(360deg)} }
+  @keyframes tkt-spin  { to{transform:rotate(360deg)} }
+  @keyframes blink-cur { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ─── Page header (shared) ─── */
+  .diag-page-header { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.05);position:relative; }
+  .diag-page-header::before { content:'';position:absolute;bottom:-1px;left:0;width:48px;height:2px;background:var(--accent); }
+  .diag-page-title { font-family:var(--font-h);font-size:1.05rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;margin-bottom:3px; }
+  .diag-title-icon { width:28px;height:28px;background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(255,107,53,.05));border:1px solid rgba(255,107,53,.3);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .diag-title-icon svg { width:14px;height:14px;color:var(--accent); }
+  .diag-page-sub { font-size:.78rem;color:rgba(255,255,255,.3);font-family:'Courier New',monospace;letter-spacing:.02em; }
+  .diag-page-sub .sys-id { color:rgba(0,180,216,.5);margin-right:8px; }
+
+  /* ─── Filter chips (shared) ─── */
+  .diag-filter-bar { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px; }
+  .diag-filter-chip { display:flex;align-items:center;gap:5px;padding:6px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.4);font-size:.73rem;font-family:'Courier New',monospace;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:all .2s;user-select:none; }
+  .diag-filter-chip:hover { background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.15); }
+  .diag-filter-chip.active { background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.4);color:var(--accent); }
+  .chip-count { background:rgba(255,255,255,.12);border-radius:3px;padding:1px 5px;font-size:.65rem; }
+  .diag-filter-chip.active .chip-count { background:rgba(255,107,53,.2); }
+
+  /* ══ TICKETS ══ */
+  .tkt-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center; }
+  .tkt-empty-art { position:relative;width:120px;height:120px;margin-bottom:28px; }
+  .tkt-empty-art .art-ring { position:absolute;inset:0;border-radius:50%;border:1px solid rgba(255,107,53,.12);animation:tkt-empty-spin 12s linear infinite; }
+  .tkt-empty-art .art-ring:nth-child(2) { inset:14px;border-color:rgba(0,180,216,.1);animation-duration:8s;animation-direction:reverse; }
+  .tkt-empty-art .art-center { position:absolute;inset:30px;background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:50%;display:flex;align-items:center;justify-content:center; }
+  .tkt-empty-art .art-center svg { width:28px;height:28px;color:rgba(255,107,53,.6); }
+  .tkt-empty-title { font-family:var(--font-h);font-size:.95rem;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:6px; }
+  .tkt-empty-sub { font-size:.8rem;color:rgba(255,255,255,.25);margin-bottom:24px;max-width:280px;line-height:1.6; }
+  .tkt-empty-cta { display:inline-flex;align-items:center;gap:7px;padding:11px 22px;background:linear-gradient(135deg,var(--accent),#e05820);color:#fff;border-radius:7px;font-family:var(--font-h);font-weight:700;font-size:.83rem;cursor:pointer;transition:all .2s;border:none;box-shadow:0 4px 16px rgba(255,107,53,.25); }
+  .tkt-empty-cta:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,107,53,.35); }
+  .tkt-empty-cta svg { width:14px;height:14px; }
+
+  .tkt-card-item { position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .2s;overflow:hidden;animation:tkt-entry .3s ease both; }
+  .tkt-card-item:hover { background:rgba(255,255,255,.06);border-color:rgba(255,107,53,.3);box-shadow:0 0 0 1px rgba(255,107,53,.1),0 4px 20px rgba(0,0,0,.3);transform:translateX(2px); }
+  .tkt-card-item::before { content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px; }
+  .tkt-card-item.prio-urgent::before { background:#FF3B3B; }
+  .tkt-card-item.prio-high::before   { background:#FF6B35; }
+  .tkt-card-item.prio-medium::before { background:#F4A261; }
+  .tkt-card-item.prio-low::before    { background:#06A77D; }
+  .tkt-card-inner { padding:14px 18px 14px 20px; }
+  .tkt-card-top { display:flex;align-items:flex-start;gap:10px;margin-bottom:8px; }
+  .tkt-card-num { font-family:'Courier New',monospace;font-size:.68rem;color:rgba(0,180,216,.6);letter-spacing:.06em;flex-shrink:0;padding-top:2px; }
+  .tkt-card-meta { flex:1;min-width:0; }
+  .tkt-card-title-row { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px; }
+  .tkt-card-title { font-family:var(--font-h);font-weight:600;font-size:.88rem;color:rgba(255,255,255,.85);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .tkt-card-badges { display:flex;align-items:center;gap:5px;flex-shrink:0; }
+  .tkt-status { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:.63rem;font-family:'Courier New',monospace;font-weight:700;letter-spacing:.06em;text-transform:uppercase; }
+  .tkt-status-dot { width:5px;height:5px;border-radius:50%;flex-shrink:0; }
+  .tkt-s-open     { background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.3);color:var(--tech); }
+  .tkt-s-open .tkt-status-dot     { background:var(--tech); }
+  .tkt-s-progress { background:rgba(244,162,97,.1);border:1px solid rgba(244,162,97,.3);color:#F4A261; }
+  .tkt-s-progress .tkt-status-dot { background:#F4A261; }
+  .tkt-s-resolved { background:rgba(6,167,125,.1);border:1px solid rgba(6,167,125,.3);color:var(--success); }
+  .tkt-s-resolved .tkt-status-dot { background:var(--success); }
+  .tkt-s-closed   { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3); }
+  .tkt-s-closed .tkt-status-dot   { background:rgba(255,255,255,.3); }
+  .tkt-cat-chip { display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:4px;font-size:.62rem;font-weight:600;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.4); }
+  .tkt-cat-chip svg { width:10px;height:10px; }
+  .tkt-card-footer { display:flex;align-items:center;justify-content:space-between;gap:8px; }
+  .tkt-card-preview { font-size:.77rem;color:rgba(255,255,255,.3);line-height:1.5;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .tkt-card-time { font-family:'Courier New',monospace;font-size:.65rem;color:rgba(255,255,255,.2);flex-shrink:0; }
+
+  /* ── Ticket viewer modal ── */
+  #ticketViewer { position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px; }
+  .tv-box { background:#0a1118;border:1px solid rgba(255,255,255,.1);border-radius:14px;width:100%;max-width:660px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,107,53,.08); }
+  .tv-header { padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:flex-start;gap:14px;flex-shrink:0;position:relative;background:rgba(255,255,255,.02); }
+  .tv-header::after { content:'';position:absolute;bottom:-1px;left:22px;width:32px;height:1px;background:var(--accent); }
+  .tv-header-icon { width:36px;height:36px;background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,107,53,.04));border:1px solid rgba(255,107,53,.25);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .tv-header-icon svg { width:16px;height:16px;color:var(--accent); }
+  .tv-header-info { flex:1;min-width:0; }
+  .tv-header-num { font-family:'Courier New',monospace;font-size:.65rem;color:rgba(0,180,216,.5);letter-spacing:.1em;margin-bottom:2px; }
+  #tvTitle { font-family:var(--font-h);font-weight:700;color:#fff;font-size:.92rem;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  #tvStatus { display:flex;align-items:center;gap:8px; }
+  .tv-close { width:30px;height:30px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;color:rgba(255,255,255,.4); }
+  .tv-close:hover { background:rgba(255,59,59,.15);border-color:rgba(255,59,59,.3);color:#ff3b3b; }
+  .tv-close svg { width:13px;height:13px; }
+  .tv-chat { flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent; }
+  .tv-chat::-webkit-scrollbar { width:4px; }
+  .tv-chat::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:2px; }
+  .tv-waiting { display:flex;flex-direction:column;align-items:center;padding:32px 16px;gap:12px; }
+  .tv-waiting-icon { width:48px;height:48px;border:2px solid rgba(0,180,216,.15);border-top-color:var(--tech);border-radius:50%;animation:tkt-spin .9s linear infinite; }
+  .tv-waiting-text { font-family:'Courier New',monospace;font-size:.73rem;color:rgba(255,255,255,.25);letter-spacing:.04em; }
+  .tv-waiting-text::after { content:'_';animation:blink-cur .8s step-end infinite;color:var(--tech); }
+  .tv-msg { display:flex;gap:10px;animation:tkt-entry .25s ease both; }
+  .tv-msg.msg-member { align-self:flex-start;max-width:82%; }
+  .tv-msg.msg-admin  { align-self:flex-end;max-width:82%;flex-direction:row-reverse; }
+  .tv-msg-avatar { width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:.65rem;font-weight:700;flex-shrink:0; }
+  .msg-member .tv-msg-avatar { background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5); }
+  .msg-admin  .tv-msg-avatar { background:linear-gradient(135deg,rgba(255,107,53,.25),rgba(255,107,53,.08));border:1px solid rgba(255,107,53,.3);color:var(--accent); }
+  .tv-msg-body { min-width:0; }
+  .tv-msg-bubble { padding:10px 14px;border-radius:10px;font-size:.83rem;line-height:1.65;color:rgba(255,255,255,.8); }
+  .msg-member .tv-msg-bubble { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-bottom-left-radius:3px; }
+  .msg-admin  .tv-msg-bubble { background:rgba(255,107,53,.07);border:1px solid rgba(255,107,53,.18);border-bottom-right-radius:3px; }
+  .tv-msg-meta { font-family:'Courier New',monospace;font-size:.62rem;color:rgba(255,255,255,.2);margin-top:4px;display:flex;align-items:center;gap:6px; }
+  .msg-admin .tv-msg-meta { justify-content:flex-end; }
+  .tv-msg-sender { color:rgba(255,255,255,.35); }
+  .tv-footer { border-top:1px solid rgba(255,255,255,.07);padding:14px 18px;display:flex;gap:10px;align-items:flex-end;flex-shrink:0;background:rgba(255,255,255,.01); }
+  .tv-reply-wrap { flex:1;position:relative; }
+  #tvReply { width:100%;padding:10px 14px 24px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:.84rem;outline:none;resize:none;transition:var(--transition);font-family:var(--font-b);box-sizing:border-box;line-height:1.5; }
+  #tvReply:focus { border-color:var(--accent);background:rgba(255,255,255,.07); }
+  #tvReply::placeholder { color:rgba(255,255,255,.2); }
+  .tv-char-count { position:absolute;bottom:8px;right:10px;font-family:'Courier New',monospace;font-size:.62rem;color:rgba(255,255,255,.2); }
+  .tv-send-btn { padding:10px 16px;background:linear-gradient(135deg,var(--accent),#e05820);color:#fff;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:.78rem;cursor:pointer;transition:all .2s;border:none;display:flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 4px 12px rgba(255,107,53,.2);flex-shrink:0; }
+  .tv-send-btn:hover { transform:translateY(-1px);box-shadow:0 6px 18px rgba(255,107,53,.3); }
+  .tv-send-btn svg { width:13px;height:13px; }
+
+  /* ══ BOLETINS ══ */
+  .blt-unread-badge { display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;background:rgba(255,59,59,.15);border:1px solid rgba(255,59,59,.35);border-radius:5px;font-family:'Courier New',monospace;font-size:.65rem;font-weight:700;color:#FF3B3B;padding:0 5px; }
+  .blt-filter-chip.type-novidade.active    { background:rgba(6,167,125,.1); border-color:rgba(6,167,125,.4); color:#06A77D; }
+  .blt-filter-chip.type-atualizacao.active { background:rgba(0,180,216,.1); border-color:rgba(0,180,216,.4); color:var(--tech); }
+  .blt-filter-chip.type-alerta.active      { background:rgba(255,59,59,.1); border-color:rgba(255,59,59,.4); color:#FF3B3B; }
+  .blt-filter-chip.type-procedimento.active{ background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.4);color:#8B5CF6; }
+  .blt-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px; }
+  .blt-card { position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;transition:all .25s;cursor:pointer;animation:tkt-entry .35s ease both;display:flex;flex-direction:column; }
+  .blt-card:hover { border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.055);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4); }
+  .blt-card-stripe { height:3px;width:100%;flex-shrink:0; }
+  .blt-card.type-novidade    .blt-card-stripe { background:linear-gradient(90deg,#06A77D,rgba(6,167,125,.3)); }
+  .blt-card.type-atualizacao .blt-card-stripe { background:linear-gradient(90deg,var(--tech),rgba(0,180,216,.3)); }
+  .blt-card.type-alerta      .blt-card-stripe { background:linear-gradient(90deg,#FF3B3B,rgba(255,59,59,.3)); }
+  .blt-card.type-procedimento .blt-card-stripe{ background:linear-gradient(90deg,#8B5CF6,rgba(139,92,246,.3)); }
+  .blt-card-body { padding:16px;flex:1;display:flex;flex-direction:column; }
+  .blt-card-top { display:flex;align-items:flex-start;gap:10px;margin-bottom:12px; }
+  .blt-card-icon { width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .blt-card.type-novidade    .blt-card-icon { background:rgba(6,167,125,.12); border:1px solid rgba(6,167,125,.25); }
+  .blt-card.type-atualizacao .blt-card-icon { background:rgba(0,180,216,.12); border:1px solid rgba(0,180,216,.25); }
+  .blt-card.type-alerta      .blt-card-icon { background:rgba(255,59,59,.1);  border:1px solid rgba(255,59,59,.25); }
+  .blt-card.type-procedimento .blt-card-icon{ background:rgba(139,92,246,.1); border:1px solid rgba(139,92,246,.25);}
+  .blt-card.type-novidade    .blt-card-icon svg { color:#06A77D; }
+  .blt-card.type-atualizacao .blt-card-icon svg { color:var(--tech); }
+  .blt-card.type-alerta      .blt-card-icon svg { color:#FF3B3B; }
+  .blt-card.type-procedimento .blt-card-icon svg{ color:#8B5CF6; }
+  .blt-card-icon svg { width:17px;height:17px; }
+  .blt-card-header { flex:1;min-width:0; }
+  .blt-card-tags { display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap; }
+  .blt-type-tag { font-family:'Courier New',monospace;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px; }
+  .blt-card.type-novidade    .blt-type-tag { background:rgba(6,167,125,.15); border:1px solid rgba(6,167,125,.3); color:#06A77D; }
+  .blt-card.type-atualizacao .blt-type-tag { background:rgba(0,180,216,.12); border:1px solid rgba(0,180,216,.28);color:var(--tech); }
+  .blt-card.type-alerta      .blt-type-tag { background:rgba(255,59,59,.1);  border:1px solid rgba(255,59,59,.28); color:#FF3B3B; }
+  .blt-card.type-procedimento .blt-type-tag{ background:rgba(139,92,246,.1); border:1px solid rgba(139,92,246,.28);color:#8B5CF6; }
+  .blt-new-badge { font-family:'Courier New',monospace;font-size:.58rem;font-weight:700;letter-spacing:.06em;padding:2px 6px;border-radius:3px;background:#FF3B3B;color:#fff;animation:pulse-new 1.8s ease infinite; }
+  .blt-card-title { font-family:var(--font-h);font-size:.88rem;font-weight:700;color:rgba(255,255,255,.85);line-height:1.35; }
+  .blt-card-desc { font-size:.78rem;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1; }
+  .blt-brands { display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px; }
+  .blt-brand-chip { font-size:.63rem;font-family:'Courier New',monospace;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.35);letter-spacing:.03em; }
+  .blt-card-foot { display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);margin-top:auto; }
+  .blt-card-date { font-family:'Courier New',monospace;font-size:.63rem;color:rgba(255,255,255,.2); }
+  .blt-read-btn { display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-family:var(--font-h);font-size:.72rem;font-weight:700;cursor:pointer;transition:all .2s;border:none; }
+  .blt-card.type-novidade    .blt-read-btn { background:rgba(6,167,125,.12); color:#06A77D; }
+  .blt-card.type-atualizacao .blt-read-btn { background:rgba(0,180,216,.1);  color:var(--tech); }
+  .blt-card.type-alerta      .blt-read-btn { background:rgba(255,59,59,.1);  color:#FF3B3B; }
+  .blt-card.type-procedimento .blt-read-btn{ background:rgba(139,92,246,.1); color:#8B5CF6; }
+  .blt-read-btn:hover { filter:brightness(1.2);transform:translateX(2px); }
+  .blt-read-btn svg { width:11px;height:11px; }
+
+  /* ── Bulletin modal ── */
+  #bltModal { position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px; }
+  .blt-modal-box { background:#0a1118;border:1px solid rgba(255,255,255,.1);border-radius:16px;width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.7); }
+  .blt-modal-header { padding:22px 28px;flex-shrink:0;position:relative; }
+  .blt-modal-header.type-novidade    { background:linear-gradient(135deg,rgba(6,167,125,.12),rgba(6,167,125,.03));border-bottom:1px solid rgba(6,167,125,.15); }
+  .blt-modal-header.type-atualizacao { background:linear-gradient(135deg,rgba(0,180,216,.12),rgba(0,180,216,.03));border-bottom:1px solid rgba(0,180,216,.15); }
+  .blt-modal-header.type-alerta      { background:linear-gradient(135deg,rgba(255,59,59,.1),rgba(255,59,59,.02));border-bottom:1px solid rgba(255,59,59,.15); }
+  .blt-modal-header.type-procedimento{ background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(139,92,246,.02));border-bottom:1px solid rgba(139,92,246,.15); }
+  .blt-modal-top { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+  .blt-modal-close { position:absolute;top:18px;right:20px;width:30px;height:30px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);transition:all .2s; }
+  .blt-modal-close:hover { background:rgba(255,59,59,.15);color:#ff3b3b;border-color:rgba(255,59,59,.3); }
+  .blt-modal-close svg { width:13px;height:13px; }
+  .blt-modal-title { font-family:var(--font-h);font-size:1.05rem;font-weight:800;color:#fff;line-height:1.3;padding-right:40px; }
+  .blt-modal-body { flex:1;overflow-y:auto;padding:24px 28px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent; }
+  .blt-modal-body::-webkit-scrollbar { width:4px; }
+  .blt-modal-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:2px; }
+  .blt-modal-content { font-size:.85rem;color:rgba(255,255,255,.6);line-height:1.8; }
+  .blt-modal-content p { margin-bottom:14px; }
+  .blt-modal-content strong { color:rgba(255,255,255,.85); }
+  .blt-modal-content ul { list-style:none;padding:0;margin-bottom:14px; }
+  .blt-modal-content ul li { display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.83rem; }
+  .blt-modal-content ul li::before { content:'▸';color:rgba(255,107,53,.5);flex-shrink:0;font-size:.7rem;margin-top:3px; }
+  .blt-affected { margin-top:20px;padding:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px; }
+  .blt-affected-title { font-family:var(--font-h);font-size:.78rem;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:7px; }
+  .blt-affected-title svg { width:13px;height:13px;color:var(--accent); }
+  .blt-affected-brands { display:flex;flex-wrap:wrap;gap:5px; }
+  .blt-affected-brand { font-size:.72rem;font-family:'Courier New',monospace;padding:3px 9px;border-radius:4px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);color:rgba(255,107,53,.7); }
+  .blt-modal-footer { padding:16px 28px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;background:rgba(255,255,255,.015); }
+  .blt-modal-pub-date { font-family:'Courier New',monospace;font-size:.68rem;color:rgba(255,255,255,.2); }
+  .blt-mark-read-btn { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(6,167,125,.1);border:1px solid rgba(6,167,125,.28);border-radius:7px;color:#06A77D;font-family:var(--font-h);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s; }
+  .blt-mark-read-btn:hover { background:rgba(6,167,125,.2);transform:translateY(-1px); }
+  .blt-mark-read-btn.read { background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.3);cursor:default; }
+  .blt-mark-read-btn.read:hover { transform:none; }
+  .blt-mark-read-btn svg { width:13px;height:13px; }
+
+  @media(max-width:640px) {
+    .blt-grid { grid-template-columns:1fr; }
+    .blt-modal-header,.blt-modal-body,.blt-modal-footer { padding-left:18px;padding-right:18px; }
+    .tv-box { max-height:95vh; }
+  }
+  </style>
+  <!-- Vercel Analytics & Speed Insights -->
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+</head>
+<body>
+<div class="dashboard">
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-hex">AP</div>
+    <span>ADAS<strong>PRO</strong></span>
+  </div>
+  <div class="sidebar-user">
+    <div class="sidebar-avatar" id="sbAvatar">?</div>
+    <div>
+      <div class="sidebar-user-name" id="sbName">—</div>
+      <div class="sidebar-user-role" id="sbRole">Membro</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-section">Conteúdo</div>
+    <a class="sidebar-nav-item active" onclick="showPage('biblioteca',this)"><span class="nav-icon">📚</span>Biblioteca técnica</a>
+
+    <div class="sidebar-nav-section" style="margin-top:12px">Categorias liberadas</div>
+    <div id="navCats"></div>
+
+    <div class="sidebar-nav-section" style="margin-top:12px">Comunicados</div>
+    <a class="sidebar-nav-item" onclick="showPage('boletins',this)"><span class="nav-icon">📡</span>Boletins técnicos</a>
+
+    <div class="sidebar-nav-section" style="margin-top:12px">Suporte</div>
+    <a class="sidebar-nav-item" onclick="showPage('suporte',this)"><span class="nav-icon">🎫</span>Abrir ticket
+      <span class="nav-badge" id="myTicketsBadge" style="display:none">0</span>
+    </a>
+    <a class="sidebar-nav-item" onclick="showPage('meus-tickets',this)"><span class="nav-icon">📋</span>Meus tickets</a>
+
+    <div class="sidebar-nav-section" style="margin-top:12px">Conta</div>
+    <a class="sidebar-nav-item" onclick="showPage('perfil',this)"><span class="nav-icon">👤</span>Meu perfil</a>
+
+    <div class="sidebar-nav-section" style="margin-top:12px">Navegação</div>
+    <a id="adminBackLink" class="sidebar-nav-item" href="admin.html" style="display:none;color:rgba(0,180,216,.8);border:1px solid rgba(0,180,216,.15);border-radius:8px;background:rgba(0,180,216,.05)">
+      <span class="nav-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </span>Voltar ao painel Admin
+    </a>
+    <a class="sidebar-nav-item" href="index.html"><span class="nav-icon">🏠</span>Página inicial</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="padding:8px 14px 4px;border-top:1px solid rgba(255,255,255,.05);margin-bottom:6px;">
+      <div style="font-size:.56rem;color:rgba(255,255,255,.18);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">AutoTech Service</div>
+      <div id="sbVersionLabel" style="font-size:.58rem;color:rgba(255,255,255,.12);font-family:monospace;">v2.2.0 · build 20260423</div>
+    </div>
+    <button class="sidebar-logout" onclick="AUTH.logout();location.href='login.html'"><span>🚪</span>Sair</button>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<main class="main-content">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="min-width:0">
+      <!-- Breadcrumb — "Painel" visível em páginas que não são a biblioteca -->
+      <div id="tbBreadcrumb" style="display:none;align-items:center;gap:5px;margin-bottom:4px">
+        <button onclick="goHome()" style="display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:.75rem;font-family:inherit;padding:0;transition:color .2s" onmouseover="this.style.color='rgba(255,107,53,.8)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Painel
+        </button>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span id="tbBreadcrumbCurrent" style="font-size:.75rem;color:rgba(255,255,255,.5)"></span>
+      </div>
+      <div class="topbar-title" id="tbTitle">Biblioteca Técnica</div>
+      <div class="topbar-sub" id="tbSub">Acesse os materiais liberados para sua conta</div>
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 14px">
+        <span style="font-size:.8rem">🔍</span>
+        <input type="text" placeholder="Buscar material..." id="searchInput" oninput="filterSearch()" style="background:none;border:none;outline:none;color:#fff;font-size:.85rem;width:150px"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── BIBLIOTECA ─── -->
+  <div class="page active" id="pageBiblioteca">
+    <div id="welcomeBanner"></div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px" id="statsRow"></div>
+
+    <!-- Filtros de categoria -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="catFilters">
+      <div class="cat-filter active" data-cat="all" onclick="filterCat('all',this)">Todos</div>
+    </div>
+    <div class="content-grid" id="contentGrid"></div>
+  </div>
+
+  <!-- ─── ABRIR TICKET ─── -->
+  <div class="page" id="pageSuport">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:920px">
+
+      <!-- Formulário -->
+      <div class="tkt-form-card">
+
+        <div class="tkt-header">
+          <div class="tkt-header-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+            </svg>
+          </div>
+          <div>
+            <div class="tkt-form-title">Abrir ticket de suporte</div>
+            <div class="tkt-form-sub">Descreva sua dúvida técnica com detalhes. Respondemos em até 24 horas úteis.</div>
+          </div>
+        </div>
+
+        <div id="ticketAlert" class="alert" style="margin-bottom:14px"></div>
+
+        <form id="ticketForm" onsubmit="submitTicket(event)">
+
+          <!-- Assunto -->
+          <div class="tkt-group">
+            <label class="tkt-label" for="tktTitle">Assunto<span class="req-star">*</span></label>
+            <input class="tkt-input" id="tktTitle" placeholder="Ex: Calibração AVM 360° Toyota RAV4 2022" required/>
+          </div>
+
+          <!-- Categoria (chips) -->
+          <div class="tkt-group">
+            <label class="tkt-label">Categoria</label>
+            <input type="hidden" id="tktCat" value="duvida-tecnica"/>
+            <div class="cat-chips" id="catChips">
+              <button type="button" class="cat-chip active" data-val="duvida-tecnica">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                Dúvida técnica
+              </button>
+              <button type="button" class="cat-chip chip-mat" data-val="solicitacao-material">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                Solicitar material
+              </button>
+              <button type="button" class="cat-chip chip-up" data-val="upgrade-plano">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/>
+                </svg>
+                Upgrade de plano
+              </button>
+              <button type="button" class="cat-chip chip-other" data-val="outro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Outro assunto
+              </button>
+            </div>
+          </div>
+
+          <!-- Prioridade -->
+          <div class="tkt-group">
+            <label class="tkt-label">Prioridade</label>
+            <input type="hidden" id="tktPrio" value="medium"/>
+            <div class="prio-chips">
+              <button type="button" class="prio-chip" data-val="low" onclick="selectPrio(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+                Baixa
+                <span class="prio-chip-sub">consulta geral</span>
+              </button>
+              <button type="button" class="prio-chip active" data-val="medium" onclick="selectPrio(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Média
+                <span class="prio-chip-sub">em atendimento</span>
+              </button>
+              <button type="button" class="prio-chip" data-val="high" onclick="selectPrio(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Alta
+                <span class="prio-chip-sub">veículo parado</span>
+              </button>
+              <button type="button" class="prio-chip" data-val="urgent" onclick="selectPrio(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>
+                </svg>
+                Urgente
+                <span class="prio-chip-sub">cliente aguardando</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Descrição -->
+          <div class="tkt-group">
+            <label class="tkt-label" for="tktMessage">Descrição detalhada<span class="req-star">*</span></label>
+            <textarea class="tkt-input tkt-textarea" id="tktMessage"
+              placeholder="Informe: marca, modelo, ano do veículo, sistema ADAS envolvido, sintoma observado, código de erro (se houver)..." required></textarea>
+          </div>
+
+          <button type="submit" class="tkt-submit">
+            Enviar ticket
+            <svg style="width:15px;height:15px;display:inline;vertical-align:middle;margin-left:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- Painel lateral -->
+      <div>
+
+        <!-- Dicas -->
+        <div class="tips-card">
+          <div class="tips-header">
+            <div class="tips-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div>
+              <div class="tips-title">Dicas para um bom ticket</div>
+              <div class="tips-sub">Detalhes ajudam a responder mais rápido</div>
+            </div>
+          </div>
+
+          <div class="tip-item">
+            <div class="tip-num">1</div>
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            <div class="tip-text">Informe <strong>marca, modelo e ano</strong> do veículo</div>
+          </div>
+
+          <div class="tip-item">
+            <div class="tip-num">2</div>
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+            </svg>
+            <div class="tip-text">Descreva o <strong>sistema ADAS</strong> envolvido — LKAS, AVM, ACC, AEB...</div>
+          </div>
+
+          <div class="tip-item">
+            <div class="tip-num">3</div>
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div class="tip-text">Mencione <strong>códigos de erro</strong> ou sintomas observados</div>
+          </div>
+
+          <div class="tip-item">
+            <div class="tip-num">4</div>
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+            </svg>
+            <div class="tip-text">Se possível, <strong>foto ou vídeo</strong> do problema agiliza muito</div>
+          </div>
+
+          <div class="tip-item">
+            <div class="tip-num">5</div>
+            <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <div class="tip-text">Selecione a <strong>categoria correta</strong> para direcionar ao especialista certo</div>
+          </div>
+        </div>
+
+        <!-- Tempo de resposta -->
+        <div class="response-card">
+          <div class="response-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <div class="response-title">Tempo de resposta</div>
+            <div class="response-body">
+              Respondemos em até <strong>24 horas úteis</strong>.<br>
+              Plano Premium tem suporte <strong>prioritário</strong>.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MEUS TICKETS ─── -->
+  <div class="page" id="pageMeusTickets">
+    <div style="max-width:900px">
+
+      <!-- Header da aba -->
+      <div class="diag-page-header">
+        <div>
+          <div class="diag-page-title">
+            <div class="diag-title-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            Meus Tickets
+          </div>
+          <div class="diag-page-sub"><span class="sys-id">SYS:TKT</span>Histórico de suporte técnico</div>
+        </div>
+        <button class="tkt-empty-cta" onclick="showPage('suporte')" style="padding:8px 16px;font-size:.77rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo ticket
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="diag-filter-bar" id="tktFilterBar">
+        <div class="diag-filter-chip active" data-filter="all" onclick="filterTickets('all',this)">Todos <span class="chip-count" id="tktCountAll">0</span></div>
+        <div class="diag-filter-chip" data-filter="open" onclick="filterTickets('open',this)">Abertos <span class="chip-count" id="tktCountOpen">0</span></div>
+        <div class="diag-filter-chip" data-filter="in-progress" onclick="filterTickets('in-progress',this)">Em andamento <span class="chip-count" id="tktCountProgress">0</span></div>
+        <div class="diag-filter-chip" data-filter="resolved" onclick="filterTickets('resolved',this)">Resolvidos <span class="chip-count" id="tktCountResolved">0</span></div>
+      </div>
+
+      <div id="myTicketsList"></div>
+    </div>
+  </div>
+
+  <!-- ─── TICKET VIEWER (modal melhorado) ─── -->
+  <div id="ticketViewer" style="display:none">
+    <div class="tv-box">
+      <div class="tv-header">
+        <div class="tv-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="tv-header-info">
+          <div class="tv-header-num" id="tvTicketNum">TKT-000</div>
+          <div id="tvTitle"></div>
+          <div id="tvStatus"></div>
+        </div>
+        <button class="tv-close" onclick="closeTicketViewer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="tv-chat" id="tvChat">
+        <div class="tv-waiting"><div class="tv-waiting-icon"></div><div class="tv-waiting-text">Aguardando resposta do mentor</div></div>
+      </div>
+      <div class="tv-footer" id="tvInput">
+        <div class="tv-reply-wrap">
+          <textarea id="tvReply" placeholder="Adicionar informação ou comentário..." rows="2" maxlength="800" oninput="document.getElementById('tvCharCount').textContent=this.value.length+'/800'"></textarea>
+          <span class="tv-char-count" id="tvCharCount">0/800</span>
+        </div>
+        <button class="tv-send-btn" onclick="sendReply()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── PERFIL ─── -->
+  <div class="page" id="pagePerfil">
+    <div style="max-width:600px">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-lg);padding:28px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+          <div id="profAvatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--tech));display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:700;font-size:1.3rem;color:#fff">?</div>
+          <div>
+            <div id="profName" style="font-family:var(--font-h);font-size:1.1rem;font-weight:700;color:#fff"></div>
+            <div id="profEmail" style="font-size:.85rem;color:rgba(255,255,255,.4)"></div>
+            <div id="profRole" style="font-size:.72rem;color:var(--tech);text-transform:uppercase;letter-spacing:.06em;margin-top:2px"></div>
+          </div>
+        </div>
+
+        <!-- Progress de acesso -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.3);margin-bottom:10px">Progresso de acesso</div>
+          <div style="background:rgba(255,255,255,.06);border-radius:50px;height:8px;overflow:hidden;margin-bottom:6px">
+            <div id="accessBar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--tech));border-radius:50px;transition:width 1s ease;width:0%"></div>
+          </div>
+          <div id="accessText" style="font-size:.78rem;color:rgba(255,255,255,.4)"></div>
+        </div>
+
+        <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.3);margin-bottom:10px">Categorias com acesso</div>
+        <div id="profPerms" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div id="memberNote" style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.15);border-radius:var(--radius);padding:16px;font-size:.86rem;color:rgba(255,255,255,.55);line-height:1.7"></div>
+    </div>
+  </div>
+
+  <!-- ─── BOLETINS TÉCNICOS ─── -->
+  <div class="page" id="pageBoletins">
+
+    <div class="diag-page-header">
+      <div>
+        <div class="diag-page-title">
+          <div class="diag-title-icon" style="background:linear-gradient(135deg,rgba(0,180,216,.2),rgba(0,180,216,.05));border-color:rgba(0,180,216,.3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tech)"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          </div>
+          Boletins Técnicos
+          <span class="blt-unread-badge" id="bltUnreadBadge" style="display:none">0</span>
+        </div>
+        <div class="diag-page-sub"><span class="sys-id" style="color:rgba(0,180,216,.5)">SYS:BLT</span>Atualizações e comunicados do mentor</div>
+      </div>
+    </div>
+
+    <!-- Filtros por tipo -->
+    <div class="diag-filter-bar" id="bltFilterBar">
+      <div class="diag-filter-chip blt-filter-chip active" data-blt-filter="all" onclick="filterBulletins('all',this)">Todos <span class="chip-count" id="bltCountAll">0</span></div>
+      <div class="diag-filter-chip blt-filter-chip type-novidade" data-blt-filter="novidade" onclick="filterBulletins('novidade',this)">Novidade</div>
+      <div class="diag-filter-chip blt-filter-chip type-atualizacao" data-blt-filter="atualizacao" onclick="filterBulletins('atualizacao',this)">Atualização</div>
+      <div class="diag-filter-chip blt-filter-chip type-alerta" data-blt-filter="alerta" onclick="filterBulletins('alerta',this)">Alerta Técnico</div>
+      <div class="diag-filter-chip blt-filter-chip type-procedimento" data-blt-filter="procedimento" onclick="filterBulletins('procedimento',this)">Procedimento</div>
+    </div>
+
+    <!-- Grid de boletins -->
+    <div class="blt-grid" id="bltGrid">
+
+      <div class="blt-card type-novidade">
+        <div class="blt-card-stripe"></div>
+        <div class="blt-card-body">
+          <div class="blt-card-top">
+            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+            <div class="blt-card-header">
+              <div class="blt-card-tags"><span class="blt-type-tag">Novidade</span><span class="blt-new-badge">NOVO</span></div>
+              <div class="blt-card-title">Novo padrão AVM para BYD Seal 2025</div>
+            </div>
+          </div>
+          <div class="blt-card-desc">Target tipo D revisado com dimensões atualizadas para o BYD Seal 2025. Impressão em papel fotográfico fosco recomendada.</div>
+          <div class="blt-brands"><span class="blt-brand-chip">BYD Seal</span><span class="blt-brand-chip">BYD Atto 3</span></div>
+          <div class="blt-card-foot">
+            <span class="blt-card-date">29/04/2026</span>
+            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="blt-card type-alerta">
+        <div class="blt-card-stripe"></div>
+        <div class="blt-card-body">
+          <div class="blt-card-top">
+            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div class="blt-card-header">
+              <div class="blt-card-tags"><span class="blt-type-tag">Alerta Técnico</span></div>
+              <div class="blt-card-title">Honda LKAS — erro C1B00 após troca de parabrisa</div>
+            </div>
+          </div>
+          <div class="blt-card-desc">Falha identificada em modelos 2022+ após substituição de parabrisa. Procedimento de reset obrigatório antes da calibração estática.</div>
+          <div class="blt-brands"><span class="blt-brand-chip">Honda Civic</span><span class="blt-brand-chip">Honda CR-V</span><span class="blt-brand-chip">Honda HR-V</span></div>
+          <div class="blt-card-foot">
+            <span class="blt-card-date">22/04/2026</span>
+            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="blt-card type-procedimento">
+        <div class="blt-card-stripe"></div>
+        <div class="blt-card-body">
+          <div class="blt-card-top">
+            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
+            <div class="blt-card-header">
+              <div class="blt-card-tags"><span class="blt-type-tag">Procedimento</span></div>
+              <div class="blt-card-title">Sequência correta: Toyota Techstream v17 + LDA Target 180°</div>
+            </div>
+          </div>
+          <div class="blt-card-desc">Guia revisado para sequência de ativação no Techstream v17. Alteração no menu ADAS a partir da versão 17.20.028.</div>
+          <div class="blt-brands"><span class="blt-brand-chip">Toyota RAV4</span><span class="blt-brand-chip">Corolla 2022+</span></div>
+          <div class="blt-card-foot">
+            <span class="blt-card-date">15/04/2026</span>
+            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="blt-card type-atualizacao">
+        <div class="blt-card-stripe"></div>
+        <div class="blt-card-body">
+          <div class="blt-card-top">
+            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg></div>
+            <div class="blt-card-header">
+              <div class="blt-card-tags"><span class="blt-type-tag">Atualização</span></div>
+              <div class="blt-card-title">Nissan LKA — 12 novos modelos adicionados (v5.1)</div>
+            </div>
+          </div>
+          <div class="blt-card-desc">Versão 5.1 do guia Nissan/Infiniti inclui Frontier 2025, Sentra facelift e 10 variantes regionais adicionais.</div>
+          <div class="blt-brands"><span class="blt-brand-chip">Nissan</span><span class="blt-brand-chip">Infiniti</span></div>
+          <div class="blt-card-foot">
+            <span class="blt-card-date">08/04/2026</span>
+            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Botão mobile -->
+<button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<!-- ─── MODAL DE LEITURA DE BOLETIM ─── -->
+<div id="bltModal" style="display:none">
+  <div class="blt-modal-box">
+    <div class="blt-modal-header type-novidade" id="bltModalHeader">
+      <div class="blt-modal-top">
+        <span class="blt-type-tag" id="bltModalTag">Tipo</span>
+        <span class="blt-new-badge" id="bltModalNew" style="display:none">NOVO</span>
+      </div>
+      <div class="blt-modal-title" id="bltModalTitle"></div>
+      <button class="blt-modal-close" onclick="closeBulletin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="blt-modal-body">
+      <div class="blt-modal-content" id="bltModalContent"></div>
+      <div class="blt-affected" id="bltModalAffected">
+        <div class="blt-affected-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Modelos afetados
+        </div>
+        <div class="blt-affected-brands" id="bltModalBrands"></div>
+      </div>
+    </div>
+    <div class="blt-modal-footer">
+      <span class="blt-modal-pub-date" id="bltModalDate"></span>
+      <button class="blt-mark-read-btn" id="bltMarkReadBtn" onclick="markBulletinRead()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Marcar como lido
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL DE UPGRADE ─── -->
+<div id="upgradeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);z-index:3000;align-items:center;justify-content:center;padding:20px">
+  <div class="upgrade-modal-box">
+    <div class="upgrade-modal-header">
+      <div>
+        <div class="upgrade-modal-title">Desbloquear acesso</div>
+        <div class="upgrade-modal-sub" id="upgradeModalSub">Escolha seu plano de acesso</div>
+      </div>
+      <button class="upgrade-modal-close" onclick="closeUpgradeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="upgrade-plans-grid" id="upgradePlansGrid"></div>
+    <div class="upgrade-modal-footer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Dúvidas? <strong>Fale pelo WhatsApp</strong> com seu mentor para escolher o melhor plano.</span>
+      <button class="upgrade-whatsapp-btn" onclick="openWhatsApp()">Falar agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:10px 24px;font-size:.85rem;color:#fff;transition:transform .3s ease;z-index:9999;opacity:0"></div>
+
+<!-- ─── Supabase SDK ─── -->
+<script src="js/supabase.min.js"></script>
+<!-- ─── ADAS PRO Scripts ─── -->
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+
+<!-- Overlay de carregamento -->
+<div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
+  <div style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:#fff">ADAS<strong style="color:#FF6B35">PRO</strong></div>
+  <div style="width:40px;height:40px;border:3px solid rgba(255,107,53,.2);border-top-color:#FF6B35;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div id="authLoadingMsg" style="font-size:.82rem;color:rgba(255,255,255,.4)">Carregando sua conta...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+history.replaceState({}, document.title, '/');
+/* ─── Auth — aguarda init do Supabase antes de verificar sessão ─── */
+let session = null;
+
+const _ver = AUTH.VERSION;
+const _vEl = document.getElementById('sbVersionLabel');
+if (_vEl) _vEl.textContent = `${_ver.full} · build ${_ver.build}`;
+
+/* ─── Variáveis globais (preenchidas após init) ─── */
+let settings     = {};
+let contentData  = [];
+let CATS         = [];
+let unlockedCats = [];
+let currentCat   = 'all';
+let searchTerm   = '';
+let currentPage  = 'biblioteca';
+
+/* ─── Sanitização XSS — escapa HTML antes de inserir no DOM ─── */
+function esc(str) {
+  if (!str && str !== 0) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;')
+    .replace(/\//g,'&#x2F;');
+}
+
+/* ─── Utilitários ─── */
+function showToast(msg,dur=3000) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(80px)';},dur);
+}
+function fmtDate(ts) { return ts ? new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—'; }
+function fmtDT(ts)   { return ts ? new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'; }
+function statusBadge(s) {
+  const m={open:['status-pending','Aberto'],'in-progress':['status-active','Em andamento'],resolved:['status-locked','Resolvido'],closed:['status-locked','Fechado']};
+  const[cls,lbl]=m[s]||['',s]; return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+
+/* ─── Init — aguarda Supabase, depois verifica sessão ─── */
+AUTH.init().then(() => {
+  session = AUTH.requireAuth('membro');
+  if (!session) return;
+
+  const initials = session.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('sbAvatar').textContent = initials;
+  document.getElementById('sbName').textContent   = session.name;
+  document.getElementById('sbRole').textContent   = {
+    superadmin: 'SuperAdmin',
+    admin:      'Administrador',
+    gestor:     'Gestor',
+    membro:     'Membro',
+  }[session.role] || session.role;
+
+  // Link "Voltar ao painel" visível apenas para admin/gestor/superadmin
+  if (['admin','gestor','superadmin'].includes(session.role)) {
+    const backLink = document.getElementById('adminBackLink');
+    if (backLink) {
+      backLink.style.display = '';
+      backLink.href = session.role === 'superadmin' ? 'superadmin.html' : 'admin.html';
+    }
+  }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'adaspro_session' && !e.newValue) {
+      window.location.href = 'login.html';
+    }
+  });
+
+  setInterval(() => {
+    const s = AUTH.getSession();
+    if (!s) window.location.href = 'login.html';
+  }, 5 * 60 * 1000);
+
+  document.getElementById('authLoading').remove();
+
+  settings     = AUTH.getSettings();
+  contentData  = AUTH.getContentForUser(session.userId);
+  CATS         = AUTH.CATEGORIES;
+  unlockedCats = [...new Set(contentData.filter(c=>!c.locked).map(c=>c.cat))];
+
+  /* ─── Sidebar nav dinâmico ─── */
+  const navEl = document.getElementById('navCats');
+  CATS.forEach(cat => {
+    const hasItems = contentData.some(c=>c.cat===cat.id);
+    const unlocked = unlockedCats.includes(cat.id);
+    if (!hasItems) return;
+    const a = document.createElement('a');
+    a.className = 'sidebar-nav-item';
+    a.dataset.cat = cat.id;
+    a.onclick = () => { filterCat(cat.id,a); showPage('biblioteca'); };
+    a.innerHTML = `<span class="nav-icon">${cat.icon}</span>${cat.label}${!unlocked?' 🔒':''}`;
+    if (!unlocked) a.style.opacity = '.4';
+    navEl.appendChild(a);
+  });
+
+  /* ─── Welcome banner ─── */
+  const wb = document.getElementById('welcomeBanner');
+  if (settings.general && settings.general.welcomeMessage) {
+    const wbDiv = document.createElement('div');
+  wbDiv.className = 'welcome-banner';
+  wbDiv.innerHTML = '<div class="welcome-icon">👋</div><div></div>';
+  const wbText = wbDiv.querySelector('div:last-child');
+  const wbTitle = document.createElement('div');
+  wbTitle.className = 'welcome-title';
+  wbTitle.textContent = `Olá, ${session.name.split(' ')[0]}!`;
+  const wbSub = document.createElement('div');
+  wbSub.className = 'welcome-sub';
+  wbSub.textContent = settings.general.welcomeMessage;
+  wbText.appendChild(wbTitle);
+  wbText.appendChild(wbSub);
+  wb.appendChild(wbDiv);
+  }
+
+  /* ─── Stats do membro ─── */
+  const totalCats = CATS.filter(c=>contentData.some(x=>x.cat===c.id)).length;
+  const myTickets = AUTH.getUserTickets(session.userId);
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-card-icon">📚</div><div class="stat-card-value">${contentData.filter(c=>!c.locked).length}</div><div class="stat-card-label">Materiais liberados</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🔒</div><div class="stat-card-value" style="color:rgba(255,255,255,.4)">${contentData.filter(c=>c.locked).length}</div><div class="stat-card-label">Materiais bloqueados</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🗂️</div><div class="stat-card-value">${unlockedCats.length}/${totalCats}</div><div class="stat-card-label">Categorias com acesso</div></div>
+    <div class="stat-card"><div class="stat-card-icon">🎫</div><div class="stat-card-value">${myTickets.length}</div><div class="stat-card-label">Tickets enviados</div></div>`;
+
+  /* ─── Badge de tickets ─── */
+  const openTkts = myTickets.filter(t=>t.status==='open'||t.status==='in-progress').length;
+  const badge = document.getElementById('myTicketsBadge');
+  badge.textContent = openTkts;
+  badge.style.display = openTkts > 0 ? 'inline-block' : 'none';
+
+  /* ─── Filtros de categoria ─── */
+  const filtersEl = document.getElementById('catFilters');
+  CATS.forEach(cat => {
+    const hasItems = contentData.some(c=>c.cat===cat.id);
+    if (!hasItems) return;
+    const btn = document.createElement('div');
+    btn.className = 'cat-filter';
+    btn.dataset.cat = cat.id;
+    btn.textContent = cat.label;
+    btn.onclick = () => filterCat(cat.id,btn);
+    filtersEl.appendChild(btn);
+  });
+
+  renderContent();
+
+}).catch(err => {
+  const el = document.getElementById('authLoadingMsg');
+  if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + err.message +
+    '<br><br><small>Verifique as credenciais em <code>js/supabase-config.js</code></small>';
+});
+
+/* ─── Helpers de nível ─── */
+const LEVEL_INFO = {
+  1: { label:'FREE',    cls:'lvl-free'    },
+  2: { label:'MÓDULO',  cls:'lvl-modulo'  },
+  3: { label:'PRO',     cls:'lvl-pro'     },
+  4: { label:'PREMIUM', cls:'lvl-premium' },
+};
+function levelBadge(level) {
+  const l = LEVEL_INFO[level] || LEVEL_INFO[1];
+  return `<span class="lvl-badge ${l.cls}">${l.label}</span>`;
+}
+
+/* ─── Renderizar conteúdo ─── */
+function renderContent() {
+  const grid      = document.getElementById('contentGrid');
+  const userLevel = AUTH.getUserAccessLevel(session.userId);
+  const items = contentData.filter(item => {
+    const mc = currentCat==='all'||item.cat===currentCat;
+    const ms = !searchTerm||item.title.toLowerCase().includes(searchTerm)||item.desc?.toLowerCase().includes(searchTerm);
+    return mc && ms;
+  });
+
+  if (!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:rgba(255,255,255,.3)">Nenhum material encontrado.</div>';
+    return;
+  }
+  grid.innerHTML = items.map(item => {
+    const cat      = CATS.find(c=>c.id===item.cat)||{icon:'📄',label:item.cat};
+    const accLvl   = item.accessLevel   || 1;
+    const dlLvl    = item.downloadLevel || 3;
+    const canDl    = AUTH.canDownloadContent(session.userId, item.id);
+    const dlPlanLbl = (LEVEL_INFO[dlLvl]||LEVEL_INFO[3]).label;
+    const fileInfo  = item.fileSize ? `<span style="font-size:.68rem;color:rgba(255,255,255,.25);margin-left:4px">${item.fileSize}</span>` : '';
+
+    const dlButton = canDl
+      ? `<button class="content-dl-btn" onclick="downloadContent('${item.id}')">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+           Download${fileInfo}
+         </button>`
+      : `<button class="content-dl-locked" onclick="openUpgradeModal('${item.cat}','${cat.label}')">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+           Download — ${dlPlanLbl}+
+         </button>`;
+
+    if (item.locked) {
+      const reqPlanLbl = (LEVEL_INFO[accLvl]||LEVEL_INFO[2]).label;
+      return `<div class="content-item locked-card">
+        <div class="content-item-header">
+          <span class="content-item-icon" style="opacity:.5">${item.icon||cat.icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <div class="content-item-cat">${cat.label}</div>
+              ${levelBadge(accLvl)}
+            </div>
+            <div class="content-item-name" style="opacity:.55">${item.title}</div>
+          </div>
+        </div>
+        <div class="content-item-body">
+          <div class="content-item-desc" style="filter:blur(3px);opacity:.4;pointer-events:none;user-select:none">${item.desc||''}</div>
+        </div>
+        <div class="unlock-panel">
+          <div class="unlock-panel-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Acesso bloqueado</span>
+            <span class="unlock-plan-badge">${reqPlanLbl} ou superior</span>
+          </div>
+          <button class="unlock-btn" onclick="openUpgradeModal('${item.cat}','${cat.label}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/></svg>
+            Desbloquear
+          </button>
+        </div>
+      </div>`;
+    }
+    const metaChips = [
+      item.pages ? `<span style="font-size:.65rem;color:rgba(255,255,255,.3)">📄 ${item.pages}p</span>` : '',
+      item.updatedAt ? `<span style="font-size:.65rem;color:rgba(6,167,125,.6)">${item.updatedAt}</span>` : '',
+      item.version ? `<span style="font-size:.65rem;color:rgba(255,255,255,.2)">${item.version}</span>` : '',
+    ].filter(Boolean).join('<span style="color:rgba(255,255,255,.1);margin:0 4px">·</span>');
+
+    return `<div class="content-item">
+      <div class="content-item-header">
+        <span class="content-item-icon">${item.icon||cat.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <div class="content-item-cat">${cat.label}</div>
+            ${levelBadge(accLvl)}
+          </div>
+          <div class="content-item-name">${item.title}</div>
+          ${metaChips?`<div style="margin-top:5px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${metaChips}</div>`:''}
+        </div>
+      </div>
+      <div class="content-item-body">
+        <div class="content-item-desc">${item.desc||''}</div>
+        <div class="content-item-actions">
+          <button class="content-item-action content-action-open" onclick="openContent('${item.id}')">Ver detalhes →</button>
+          ${dlButton}
+        </div>
+      </div></div>`;
+  }).join('');
+}
+
+function filterCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-filter,[data-cat]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`[data-cat="${cat}"]`).forEach(b=>b.classList.add('active'));
+  renderContent();
+}
+function filterSearch() {
+  searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  renderContent();
+}
+
+/* ─── Visualizar material ─── */
+function openContent(id) {
+  const item = contentData.find(c=>c.id===id);
+  if (!item||item.locked) return;
+  const cat = CATS.find(c=>c.id===item.cat)||{icon:'📄',label:item.cat};
+  const canDl = AUTH.canDownloadContent(session.userId, item.id);
+
+  const highlightRows = (item.highlights||[]).map(h=>
+    `<div style="display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="color:#06A77D;font-size:.8rem;flex-shrink:0;margin-top:1px">✓</span>
+      <span style="font-size:.81rem;color:rgba(255,255,255,.6);line-height:1.5">${h}</span>
+    </div>`
+  ).join('');
+
+  const modelTags = (item.models||[]).slice(0,6).map(m=>
+    `<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;font-size:.68rem;color:rgba(255,255,255,.45);margin:2px">${m}</span>`
+  ).join('');
+
+  const dlSection = canDl
+    ? `<button onclick="downloadContent('${item.id}');this.closest('[data-modal]').remove()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:linear-gradient(135deg,#06A77D,#048a67);color:#fff;border-radius:10px;font-family:var(--font-h);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;border:none;box-shadow:0 4px 14px rgba(6,167,125,.3)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar PDF — ${item.title}
+      </button>`
+    : `<div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.18);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span style="font-size:.82rem;color:rgba(255,255,255,.5);flex:1">Download disponível no plano <strong style="color:#FF6B35">PRO ou superior</strong></span>
+        <button onclick="openUpgradeModal('${item.cat}','${cat.label}')" style="padding:6px 12px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:7px;color:#FF6B35;font-size:.75rem;font-weight:600;cursor:pointer">Desbloquear</button>
+      </div>`;
+
+  const modal = document.createElement('div');
+  modal.setAttribute('data-modal','');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+  modal.innerHTML=`
+  <div style="background:#0d1520;border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:620px;overflow:hidden;animation:fadeUp .25s ease">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,rgba(27,43,77,.9),rgba(13,24,33,.9));padding:24px 28px 20px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;background:rgba(255,255,255,.06);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${cat.icon}</div>
+          <div>
+            <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:3px">${cat.label}</div>
+            <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem;line-height:1.3">${item.title}</div>
+          </div>
+        </div>
+        <button onclick="this.closest('[data-modal]').remove()" style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);cursor:pointer;font-size:.85rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:none">✕</button>
+      </div>
+      <!-- Meta chips -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${item.pages?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);border-radius:5px;font-size:.68rem;color:var(--tech)">📄 ${item.pages} páginas</span>`:''}
+        ${item.fileSize?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.4)">${item.fileSize}</span>`:''}
+        ${item.version?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.4)">${item.version}</span>`:''}
+        ${item.updatedAt?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(6,167,125,.08);border:1px solid rgba(6,167,125,.2);border-radius:5px;font-size:.68rem;color:#4dd9a8">Atualizado ${item.updatedAt}</span>`:''}
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:22px 28px;display:flex;flex-direction:column;gap:18px">
+      <!-- Descrição -->
+      <p style="font-size:.88rem;color:rgba(255,255,255,.55);line-height:1.75;margin:0">${item.desc||''}</p>
+
+      <!-- Modelos cobertos -->
+      ${item.models&&item.models.length?`
+      <div>
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);margin-bottom:8px">Modelos cobertos</div>
+        <div style="line-height:1.8">${modelTags}${item.models.length>6?`<span style="font-size:.68rem;color:rgba(255,255,255,.3);margin-left:4px">+${item.models.length-6} mais</span>`:''}</div>
+      </div>`:''}
+
+      <!-- Destaques técnicos -->
+      ${highlightRows?`
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 18px">
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.25);margin-bottom:10px">Informações técnicas</div>
+        ${highlightRows}
+      </div>`:''}
+
+      <!-- Download / Upgrade -->
+      ${dlSection}
+
+      <!-- Suporte -->
+      <div style="text-align:center;padding-top:2px">
+        <button onclick="this.closest('[data-modal]').remove();showPage('suporte')" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.76rem;cursor:pointer;text-decoration:underline">Dúvidas sobre este material? Abrir ticket de suporte →</button>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}</style>`;
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+/* ─── Download de conteúdo ─── */
+async function downloadContent(id) {
+  const item = contentData.find(c => c.id === id);
+  if (!item) return;
+
+  // Arquivo ainda não enviado ao servidor — feedback imediato sem chamar edge function
+  if (!item.filePath) {
+    showToast('📎 Arquivo em preparação. Solicite via ticket de suporte.', 5000);
+    setTimeout(() => showPage('suporte'), 1200);
+    return;
+  }
+
+  showToast('⏳ Verificando permissões...');
+
+  try {
+    // Tenta URL assinada diretamente via Storage (sem precisar de Edge Function)
+    let url = await AUTH.getSignedUrl(item.filePath, 3600);
+
+    if (!url) {
+      // Fallback: Edge Function (para lógica de permissão customizada)
+      const result = await AUTH.callEdgeFunction('get-download-url', { contentId: id });
+      if (!result.ok || !result.data?.url) {
+        showToast('⛔ Sem permissão para este arquivo. Verifique seu plano.', 4000);
+        return;
+      }
+      url = result.data.url;
+    }
+
+    AUTH.trackDownload(session.userId, id);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = item.title.replace(/[^a-zA-Z0-9 ]/g, '') + '.pdf';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('⬇️ Download iniciado — ' + item.title);
+
+  } catch (err) {
+    showToast('⛔ Erro ao iniciar download. Tente novamente.', 4000);
+    console.error('[downloadContent]', err);
+  }
+}
+
+function suggestUpgrade(catLabel) {
+  showToast(`Para acessar ${catLabel}, abra um ticket solicitando upgrade de plano.`, 4000);
+  showPage('suporte');
+}
+
+/* ─── Ticket ─── */
+function submitTicket(e) {
+  e.preventDefault();
+  // Sanitiza input antes de salvar
+  const title   = esc(document.getElementById('tktTitle').value.trim());
+  const cat     = document.getElementById('tktCat').value;
+  const prio    = document.getElementById('tktPrio').value;
+  const message = esc(document.getElementById('tktMessage').value.trim());
+  if (!title||!message) return;
+  if (title.length > 200)   { showToast('⚠️ Assunto muito longo (máx 200 chars).'); return; }
+  if (message.length > 2000) { showToast('⚠️ Mensagem muito longa (máx 2000 chars).'); return; }
+
+  const result = AUTH.createTicket(session.userId, { title, category:cat, priority:prio, message });
+  if (result.ok) {
+    document.getElementById('ticketForm').reset();
+    showToast('✅ Ticket enviado! Respondemos em até 24h.');
+    const open = AUTH.getUserTickets(session.userId).filter(t=>t.status==='open'||t.status==='in-progress').length;
+    badge.textContent = open; badge.style.display = open>0?'inline-block':'none';
+  }
+}
+
+/* ─── Meus Tickets ─── */
+function loadMeusTickets() {
+  const tickets = AUTH.getUserTickets(session.userId);
+  const el = document.getElementById('myTicketsList');
+
+  const cnt = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  cnt('tktCountAll',      tickets.length);
+  cnt('tktCountOpen',     tickets.filter(t=>t.status==='open').length);
+  cnt('tktCountProgress', tickets.filter(t=>t.status==='in-progress').length);
+  cnt('tktCountResolved', tickets.filter(t=>t.status==='resolved'||t.status==='closed').length);
+
+  if (!tickets.length) {
+    el.innerHTML = `<div class="tkt-empty">
+      <div class="tkt-empty-art">
+        <div class="art-ring"></div><div class="art-ring"></div>
+        <div class="art-center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+      </div>
+      <div class="tkt-empty-title">Nenhum ticket aberto</div>
+      <div class="tkt-empty-sub">Encontrou alguma dúvida técnica? Nosso mentor responde em até 24h.</div>
+      <button class="tkt-empty-cta" onclick="showPage('suporte')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Abrir primeiro ticket
+      </button>
+    </div>`;
+    return;
+  }
+
+  const catLabels = { 'duvida-tecnica':'Dúvida Técnica','solicitacao-material':'Solicitar Material','upgrade-plano':'Upgrade de Plano','outro':'Outro' };
+  const statusMap = { 'open':['tkt-s-open','Aberto'],'in-progress':['tkt-s-progress','Em andamento'],'resolved':['tkt-s-resolved','Resolvido'],'closed':['tkt-s-closed','Fechado'] };
+
+  el.innerHTML = tickets.map((t, i) => {
+    const prio = t.priority || 'medium';
+    const [sCls, sLabel] = statusMap[t.status] || statusMap['open'];
+    const catLabel = catLabels[t.category] || 'Suporte';
+    const lastMsg = t.messages.length ? t.messages[t.messages.length-1].message : 'Nenhuma mensagem ainda.';
+    const num = String(i+1).padStart(3,'0');
+    return `<div class="tkt-card-item prio-${esc(prio)}" data-status="${esc(t.status)}" onclick="openTicketViewer('${esc(t.id)}')" style="animation-delay:${i*.05}s">
+      <div class="tkt-card-inner">
+        <div class="tkt-card-top">
+          <div class="tkt-card-num">TKT-${num}</div>
+          <div class="tkt-card-meta">
+            <div class="tkt-card-title-row">
+              <div class="tkt-card-title">${esc(t.title)}</div>
+              <div class="tkt-card-badges"><span class="tkt-status ${sCls}"><span class="tkt-status-dot"></span>${sLabel}</span></div>
+            </div>
+            <span class="tkt-cat-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              ${catLabel}
+            </span>
+          </div>
+        </div>
+        <div class="tkt-card-footer">
+          <div class="tkt-card-preview">${esc(lastMsg).substring(0,90)}${lastMsg.length>90?'…':''}</div>
+          <div class="tkt-card-time">${fmtDate(t.createdAt)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── Viewer de ticket ─── */
+let viewingTicketId = null;
+function openTicketViewer(id) {
+  viewingTicketId = id;
+  const t = AUTH.getTicketById(id);
+  if (!t) return;
+  const allTickets = AUTH.getUserTickets(session.userId);
+  const idx = allTickets.findIndex(x=>x.id===id);
+  const num = String(idx+1).padStart(3,'0');
+  const numEl = document.getElementById('tvTicketNum');
+  if (numEl) numEl.textContent = 'TKT-' + num;
+  document.getElementById('tvTitle').textContent = t.title;
+  const sMap = { 'open':['tkt-s-open','Aberto'],'in-progress':['tkt-s-progress','Em andamento'],'resolved':['tkt-s-resolved','Resolvido'],'closed':['tkt-s-closed','Fechado'] };
+  const [sCls, sLabel] = sMap[t.status] || sMap['open'];
+  document.getElementById('tvStatus').innerHTML = `<span class="tkt-status ${sCls}"><span class="tkt-status-dot"></span>${sLabel}</span>`;
+  const chat = document.getElementById('tvChat');
+  if (!t.messages.length) {
+    chat.innerHTML = `<div class="tv-waiting"><div class="tv-waiting-icon"></div><div class="tv-waiting-text">Aguardando resposta do mentor</div></div>`;
+  } else {
+    chat.innerHTML = t.messages.map((m, i) => {
+      const isMember = m.role === 'member';
+      const initials = esc(m.authorName||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+      return `<div class="tv-msg ${isMember?'msg-member':'msg-admin'}" style="animation-delay:${i*.05}s">
+        <div class="tv-msg-avatar">${initials}</div>
+        <div class="tv-msg-body">
+          <div class="tv-msg-bubble">${esc(m.message)}</div>
+          <div class="tv-msg-meta"><span class="tv-msg-sender">${esc(m.authorName||'')}</span><span>${fmtDT(m.createdAt)}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  chat.scrollTop = chat.scrollHeight;
+  document.getElementById('tvInput').style.display = t.status==='closed'?'none':'flex';
+  document.getElementById('tvReply').value = '';
+  const cc = document.getElementById('tvCharCount');
+  if (cc) cc.textContent = '0/800';
+  document.getElementById('ticketViewer').style.display = 'flex';
+}
+function closeTicketViewer() {
+  document.getElementById('ticketViewer').style.display = 'none';
+  viewingTicketId = null;
+}
+function sendReply() {
+  if (!viewingTicketId) return;
+  const raw = document.getElementById('tvReply').value.trim();
+  if (!raw) return;
+  if (raw.length > 2000) { showToast('⚠️ Mensagem muito longa (máx 2000 chars).'); return; }
+  const msg = esc(raw); // sanitiza antes de salvar
+  AUTH.replyTicket(viewingTicketId, session.userId, msg);
+  openTicketViewer(viewingTicketId);
+  loadMeusTickets();
+}
+
+/* ─── Perfil ─── */
+function loadPerfil() {
+  const user = AUTH.getUserById(session.userId);
+  if (!user) return;
+  const init = user.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('profAvatar').textContent = init;
+  document.getElementById('profName').textContent   = user.name;
+  document.getElementById('profEmail').textContent  = user.email;
+  document.getElementById('profRole').textContent   = user.role;
+
+  const total = CATS.filter(c=>contentData.some(x=>x.cat===c.id)).length;
+  const pct   = total > 0 ? Math.round(((user.permissions || []).length/total)*100) : 0;
+  document.getElementById('accessBar').style.width = pct + '%';
+  document.getElementById('accessText').textContent = `${(user.permissions || []).length} de ${total} categorias liberadas (${pct}%)`;
+
+  const permsEl = document.getElementById('profPerms');
+  permsEl.innerHTML = CATS.filter(c=>(user.permissions||[]).includes(c.id)).map(c =>
+    `<span style="background:rgba(0,180,216,.1);color:var(--tech);border:1px solid rgba(0,180,216,.2);border-radius:50px;padding:4px 12px;font-size:.75rem;font-weight:500">${c.icon} ${c.label}</span>`
+  ).join('') || '<span style="font-size:.82rem;color:rgba(255,255,255,.3)">Nenhuma categoria liberada ainda.</span>';
+
+  document.getElementById('memberNote').textContent = settings.general.membershipNote || 'Para solicitar acesso a novas categorias ou alterar seu plano, abra um ticket de suporte.';
+}
+
+/* ─── Navegação ─── */
+function goHome() {
+  const homeNavEl = document.querySelector('.sidebar-nav-item[onclick*="biblioteca"]');
+  showPage('biblioteca', homeNavEl);
+}
+
+function showPage(page, navEl) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(n=>n.classList.remove('active'));
+  const map = {
+    biblioteca:    ['pageBiblioteca','Biblioteca Técnica','Acesse os materiais liberados para sua conta'],
+    suporte:       ['pageSuport','Abrir Ticket de Suporte','Envie sua dúvida ao especialista'],
+    'meus-tickets':['pageMeusTickets','Meus Tickets','Histórico de suporte e atendimento'],
+    boletins:      ['pageBoletins','Boletins Técnicos','Atualizações e comunicados do mentor'],
+    perfil:        ['pagePerfil','Meu Perfil','Informações da sua conta e permissões'],
+  };
+  const [id,title,sub] = map[page]||['pageBiblioteca','Biblioteca',''];
+  document.getElementById(id)?.classList.add('active');
+  document.getElementById('tbTitle').textContent = title;
+  document.getElementById('tbSub').textContent   = sub;
+  navEl?.classList.add('active');
+  // Breadcrumb: oculto na biblioteca, visível nas demais páginas
+  const breadcrumb = document.getElementById('tbBreadcrumb');
+  if (page === 'biblioteca') {
+    breadcrumb.style.display = 'none';
+  } else {
+    breadcrumb.style.display = 'flex';
+    document.getElementById('tbBreadcrumbCurrent').textContent = title;
+  }
+  if (page==='meus-tickets') loadMeusTickets();
+  if (page==='perfil') { setTimeout(()=>{ document.getElementById('accessBar').style.width = ((AUTH.getUserById(session.userId)?.permissions||[]).length/(CATS.length||1)*100)+'%'; },100); loadPerfil(); }
+}
+
+/* ─── Category chips ─── */
+document.getElementById('catChips').addEventListener('click', function(e) {
+  const chip = e.target.closest('.cat-chip');
+  if (!chip) return;
+  this.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  document.getElementById('tktCat').value = chip.dataset.val;
+});
+
+/* ─── Priority chips ─── */
+function selectPrio(chip) {
+  document.querySelectorAll('.prio-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  document.getElementById('tktPrio').value = chip.dataset.val;
+}
+
+/* ─── Upgrade modal ─── */
+function openUpgradeModal(catId, catLabel) {
+  const modal = document.getElementById('upgradeModal');
+  document.getElementById('upgradeModalSub').textContent = `Para acessar "${catLabel}" e outros módulos`;
+  const grid = document.getElementById('upgradePlansGrid');
+  const plans = AUTH.PLANS;
+  grid.innerHTML = plans.map(plan => `
+    <div class="upgrade-plan-card ${plan.popular ? 'popular' : ''}">
+      ${plan.popular ? '<div class="popular-badge">Mais popular</div>' : ''}
+      <div class="plan-card-badge" style="color:${plan.color};border-color:${plan.color}33;background:${plan.color}11">${plan.badge}</div>
+      <div class="plan-card-name">${plan.name}</div>
+      <div class="plan-card-price">
+        ${plan.price === 0 ? '<span class="price-free">Grátis</span>' : `<span class="price-val">R$${plan.price}</span><span class="price-period">/${plan.period}</span>`}
+      </div>
+      <ul class="plan-card-features">
+        ${plan.features.map(f => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#06A77D;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>${f}</li>`).join('')}
+      </ul>
+      <button class="plan-card-cta ${plan.id === 'free' ? 'cta-disabled' : ''}" onclick="requestPlan('${plan.id}','${catId}')">
+        ${plan.id === 'free' ? 'Plano atual' : 'Solicitar'}
+      </button>
+    </div>
+  `).join('');
+  modal.style.display = 'flex';
+}
+function closeUpgradeModal() {
+  document.getElementById('upgradeModal').style.display = 'none';
+}
+function requestPlan(planId, catId) {
+  closeUpgradeModal();
+  const plan = AUTH.PLANS.find(p => p.id === planId);
+  document.getElementById('tktCat').value = 'upgrade-plano';
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('active', c.dataset.val === 'upgrade-plano'));
+  document.getElementById('tktTitle').value = `Solicitação de upgrade — Plano ${plan?.name}`;
+  document.getElementById('tktMessage').value = `Olá, gostaria de assinar o Plano ${plan?.name} (R$${plan?.price}/${plan?.period}) para acessar os módulos disponíveis.${catId ? `\n\nMódulo de interesse: ${catId}` : ''}`;
+  showPage('suporte');
+  showToast('Formulário preenchido automaticamente — revise e envie o ticket!', 4000);
+}
+function openWhatsApp() {
+  const msg = encodeURIComponent('Olá! Gostaria de saber mais sobre os planos de acesso da plataforma ADAS PRO.');
+  window.open('https://wa.me/55?text=' + msg, '_blank');
+}
+
+/* ─── Filtros de ticket ─── */
+function filterTickets(filter, el) {
+  document.querySelectorAll('#tktFilterBar .diag-filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#myTicketsList .tkt-card-item').forEach(card => {
+    const matches = filter === 'all' || card.dataset.status === filter;
+    card.style.display = matches ? '' : 'none';
+  });
+}
+
+/* ─── Boletins técnicos ─── */
+function filterBulletins(type, el) {
+  document.querySelectorAll('#bltFilterBar .diag-filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const cards = document.querySelectorAll('#bltGrid .blt-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const matches = type === 'all' || card.classList.contains('type-'+type);
+    card.style.display = matches ? '' : 'none';
+    if (matches) visible++;
+  });
+  const cnt = document.getElementById('bltCountAll');
+  if (cnt) cnt.textContent = visible;
+}
+
+function openBulletin(btn) {
+  const card = btn.closest('.blt-card');
+  const type = [...card.classList].find(c=>c.startsWith('type-'))?.replace('type-','') || 'novidade';
+  const title  = card.querySelector('.blt-card-title')?.textContent || '';
+  const desc   = card.querySelector('.blt-card-desc')?.textContent || '';
+  const date   = card.querySelector('.blt-card-date')?.textContent || '';
+  const brands = [...card.querySelectorAll('.blt-brand-chip')].map(b=>b.textContent);
+  const isNew  = !!card.querySelector('.blt-new-badge');
+  const typeLabels = { novidade:'Novidade', atualizacao:'Atualização', alerta:'Alerta Técnico', procedimento:'Procedimento' };
+
+  const header = document.getElementById('bltModalHeader');
+  header.className = `blt-modal-header type-${type}`;
+  const tagEl = document.getElementById('bltModalTag');
+  tagEl.textContent = typeLabels[type] || type;
+  tagEl.className = 'blt-type-tag';
+  document.getElementById('bltModalTitle').textContent = title;
+  document.getElementById('bltModalNew').style.display = isNew ? '' : 'none';
+  document.getElementById('bltModalContent').innerHTML =
+    `<p>${esc(desc)}</p><p>Este boletim técnico contém informações detalhadas e procedimentos específicos para os modelos listados. Consulte o material de calibração correspondente na Biblioteca Técnica para o procedimento completo.</p><ul><li>Verifique o material técnico atualizado na biblioteca</li><li>Aplique o procedimento na sequência indicada</li><li>Use a ferramenta de diagnóstico recomendada pelo fabricante</li></ul>`;
+  document.getElementById('bltModalDate').textContent = 'Publicado em ' + date;
+  document.getElementById('bltModalBrands').innerHTML = brands.map(b=>`<span class="blt-affected-brand">${esc(b)}</span>`).join('');
+  const markBtn = document.getElementById('bltMarkReadBtn');
+  markBtn.className = 'blt-mark-read-btn';
+  markBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Marcar como lido`;
+
+  const modal = document.getElementById('bltModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBulletin() {
+  document.getElementById('bltModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function markBulletinRead() {
+  const btn = document.getElementById('bltMarkReadBtn');
+  btn.className = 'blt-mark-read-btn read';
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Lido`;
+}
+
+document.getElementById('bltModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeBulletin();
+});
+
+/* ─── Inicializar contagem de boletins ─── */
+const _bltCards = document.querySelectorAll('#bltGrid .blt-card');
+const _bltCnt = document.getElementById('bltCountAll');
+if (_bltCnt) _bltCnt.textContent = _bltCards.length;
+const _bltNewCnt = document.querySelectorAll('#bltGrid .blt-new-badge').length;
+const _bltBadge = document.getElementById('bltUnreadBadge');
+if (_bltBadge && _bltNewCnt > 0) { _bltBadge.textContent = _bltNewCnt; _bltBadge.style.display = ''; }
+</script>
+</body>
+</html>

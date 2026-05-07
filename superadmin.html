@@ -1,0 +1,3399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADAS PRO — Super Admin</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='11' fill='%23F8FAFC'%3ESA%3C/text%3E%3C/svg%3E"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="js/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <style>
+    /* ─────────────────────────────────────────────────────
+       VARIÁVEIS — Dark Theme (branco)
+    ───────────────────────────────────────────────────── */
+    :root {
+      /* Accent / Brand — branco */
+      --accent:         #F8FAFC;
+      --accent-hover:   #E2E8F0;
+      --accent-soft:    #FFFFFF;
+      --accent-bg:      rgba(255,255,255,.08);
+      --accent-border:  rgba(255,255,255,.18);
+
+      /* Legacy aliases */
+      --primary:        #0F1923;
+      --primary-dark:   #080E15;
+      --purple:         #F8FAFC;
+      --purple-dark:    #E2E8F0;
+
+      /* Gold */
+      --gold:           #FBBF24;
+      --gold-bg:        rgba(251,191,36,.12);
+      --gold-border:    rgba(251,191,36,.3);
+
+      /* Status */
+      --tech:           #38BDF8;
+      --tech-bg:        rgba(56,189,248,.1);
+      --tech-border:    rgba(56,189,248,.2);
+      --success:        #34D399;
+      --success-bg:     rgba(52,211,153,.1);
+      --success-border: rgba(52,211,153,.25);
+      --warning:        #FBBF24;
+      --warning-bg:     rgba(251,191,36,.1);
+      --danger:         #EF4444;
+      --danger-bg:      rgba(239,68,68,.1);
+      --danger-border:  rgba(239,68,68,.25);
+
+      /* Surface */
+      --bg:             #0F1923;
+      --surface:        #16202E;
+      --surface-muted:  #1A2535;
+      --surface-hover:  #1E2D40;
+      --glass:          rgba(255,255,255,.04);
+      --glass-border:   rgba(255,255,255,.08);
+
+      /* Text */
+      --text-primary:   #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted:     #64748B;
+      --text-subtle:    #475569;
+      --white:          #FFFFFF;
+
+      /* Borders */
+      --border:         rgba(255,255,255,.08);
+      --border-strong:  rgba(255,255,255,.18);
+
+      /* Shadows */
+      --shadow-xs: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-sm: 0 1px 4px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.2);
+      --shadow-md: 0 4px 14px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+      --shadow-lg: 0 12px 36px rgba(0,0,0,.6), 0 4px 10px rgba(0,0,0,.4);
+
+      --font-h:     'Poppins', sans-serif;
+      --font-b:     'Inter', sans-serif;
+      --transition: background-color .3s, color .3s, border-color .3s,
+                    box-shadow .3s, transform .3s, opacity .3s, filter .3s;
+      --radius:     10px;
+      --radius-lg:  14px;
+      --sidebar-w:  248px;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       RESET / BASE
+    ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text-secondary);
+      font-family: var(--font-b);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    input, textarea, select { font-family: inherit; }
+
+    /* ─────────────────────────────────────────────────────
+       LAYOUT
+    ───────────────────────────────────────────────────── */
+    .dashboard { display: flex; min-height: 100vh; }
+
+    /* ─────────────────────────────────────────────────────
+       SIDEBAR
+    ───────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-hex {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #1E2D40, #243548);
+      border: 1px solid rgba(255,255,255,.14);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-h); font-weight: 800; font-size: .85rem;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.35);
+      flex-shrink: 0;
+    }
+    .sidebar-logo span {
+      font-family: var(--font-h);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -.02em;
+    }
+    .sidebar-logo span strong { color: #FF6B35; }
+
+    /* Badge SUPERADMIN */
+    .sa-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 12px 14px 0;
+      padding: 7px 12px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-bg), var(--gold-bg));
+      border: 1px solid var(--accent-border);
+    }
+    .sa-badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 6px rgba(251,191,36,.5);
+      animation: pulseDot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .sa-badge-text {
+      font-family: var(--font-h);
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-transform: uppercase;
+    }
+
+    /* User info */
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      margin: 10px 10px 4px;
+      border-radius: var(--radius);
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+    }
+    .sidebar-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1E2D40, #2A3F5C);
+      border: 1px solid rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-h); font-weight: 800; font-size: .82rem;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    .sidebar-user-name {
+      font-size: .83rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-user-role {
+      font-size: .67rem;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    /* Nav */
+    .sidebar-nav { padding: 8px 0; flex: 1; }
+    .sidebar-nav-section {
+      font-size: .6rem;
+      font-weight: 700;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      padding: 14px 18px 4px;
+    }
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 14px 9px 16px;
+      margin: 1px 8px;
+      border-radius: 8px;
+      font-size: .83rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+      position: relative;
+    }
+    .sidebar-nav-item:hover {
+      background: var(--accent-bg);
+      color: var(--accent);
+    }
+    .sidebar-nav-item.active {
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 600;
+      border: 1px solid var(--accent-border);
+    }
+    .sidebar-nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 20%; bottom: 20%;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--gold);
+    }
+    .nav-icon { font-size: .95rem; }
+
+    /* Footer */
+    .sidebar-footer {
+      padding: 10px 10px 14px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-version {
+      font-size: .6rem;
+      color: var(--text-subtle);
+      font-family: monospace;
+      padding: 4px 8px 8px;
+    }
+    .sidebar-logout {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 8px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger);
+      font-size: .82rem;
+      font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      transition: var(--transition);
+    }
+    .sidebar-logout:hover {
+      background: rgba(239,68,68,.15);
+      color: #EF4444;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       MAIN CONTENT
+    ───────────────────────────────────────────────────── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+      position: sticky; top: 0;
+      z-index: 50;
+    }
+    .topbar-title {
+      font-family: var(--font-h);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .topbar-sub {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tb-clock {
+      font-size: .78rem;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    .tb-btn {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-muted);
+    }
+    .tb-btn:hover { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+
+    /* Page container */
+    .pages-wrap { padding: 24px 28px; flex: 1; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ─────────────────────────────────────────────────────
+       CARDS DE MÉTRICA
+    ───────────────────────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 22px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-strong);
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .metric-card.blue::before   { background: linear-gradient(90deg, var(--tech), #0EA5E9); }
+    .metric-card.orange::before { background: linear-gradient(90deg, #F97316, #EA580C); }
+    .metric-card.green::before  { background: linear-gradient(90deg, var(--success), #10B981); }
+    .metric-card.purple::before { background: linear-gradient(90deg, var(--accent), var(--accent-soft)); }
+
+    .metric-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 14px;
+    }
+    .metric-card.blue   .metric-icon { background: var(--tech-bg); }
+    .metric-card.orange .metric-icon { background: rgba(249,115,22,.12); }
+    .metric-card.green  .metric-icon { background: var(--success-bg); }
+    .metric-card.purple .metric-icon { background: var(--accent-bg); }
+
+    .metric-value {
+      font-family: var(--font-h);
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .metric-label {
+      font-size: .72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      font-weight: 600;
+    }
+    .metric-delta {
+      margin-top: 10px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .metric-delta.up      { color: var(--success); }
+    .metric-delta.down    { color: var(--danger); }
+    .metric-delta.neutral { color: var(--text-muted); }
+
+    /* ─────────────────────────────────────────────────────
+       GRÁFICO DE BARRAS (CSS puro)
+    ───────────────────────────────────────────────────── */
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .chart-title {
+      font-family: var(--font-h);
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .chart-sub {
+      font-size: .74rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      height: 150px;
+      padding: 0 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      height: 100%;
+    }
+    .bar {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-bg) 100%);
+      transition: all .4s ease;
+      cursor: pointer;
+      position: relative;
+      min-height: 4px;
+    }
+    .bar:hover { filter: brightness(.92); }
+    .bar-tip {
+      position: absolute;
+      top: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text-primary);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: .7rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .bar:hover .bar-tip { opacity: 1; }
+    .bar-label {
+      font-size: .68rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       SAUDE DO SISTEMA
+    ───────────────────────────────────────────────────── */
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .health-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-xs);
+    }
+    .health-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.ok      { background: var(--success); box-shadow: 0 0 6px rgba(52,211,153,.4); animation: pulseDot 2.5s ease-in-out infinite; }
+    .status-dot.warn    { background: var(--warning); box-shadow: 0 0 6px rgba(251,191,36,.4); animation: pulseDot 1.5s ease-in-out infinite; }
+    .status-dot.error   { background: var(--danger);  box-shadow: 0 0 6px rgba(239,68,68,.4); animation: pulseDot 1s ease-in-out infinite; }
+    .status-dot.neutral { background: var(--text-subtle); }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .35; }
+    }
+
+    .health-info-name  { font-size: .84rem; font-weight: 600; color: var(--text-primary); }
+    .health-info-value { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ─────────────────────────────────────────────────────
+       TABLE CARD
+    ───────────────────────────────────────────────────── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-muted);
+    }
+    .table-card-title {
+      font-family: var(--font-h);
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .table-card-sub {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-table th {
+      text-align: left;
+      font-size: .67rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-muted);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 11px 16px;
+      font-size: .82rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--surface-hover); }
+
+    /* ─────────────────────────────────────────────────────
+       ROLE BADGES
+    ───────────────────────────────────────────────────── */
+    .role-badge {
+      display: inline-flex;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: .67rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      border: 1px solid;
+    }
+    .role-superadmin { color: var(--accent);   border-color: var(--accent-border); background: var(--accent-bg); }
+    .role-admin      { color: #FB923C;         border-color: rgba(251,146,60,.3); background: rgba(251,146,60,.1); }
+    .role-gestor     { color: var(--tech);     border-color: var(--tech-border); background: var(--tech-bg); }
+    .role-membro     { color: var(--text-muted); border-color: var(--border); background: var(--surface-muted); }
+
+    /* ─────────────────────────────────────────────────────
+       BOTÕES DE AÇÃO
+    ───────────────────────────────────────────────────── */
+    .action-btn {
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .btn-promote       { color: var(--accent); border-color: var(--accent-border); background: var(--accent-bg); }
+    .btn-promote:hover  { background: rgba(52,211,153,.2); }
+    .btn-demote        { color: var(--warning); border-color: var(--gold-border); background: var(--warning-bg); }
+    .btn-demote:hover   { background: rgba(251,191,36,.2); }
+    .btn-remove        { color: var(--danger);  border-color: var(--danger-border); background: var(--danger-bg); }
+    .btn-remove:hover   { background: rgba(239,68,68,.2); }
+    .btn-primary-sm {
+      padding: 8px 18px;
+      background: #FF6B35;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(255,107,53,.25);
+    }
+    .btn-primary-sm:hover { background: #E8622F; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,107,53,.35); }
+    .btn-accent-sm {
+      padding: 8px 18px;
+      background: #F97316;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(249,115,22,.25);
+    }
+    .btn-accent-sm:hover { background: #EA580C; transform: translateY(-1px); }
+    .btn-danger-sm {
+      padding: 8px 18px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      transition: var(--transition);
+    }
+    .btn-danger-sm:hover { background: rgba(239,68,68,.2); }
+
+    /* ─────────────────────────────────────────────────────
+       FILTROS
+    ───────────────────────────────────────────────────── */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      box-shadow: var(--shadow-xs);
+      transition: var(--transition);
+    }
+    .search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+    .search-box input {
+      background: none; border: none; outline: none;
+      color: var(--text-primary); font-size: .84rem; width: 200px;
+    }
+    .search-box input::placeholder { color: var(--text-muted); }
+    .filter-select {
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: .82rem;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-xs);
+    }
+    .filter-select:focus-visible { border-color: var(--accent); outline: 2px solid rgba(255,255,255,.1); outline-offset: 1px; }
+    .filter-select option { background: var(--surface); color: var(--text-primary); }
+
+    /* ─────────────────────────────────────────────────────
+       TOGGLE SWITCH
+    ───────────────────────────────────────────────────── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      cursor: pointer;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: .87rem; color: var(--text-secondary); font-weight: 500; }
+    .toggle-sub   { font-size: .74rem; color: var(--text-muted); margin-top: 2px; }
+    .toggle-sw {
+      position: relative;
+      width: 44px; height: 24px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .toggle-sw input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 50px;
+      transition: var(--transition);
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px; left: 3px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-xs);
+    }
+    .toggle-sw input:checked ~ .toggle-track { background: var(--success); }
+    .toggle-sw input:checked ~ .toggle-track::after { transform: translateX(20px); }
+
+    /* ─────────────────────────────────────────────────────
+       CONFIG SECTION
+    ───────────────────────────────────────────────────── */
+    .cfg-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 26px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+    .cfg-section-title {
+      font-family: var(--font-h);
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cfg-section-sub {
+      font-size: .76rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+    .cfg-field label {
+      display: block;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .cfg-input {
+      width: 100%;
+      padding: 9px 13px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: .85rem;
+      transition: var(--transition);
+    }
+    .cfg-input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+    .cfg-input::placeholder { color: var(--text-subtle); }
+    .cfg-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+    /* ─────────────────────────────────────────────────────
+       PLANOS CARDS
+    ───────────────────────────────────────────────────── */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .plan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .plan-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .plan-badge {
+      display: inline-flex;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      border: 1px solid;
+    }
+    .plan-name {
+      font-family: var(--font-h);
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .plan-price {
+      font-family: var(--font-h);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+    .plan-price span {
+      font-size: .75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .plan-edit-btn {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 14px;
+    }
+    .plan-edit-btn:hover { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+
+    /* ─────────────────────────────────────────────────────
+       MODAL
+    ───────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+      overscroll-behavior: contain;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 30px;
+      width: 480px;
+      max-width: 95vw;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(14px) scale(.98);
+      transition: transform .25s ease;
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-title {
+      font-family: var(--font-h);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-close {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .modal-close:hover { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); }
+    .modal-field { margin-bottom: 14px; }
+    .modal-label { font-size: .75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .modal-input {
+      width: 100%;
+      padding: 9px 13px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: .86rem;
+      transition: var(--transition);
+    }
+    .modal-input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+    .modal-input::placeholder { color: var(--text-subtle); }
+    .modal-select {
+      width: 100%;
+      padding: 9px 13px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: .86rem;
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .modal-select:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+    .modal-select option { background: var(--surface); color: var(--text-primary); }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .btn-modal-cancel {
+      padding: 9px 20px;
+      border-radius: 8px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: .84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-modal-cancel:hover { background: var(--border); color: var(--text-secondary); }
+
+    /* ─────────────────────────────────────────────────────
+       CONTEÚDO EDITORIAL
+    ───────────────────────────────────────────────────── */
+    /* Abas de tipo (Artigos / Boletim) */
+    .ed-type-tabs {
+      display: flex; gap: 4px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      width: fit-content;
+      margin-bottom: 18px;
+    }
+    .ed-type-tab {
+      padding: 7px 20px;
+      border-radius: 7px;
+      font-size: .82rem; font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .ed-type-tab:hover { color: var(--text-secondary); }
+    .ed-type-tab.active {
+      background: var(--surface);
+      color: var(--gold);
+      box-shadow: var(--shadow-xs);
+      border: 1px solid var(--gold-border);
+    }
+    /* Abas de status (Rascunhos / Publicados / Arquivados) */
+    .ed-status-tabs {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .ed-status-tab {
+      padding: 9px 20px;
+      font-size: .82rem; font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex; align-items: center; gap: 7px;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .ed-status-tab:hover { color: var(--text-secondary); }
+    .ed-status-tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+    .ed-count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 20px; height: 18px; padding: 0 5px;
+      border-radius: 50px;
+      font-size: .65rem; font-weight: 700;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .ed-status-tab.active .ed-count-badge {
+      background: var(--gold-bg);
+      border-color: var(--gold-border);
+      color: var(--gold);
+    }
+    /* Severity badges (boletins) */
+    .sev-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 9px; border-radius: 4px;
+      font-size: .67rem; font-weight: 700;
+      border: 1px solid;
+    }
+    .sev-info     { color: var(--tech);    border-color: var(--tech-border); background: var(--tech-bg); }
+    .sev-warning  { color: var(--warning); border-color: var(--gold-border); background: var(--warning-bg); }
+    .sev-critical { color: var(--danger);  border-color: var(--danger-border); background: var(--danger-bg); }
+    /* Status badges */
+    .ed-status-badge {
+      display: inline-flex; padding: 2px 9px; border-radius: 4px;
+      font-size: .67rem; font-weight: 700; border: 1px solid;
+    }
+    .eds-draft     { color: var(--warning); border-color: var(--gold-border); background: var(--warning-bg); }
+    .eds-published { color: var(--success); border-color: var(--success-border); background: var(--success-bg); }
+    .eds-archived  { color: var(--text-muted); border-color: var(--border); background: var(--surface-muted); }
+    /* Ações rápidas em 3 pontos */
+    .ed-actions-menu { position: relative; display: inline-block; }
+    .ed-actions-menu-btn {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; cursor: pointer; transition: var(--transition);
+      color: var(--text-muted);
+    }
+    .ed-actions-menu-btn:hover { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+    /* Acesso por ícone */
+    .acc-icon { font-size: .9rem; }
+    /* Empty state */
+    .ed-empty {
+      text-align: center;
+      padding: 56px 24px;
+      color: var(--text-muted);
+    }
+    .ed-empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: .5; }
+    .ed-empty-title { font-family: var(--font-h); font-size: .95rem; color: var(--text-secondary); margin-bottom: 6px; }
+    .ed-empty-sub   { font-size: .8rem; margin-bottom: 20px; }
+    /* Skeleton loader */
+    .skeleton-row { animation: skeleton-pulse 1.4s ease infinite; }
+    .skeleton-cell { height: 14px; border-radius: 4px; background: var(--border); }
+    @keyframes skeleton-pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .45; }
+    }
+
+    /* ─────────────────────────────────────────────────────
+       MANUTENÇÃO BANNER
+    ───────────────────────────────────────────────────── */
+    .maintenance-banner {
+      display: none;
+      padding: 12px 20px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: var(--radius);
+      color: var(--danger);
+      font-size: .84rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+      align-items: center;
+      gap: 10px;
+    }
+    .maintenance-banner.visible { display: flex; }
+
+    /* ─────────────────────────────────────────────────────
+       LOADING
+    ───────────────────────────────────────────────────── */
+    #loadingScreen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 9999;
+    }
+    .loading-logo {
+      font-family: var(--font-h);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .loading-logo span { color: #FF6B35; }
+    .loading-spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--accent-bg);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    .loading-text { font-size: .78rem; color: var(--text-muted); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─────────────────────────────────────────────────────
+       TOAST
+    ───────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: .84rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      z-index: 2000;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success-border); background: var(--success-bg); color: var(--success); }
+    .toast.error   { border-color: var(--danger-border);  background: var(--danger-bg);  color: var(--danger); }
+
+    /* ─────────────────────────────────────────────────────
+       AUDITORIA
+    ───────────────────────────────────────────────────── */
+    .audit-status-ok     { color: var(--success); font-weight: 600; font-size: .75rem; }
+    .audit-status-fail   { color: var(--danger);  font-weight: 600; font-size: .75rem; }
+    .audit-status-warn   { color: var(--warning); font-weight: 600; font-size: .75rem; }
+    .audit-action-badge  {
+      display: inline-flex; padding: 2px 8px;
+      border-radius: 4px; font-size: .68rem; font-weight: 600;
+    }
+    .audit-login  { background: var(--tech-bg);    color: var(--tech); }
+    .audit-role   { background: var(--accent-bg);  color: var(--accent); }
+    .audit-delete { background: var(--danger-bg);  color: var(--danger); }
+    .audit-access { background: var(--warning-bg); color: var(--warning); }
+    .audit-config { background: var(--success-bg); color: var(--success); }
+
+    /* ─────────────────────────────────────────────────────
+       SEGURANÇA
+    ───────────────────────────────────────────────────── */
+    .sec-list { padding: 0 20px; }
+    .sec-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      gap: 12px;
+    }
+    .sec-item:last-child { border-bottom: none; }
+    .sec-ip { font-family: monospace; font-size: .8rem; color: var(--tech); font-weight: 600; }
+    .sec-email { font-size: .82rem; color: var(--text-secondary); }
+    .sec-time  { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
+    .sec-device { font-size: .72rem; color: var(--text-muted); }
+    .session-badge {
+      display: inline-flex; padding: 2px 8px;
+      border-radius: 50px; font-size: .67rem; font-weight: 700;
+      background: var(--success-bg); color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    /* ─────────────────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────────────────── */
+    @media (max-width: 1200px) {
+      .metrics-grid  { grid-template-columns: repeat(2, 1fr); }
+      .plans-grid    { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .health-grid   { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-248px); width: 248px; }
+      .main-content { margin-left: 0; }
+      .metrics-grid  { grid-template-columns: 1fr; }
+      .plans-grid    { grid-template-columns: 1fr; }
+      .health-grid   { grid-template-columns: 1fr; }
+      .cfg-grid-2    { grid-template-columns: 1fr; }
+      .data-table    { min-width: 700px; }
+      .table-card > div { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loadingScreen">
+  <div class="loading-logo">ADAS<span>PRO</span></div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Verificando permissões SUPERADMIN...</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Modal — Adicionar Admin -->
+<div class="modal-overlay" id="modalAddAdmin" role="dialog" aria-modal="true" aria-labelledby="modalAddAdminTitle" onclick="closeModal('modalAddAdmin')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalAddAdminTitle">
+      <span>Adicionar Novo Admin / Gestor</span>
+      <button class="modal-close" onclick="closeModal('modalAddAdmin')" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Nome completo</label>
+      <input type="text" class="modal-input" id="newAdminName" placeholder="Ex: Carlos Henrique"/>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">E-mail</label>
+      <input type="email" class="modal-input" id="newAdminEmail" placeholder="email@exemplo.com"/>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Função</label>
+      <select class="modal-select" id="newAdminRole">
+        <option value="admin">Admin</option>
+        <option value="gestor">Gestor</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalAddAdmin')">Cancelar</button>
+      <button class="btn-primary-sm" onclick="addAdminUser()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal — Editar Plano -->
+<div class="modal-overlay" id="modalEditPlan" role="dialog" aria-modal="true" aria-labelledby="editPlanTitle" onclick="closeModal('modalEditPlan')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span id="editPlanTitle">Editar Plano</span>
+      <button class="modal-close" onclick="closeModal('modalEditPlan')" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Nome do plano</label>
+      <input type="text" class="modal-input" id="editPlanName"/>
+    </div>
+    <div class="cfg-grid-2">
+      <div class="modal-field">
+        <label class="modal-label">Preço (R$)</label>
+        <input type="number" class="modal-input" id="editPlanPrice"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Período</label>
+        <input type="text" class="modal-input" id="editPlanPeriod" placeholder="mês, ano..."/>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Descrição</label>
+      <textarea class="modal-input cfg-input" id="editPlanDesc" rows="3" style="resize:vertical"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalEditPlan')">Cancelar</button>
+      <button class="btn-primary-sm" onclick="savePlan()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="appShell" style="display:none">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-hex">SA</div>
+      <span>ADAS<strong>PRO</strong></span>
+    </div>
+    <div class="sa-badge">
+      <div class="sa-badge-dot"></div>
+      <div class="sa-badge-text">Super Admin</div>
+    </div>
+    <div class="sidebar-user" style="margin-top:10px">
+      <div class="sidebar-avatar" id="sbAvatar">SA</div>
+      <div>
+        <div class="sidebar-user-name" id="sbName">—</div>
+        <div class="sidebar-user-role" id="sbRole">superadmin</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-section">Painel</div>
+      <a class="sidebar-nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">🏠</span>Dashboard
+      </a>
+
+      <div class="sidebar-nav-section" style="margin-top:10px">Gestão</div>
+      <a class="sidebar-nav-item" onclick="showPage('admins',this)">
+        <span class="nav-icon">👥</span>Gerenciar Admins
+      </a>
+      <a class="sidebar-nav-item" onclick="showPage('security',this)">
+        <span class="nav-icon">🔐</span>Segurança
+      </a>
+
+      <div class="sidebar-nav-section" style="margin-top:10px">Negócio</div>
+      <a class="sidebar-nav-item" onclick="showPage('plans',this)">
+        <span class="nav-icon">📦</span>Planos &amp; Módulos
+      </a>
+      <a class="sidebar-nav-item" onclick="showPage('editorial',this)">
+        <span class="nav-icon">✏️</span>Conteúdo Editorial
+        <span class="nav-badge" id="badgeDrafts" style="display:none;background:#F4A261;color:#000;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:auto">0</span>
+      </a>
+
+      <div class="sidebar-nav-section" style="margin-top:10px">Sistema</div>
+      <a class="sidebar-nav-item" onclick="showPage('system',this)">
+        <span class="nav-icon">⚙️</span>Sistema
+      </a>
+      <a class="sidebar-nav-item" onclick="showPage('audit',this)">
+        <span class="nav-icon">📋</span>Auditoria
+      </a>
+      <a class="sidebar-nav-item" href="email-config.html" style="color:rgba(0,180,216,.85);margin-top:2px;">
+        <span class="nav-icon">✉️</span>E-mails Transacionais
+        <span style="font-size:.58rem;background:rgba(0,180,216,.18);color:#00B4D8;padding:1px 6px;border-radius:3px;margin-left:auto;letter-spacing:.05em;">CONFIG</span>
+      </a>
+
+      <div class="sidebar-nav-section" style="margin-top:10px">Acesso</div>
+      <a class="sidebar-nav-item" href="admin.html">
+        <span class="nav-icon">🛡️</span>Painel Admin
+      </a>
+      <a class="sidebar-nav-item" href="membros.html">
+        <span class="nav-icon">👤</span>Ver como membro
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-version" id="sbVersion">v3.0.0 · build 20260424</div>
+      <button class="sidebar-logout" onclick="doLogout()">
+        <span>🚪</span>Sair da sessão
+      </button>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="tbTitle">Dashboard</div>
+        <div class="topbar-sub" id="tbSub">Controle total do sistema ADAS PRO</div>
+      </div>
+      <div class="topbar-right">
+        <div class="tb-clock" id="tbClock">00:00:00</div>
+        <div class="tb-btn" title="Admin Panel" onclick="location.href='admin.html'">🛡️</div>
+        <div class="tb-btn" title="Recarregar" onclick="location.reload()">🔄</div>
+      </div>
+    </div>
+
+    <div class="pages-wrap">
+
+      <!-- ══════════════════════════════════
+           PAGE: DASHBOARD
+      ═══════════════════════════════════ -->
+      <div class="page active" id="page-dashboard">
+
+        <div class="metrics-grid">
+          <div class="metric-card blue">
+            <div class="metric-icon">👥</div>
+            <div class="metric-value" id="metricUsers">—</div>
+            <div class="metric-label">Usuários ativos</div>
+            <div class="metric-delta up" id="metricUsersDelta">Carregando...</div>
+          </div>
+          <div class="metric-card orange">
+            <div class="metric-icon">🛡️</div>
+            <div class="metric-value" id="metricAdmins">—</div>
+            <div class="metric-label">Admins &amp; Gestores</div>
+            <div class="metric-delta neutral" id="metricAdminsDelta">da equipe de controle</div>
+          </div>
+          <div class="metric-card green">
+            <div class="metric-icon">💰</div>
+            <div class="metric-value" id="metricRevenue">—</div>
+            <div class="metric-label">Receita estimada/mês</div>
+            <div class="metric-delta up" id="metricRevenueDelta">Cálculo por planos</div>
+          </div>
+          <div class="metric-card purple">
+            <div class="metric-icon">⚡</div>
+            <div class="metric-value">99.9%</div>
+            <div class="metric-label">Uptime do sistema</div>
+            <div class="metric-delta up">Últimos 30 dias</div>
+          </div>
+        </div>
+
+        <!-- Gráfico de barras CSS -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Novos usuários por mês</div>
+              <div class="chart-sub">Últimos 6 meses · dados simulados para demo</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <div style="display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--text-muted)">
+                <div style="width:10px;height:10px;border-radius:3px;background:var(--purple)"></div>
+                Cadastros
+              </div>
+            </div>
+          </div>
+          <div class="bar-chart" id="barChart">
+            <!-- renderizado por JS -->
+          </div>
+          <div style="display:flex;justify-content:flex-end;padding-top:12px">
+            <div style="font-size:.72rem;color:var(--text-muted)">
+              Total simulado: <strong style="color:var(--text-secondary)">248 cadastros</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Saúde do sistema -->
+        <div style="margin-bottom:6px">
+          <div style="font-family:var(--font-h);font-size:.82rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">
+            Saúde do Sistema
+          </div>
+          <div class="health-grid">
+            <div class="health-card">
+              <div class="status-dot ok" id="statusFirebaseAuth"></div>
+              <div>
+                <div class="health-info-name">Firebase Auth</div>
+                <div class="health-info-value" id="statusFirebaseAuthLabel">Online · Modo local</div>
+              </div>
+            </div>
+            <div class="health-card">
+              <div class="status-dot ok" id="statusRTDB"></div>
+              <div>
+                <div class="health-info-name">Realtime Database</div>
+                <div class="health-info-value" id="statusRTDBLabel">Sincronizado</div>
+              </div>
+            </div>
+            <div class="health-card">
+              <div class="status-dot ok"></div>
+              <div>
+                <div class="health-info-name">Deploy</div>
+                <div class="health-info-value">v3.0.0 · build 20260424</div>
+              </div>
+            </div>
+            <div class="health-card">
+              <div class="status-dot ok"></div>
+              <div>
+                <div class="health-info-name">CDN Assets</div>
+                <div class="health-info-value">Carregado sem erros</div>
+              </div>
+            </div>
+            <div class="health-card">
+              <div class="status-dot neutral" id="statusMaintenance"></div>
+              <div>
+                <div class="health-info-name">Modo Manutenção</div>
+                <div class="health-info-value" id="statusMaintenanceLabel">Inativo</div>
+              </div>
+            </div>
+            <div class="health-card">
+              <div class="status-dot ok"></div>
+              <div>
+                <div class="health-info-name">Sessão atual</div>
+                <div class="health-info-value" id="statusSessionLabel">Autenticada · SUPERADMIN</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           PAGE: ADMINS
+      ═══════════════════════════════════ -->
+      <div class="page" id="page-admins">
+
+        <!-- Painel hierárquico de distribuição -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px" id="hierarchyBar">
+          <div style="background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.4rem">👑</span>
+            <div><div style="font-size:1.3rem;font-weight:800;color:var(--purple)" id="hCount-superadmin">—</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">Superadmin</div></div>
+          </div>
+          <div style="background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.4rem">🛡️</span>
+            <div><div style="font-size:1.3rem;font-weight:800;color:#EA580C" id="hCount-admin">—</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">Administradores</div></div>
+          </div>
+          <div style="background:var(--tech-bg);border:1px solid var(--tech-border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.4rem">⚙️</span>
+            <div><div style="font-size:1.3rem;font-weight:800;color:var(--tech)" id="hCount-gestor">—</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">Gestores</div></div>
+          </div>
+          <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.4rem">👤</span>
+            <div><div style="font-size:1.3rem;font-weight:800;color:var(--text-secondary)" id="hCount-membro">—</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">Membros</div></div>
+          </div>
+        </div>
+
+        <div class="filters-bar">
+          <div class="search-box">
+            <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
+            <input type="text" id="adminsSearch" placeholder="Buscar por nome ou e-mail..." oninput="filterAdmins()"/>
+          </div>
+          <select class="filter-select" id="adminsRoleFilter" onchange="filterAdmins()">
+            <option value="">Todas as funções</option>
+            <option value="superadmin">👑 Superadmin</option>
+            <option value="admin">🛡️ Admin</option>
+            <option value="gestor">⚙️ Gestor</option>
+            <option value="membro">👤 Membro</option>
+          </select>
+          <button class="btn-primary-sm" style="margin-left:auto" onclick="openDrawerNewUser()">
+            + Novo Usuário
+          </button>
+        </div>
+
+        <div class="table-card">
+          <div class="table-card-header">
+            <div>
+              <div class="table-card-title">Gestão de Hierarquia de Acesso</div>
+              <div class="table-card-sub" id="adminsCountLabel">Carregando...</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>E-mail</th>
+                  <th>Nível</th>
+                  <th>Função</th>
+                  <th>Status</th>
+                  <th>Desde</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="adminsTbody">
+                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           PAGE: SEGURANÇA
+      ═══════════════════════════════════ -->
+      <div class="page" id="page-security">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+
+          <!-- Tentativas falhas -->
+          <div class="table-card">
+            <div class="table-card-header">
+              <div>
+                <div class="table-card-title">Tentativas de login falhadas</div>
+                <div class="table-card-sub">Últimas 10 ocorrências</div>
+              </div>
+              <span style="font-size:.7rem;color:var(--danger);font-weight:700">● AO VIVO</span>
+            </div>
+            <div class="sec-list" id="failedLoginsList"></div>
+          </div>
+
+          <!-- Sessões ativas -->
+          <div class="table-card">
+            <div class="table-card-header">
+              <div>
+                <div class="table-card-title">Sessões ativas</div>
+                <div class="table-card-sub">Dispositivos conectados agora</div>
+              </div>
+              <button class="btn-danger-sm" onclick="terminateAllSessions()">Encerrar todas</button>
+            </div>
+            <div class="sec-list" id="activeSessionsList"></div>
+          </div>
+        </div>
+
+        <!-- Configurações de segurança -->
+        <div class="cfg-section">
+          <div class="cfg-section-title">🛡️ Configurações de Segurança</div>
+          <div class="cfg-section-sub">Políticas globais de acesso e autenticação</div>
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label">Autenticação 2FA Obrigatória</div>
+              <div class="toggle-sub">Exigir segundo fator para todos os admins e gestores</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggle2FA" onchange="onSecurityToggle('2fa', this.checked)"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label">Bloquear após 5 tentativas falhas</div>
+              <div class="toggle-sub">IP bloqueado por 15 minutos automaticamente</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggleRateLimit" checked onchange="onSecurityToggle('rateLimit', this.checked)"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label">Log de auditoria detalhado</div>
+              <div class="toggle-sub">Registrar todas as ações com IP e timestamp</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggleAuditLog" checked onchange="onSecurityToggle('auditLog', this.checked)"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label">Sessão expira em 4h</div>
+              <div class="toggle-sub">Sessões inativas são encerradas automaticamente</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggleSession4h" checked onchange="onSecurityToggle('session4h', this.checked)"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           PAGE: PLANOS & MÓDULOS
+      ═══════════════════════════════════ -->
+      <div class="page" id="page-plans">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <div style="font-family:var(--font-h);font-size:1rem;font-weight:700;color:var(--text-primary)">Planos &amp; Módulos</div>
+            <div style="font-size:.76rem;color:var(--text-muted);margin-top:2px">Edite preços, nomes e configurações de cada plano</div>
+          </div>
+          <button class="btn-accent-sm" onclick="addNewModule()">+ Novo Módulo</button>
+        </div>
+
+        <div class="plans-grid" id="plansGrid">
+          <!-- renderizado por JS -->
+        </div>
+
+        <!-- Módulos avulsos -->
+        <div class="cfg-section">
+          <div class="cfg-section-title">📦 Módulos Avulsos</div>
+          <div class="cfg-section-sub">Pacotes adicionais que o usuário pode contratar individualmente</div>
+          <div id="modulesContainer">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Honda &amp; Acura — Calibração LKAS/AVM</div>
+                <div class="toggle-sub">12 materiais técnicos · R$ 47/mês</div>
+              </div>
+              <button class="action-btn btn-promote">Ativo</button>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Toyota &amp; Lexus — LDW/AVM/ACC</div>
+                <div class="toggle-sub">9 materiais técnicos · R$ 47/mês</div>
+              </div>
+              <button class="action-btn btn-promote">Ativo</button>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Nissan &amp; Infiniti — LKA ProPilot</div>
+                <div class="toggle-sub">8 materiais técnicos · R$ 47/mês</div>
+              </div>
+              <button class="action-btn btn-promote">Ativo</button>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">VAG Group — Audi/VW/Seat/Skoda</div>
+                <div class="toggle-sub">6 materiais técnicos · R$ 47/mês</div>
+              </div>
+              <button class="action-btn btn-promote">Ativo</button>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">BYD / Chery / MG — Chineses</div>
+                <div class="toggle-sub">4 materiais técnicos · R$ 47/mês</div>
+              </div>
+              <button class="action-btn btn-demote">Rascunho</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           PAGE: SISTEMA
+      ═══════════════════════════════════ -->
+      <div class="page" id="page-system">
+
+        <!-- Banner de manutenção -->
+        <div class="maintenance-banner" id="maintenanceBanner">
+          <span>⚠️</span>
+          <span>MODO MANUTENÇÃO ATIVO — a plataforma está inacessível para membros no momento.</span>
+        </div>
+
+        <!-- Toggle manutenção -->
+        <div class="cfg-section">
+          <div class="cfg-section-title">⚙️ Controle do Sistema</div>
+          <div class="cfg-section-sub">Configurações globais de operação da plataforma</div>
+
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label" style="color:var(--danger)">🔴 Modo Manutenção</div>
+              <div class="toggle-sub">Bloqueia acesso de todos os membros e exibe página de manutenção</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggleMaintenance" onchange="onMaintenanceToggle(this.checked)"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label">Novos cadastros abertos</div>
+              <div class="toggle-sub">Permite que novos usuários se registrem na plataforma</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggleRegistrations" checked onchange="showToast('Configuração salva.','success')"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="toggle-label">Aprovação manual obrigatória</div>
+              <div class="toggle-sub">Novos membros precisam de aprovação antes de acessar</div>
+            </div>
+            <span class="toggle-sw">
+              <input type="checkbox" id="toggleManualApproval" checked onchange="showToast('Configuração salva.','success')"/>
+              <div class="toggle-track"></div>
+            </span>
+          </label>
+        </div>
+
+        <!-- Mensagem global -->
+        <div class="cfg-section">
+          <div class="cfg-section-title">📢 Mensagem Global</div>
+          <div class="cfg-section-sub">Esta mensagem aparece no topo do painel de todos os membros</div>
+          <div class="cfg-field" style="margin-bottom:14px">
+            <label>Mensagem de aviso (deixe em branco para desativar)</label>
+            <textarea class="cfg-input" id="globalMessage" rows="3" placeholder="Ex: Novos materiais disponíveis! Acesse a Biblioteca para conferir."></textarea>
+          </div>
+          <button class="btn-primary-sm" onclick="saveGlobalMessage()">Publicar mensagem</button>
+        </div>
+
+        <!-- Webhook -->
+        <div class="cfg-section">
+          <div class="cfg-section-title">🔗 Webhook de Notificação</div>
+          <div class="cfg-section-sub">URL para receber notificações via POST quando eventos ocorrerem</div>
+          <div class="cfg-grid-2">
+            <div class="cfg-field">
+              <label>URL do Webhook</label>
+              <input type="url" class="cfg-input" id="webhookUrl" placeholder="https://hooks.exemplo.com/..."/>
+            </div>
+            <div class="cfg-field">
+              <label>Segredo (header X-Secret)</label>
+              <input type="password" class="cfg-input" id="webhookSecret" placeholder="••••••••"/>
+            </div>
+          </div>
+          <button class="btn-accent-sm" onclick="saveWebhook()">Salvar webhook</button>
+          <button class="action-btn btn-promote" style="margin-left:10px" onclick="testWebhook()">Testar</button>
+        </div>
+
+        <!-- Informações de deploy -->
+        <div class="cfg-section">
+          <div class="cfg-section-title">🚀 Informações do Deploy</div>
+          <div class="cfg-section-sub">Dados do ambiente atual de execução</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+            <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+              <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Versão</div>
+              <div style="font-family:var(--font-h);font-weight:700;color:var(--text-primary);font-size:1rem">v3.0.0</div>
+            </div>
+            <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+              <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Build</div>
+              <div style="font-family:var(--font-h);font-weight:700;color:var(--text-primary);font-size:1rem">20260424</div>
+            </div>
+            <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+              <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Ambiente</div>
+              <div style="font-family:var(--font-h);font-weight:700;color:var(--success);font-size:1rem">Produção</div>
+            </div>
+            <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+              <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Codinome</div>
+              <div style="font-family:var(--font-h);font-weight:700;color:var(--purple);font-size:1rem">Phoenix</div>
+            </div>
+            <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+              <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Empresa</div>
+              <div style="font-family:var(--font-h);font-weight:700;color:var(--text-primary);font-size:.9rem">AutoTech Service</div>
+            </div>
+            <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+              <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Plataforma</div>
+              <div style="font-family:var(--font-h);font-weight:700;color:var(--text-primary);font-size:.9rem">ADAS PRO</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           PAGE: AUDITORIA
+      ═══════════════════════════════════ -->
+      <div class="page" id="page-audit">
+        <div class="filters-bar">
+          <div class="search-box">
+            <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
+            <input type="text" id="auditSearch" placeholder="Buscar usuário ou ação..." oninput="filterAudit()"/>
+          </div>
+          <select class="filter-select" id="auditTypeFilter" onchange="filterAudit()">
+            <option value="">Todos os tipos</option>
+            <option value="login">Login</option>
+            <option value="role">Alteração de role</option>
+            <option value="delete">Exclusão</option>
+            <option value="access">Acesso negado</option>
+            <option value="config">Configuração</option>
+          </select>
+          <button class="btn-primary-sm" style="margin-left:auto" onclick="exportAudit()">
+            ⬇ Exportar CSV
+          </button>
+        </div>
+
+        <div class="table-card">
+          <div class="table-card-header">
+            <div>
+              <div class="table-card-title">Log de Auditoria</div>
+              <div class="table-card-sub">Registro completo de ações no sistema</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Data / Hora</th>
+                  <th>Usuário</th>
+                  <th>Ação</th>
+                  <th>IP</th>
+                  <th>Detalhes</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="auditTbody">
+                <!-- renderizado por JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: CONTEÚDO EDITORIAL ═══ -->
+      <div class="page" id="page-editorial">
+
+        <!-- Stats cards -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px" id="editorialStats">
+          <div class="ed-stat-card ed-stat-draft">
+            <div class="ed-stat-icon">📝</div>
+            <div><div class="ed-stat-val" id="edCountDraft">0</div><div class="ed-stat-lbl">Rascunhos</div></div>
+          </div>
+          <div class="ed-stat-card ed-stat-pub">
+            <div class="ed-stat-icon">📡</div>
+            <div><div class="ed-stat-val" id="edCountPub">0</div><div class="ed-stat-lbl">Publicados</div></div>
+          </div>
+          <div class="ed-stat-card ed-stat-arch">
+            <div class="ed-stat-icon">🗄️</div>
+            <div><div class="ed-stat-val" id="edCountArch">0</div><div class="ed-stat-lbl">Arquivados</div></div>
+          </div>
+        </div>
+
+        <!-- Main tabs: Artigos | Boletins -->
+        <div class="ed-tabs" id="edMainTabs">
+          <button class="ed-tab active" data-edtype="boletim" onclick="switchEdType('boletim',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            Boletins Técnicos
+            <span class="ed-tab-count" id="edTabCountBoletim">0</span>
+          </button>
+          <button class="ed-tab" data-edtype="artigo" onclick="switchEdType('artigo',this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Artigos
+            <span class="ed-tab-count" id="edTabCountArtigo">0</span>
+          </button>
+        </div>
+
+        <!-- Sub-tabs: status -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="ed-subtabs" id="edSubTabs">
+            <button class="ed-subtab active" data-status="all"        onclick="switchEdStatus('all',this)">Todos</button>
+            <button class="ed-subtab"        data-status="draft"      onclick="switchEdStatus('draft',this)">Rascunhos</button>
+            <button class="ed-subtab"        data-status="published"  onclick="switchEdStatus('published',this)">Publicados</button>
+            <button class="ed-subtab"        data-status="archived"   onclick="switchEdStatus('archived',this)">Arquivados</button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="search-box" style="width:200px">
+              <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
+              <input type="text" id="edSearch" placeholder="Buscar..." oninput="renderEditorialTable()"/>
+            </div>
+            <button class="btn-primary-sm" onclick="openEditor()">+ Novo</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <div>
+              <div class="table-card-title" id="edTableTitle">Boletins Técnicos</div>
+              <div class="table-card-sub" id="edTableSub">Gerencie e publique conteúdo técnico</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID / Título</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                  <th>Marcas</th>
+                  <th>Criado em</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="edTbody">
+                <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pages-wrap -->
+  </main>
+</div><!-- /dashboard -->
+
+<!-- Modal — Editor de Conteúdo (90% viewport) -->
+<div id="modalEditor" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()">
+  <div class="editor-shell" onclick="event.stopPropagation()">
+
+    <!-- Top bar -->
+    <div class="editor-topbar">
+      <div class="editor-topbar-title" id="editorTitle">Novo Boletim Técnico</div>
+      <span class="editor-autosave" id="editorAutosave">rascunho</span>
+      <button class="editor-preview-btn" id="editorPreviewBtn" onclick="toggleEditorPreview()">👁 Preview</button>
+      <button class="editor-save-btn" onclick="saveEditorDraft()">Salvar rascunho</button>
+      <button class="editor-publish-btn" onclick="publishEditorContent()">Publicar</button>
+      <button class="editor-close-btn" onclick="closeEditor()" aria-label="Fechar editor">✕</button>
+    </div>
+
+    <div class="editor-main">
+
+      <!-- Left: editor + toolbar -->
+      <div class="editor-content-wrap">
+        <!-- Toolbar -->
+        <div class="editor-toolbar">
+          <button class="ed-tool" title="Título H2" onclick="edCmd('h2')"><b>H2</b></button>
+          <button class="ed-tool" title="Subtítulo H3" onclick="edCmd('h3')"><b>H3</b></button>
+          <span class="ed-tool-sep"></span>
+          <button class="ed-tool" title="Negrito" onclick="edCmd('bold')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+          <button class="ed-tool" title="Itálico" onclick="edCmd('italic')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+          <span class="ed-tool-sep"></span>
+          <button class="ed-tool" title="Lista" onclick="edCmd('ul')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+          <button class="ed-tool" title="Lista numerada" onclick="edCmd('ol')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+          <span class="ed-tool-sep"></span>
+          <button class="ed-tool" title="Divisor" onclick="edCmd('hr')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <button class="ed-tool" title="Link" onclick="edCmd('link')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+        </div>
+
+        <!-- Editor area -->
+        <div class="editor-area" id="editorArea" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Conteúdo do artigo" data-placeholder="Comece a escrever o conteúdo aqui…" oninput="onEditorInput()"></div>
+        <div class="editor-preview" id="editorPreview"></div>
+      </div>
+
+      <!-- Right: metadata sidebar -->
+      <div class="editor-sidebar">
+
+        <div class="ed-meta-group">
+          <label class="ed-meta-label">Título</label>
+          <input class="ed-meta-input" type="text" id="edMetaTitle" placeholder="Título do conteúdo..." oninput="document.getElementById('editorTitle').textContent=this.value||'Novo conteúdo'"/>
+        </div>
+
+        <div class="ed-meta-group">
+          <label class="ed-meta-label">Tipo de conteúdo</label>
+          <select class="ed-meta-input ed-meta-select" id="edMetaContentType" onchange="onEdMetaTypeChange()">
+            <option value="boletim">Boletim Técnico</option>
+            <option value="artigo">Artigo</option>
+          </select>
+        </div>
+
+        <div class="ed-meta-group" id="edBulletinTypeGroup">
+          <label class="ed-meta-label">Categoria do boletim</label>
+          <select class="ed-meta-input ed-meta-select" id="edMetaBulletinType">
+            <option value="novidade">Novidade</option>
+            <option value="atualizacao">Atualização</option>
+            <option value="alerta">Alerta Técnico</option>
+            <option value="procedimento">Procedimento</option>
+          </select>
+        </div>
+
+        <div class="ed-meta-group">
+          <label class="ed-meta-label">Marcas afetadas</label>
+          <div class="ed-brands-grid" id="edBrandsGrid">
+            <!-- populado via JS -->
+          </div>
+        </div>
+
+        <div class="ed-meta-group">
+          <label class="ed-meta-label">Tags (separadas por vírgula)</label>
+          <input class="ed-meta-input" type="text" id="edMetaTags" placeholder="calibração, lkas, honda..."/>
+        </div>
+
+        <div class="ed-meta-group">
+          <label class="ed-meta-label">Status</label>
+          <select class="ed-meta-input ed-meta-select" id="edMetaStatus">
+            <option value="draft">Rascunho</option>
+            <option value="published">Publicado</option>
+            <option value="archived">Arquivado</option>
+          </select>
+        </div>
+
+        <div class="ed-meta-group">
+          <label class="ed-meta-label" id="edWordCountLabel">Palavras: 0</label>
+        </div>
+
+      </div><!-- /editor-sidebar -->
+    </div><!-- /editor-main -->
+  </div><!-- /editor-shell -->
+</div>
+
+<!-- Modal — Confirmar Exclusão de Usuário -->
+<div class="modal-overlay" id="modalDeleteConfirm" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle" onclick="closeModal('modalDeleteConfirm')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+    <div class="modal-title" id="modalDeleteTitle">
+      <span style="color:#EF4444">Excluir usuário</span>
+      <button class="modal-close" onclick="closeModal('modalDeleteConfirm')" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="del-confirm-info">
+      <div class="del-confirm-name" id="delConfirmName">Nome do usuário</div>
+      <div class="del-confirm-email" id="delConfirmEmail">email@exemplo.com</div>
+    </div>
+    <div class="del-confirm-warn">
+      ⚠️ Esta ação é <strong>irreversível</strong>. O usuário perderá todo o acesso imediatamente. Digite o e-mail abaixo para confirmar.
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Digite o e-mail para confirmar</label>
+      <input class="del-confirm-input" type="text" id="delConfirmInput" placeholder="email@exemplo.com" oninput="checkDelConfirm()"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeModal('modalDeleteConfirm')">Cancelar</button>
+      <button class="btn-danger-confirm" id="delConfirmBtn" disabled onclick="executeDeleteUser()">Excluir definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer — Novo Usuário -->
+<div id="drawerNewUser" role="dialog" aria-modal="true" aria-labelledby="drawerNewUserTitle">
+  <div class="drawer-backdrop" onclick="closeDrawerNewUser()"></div>
+  <div class="drawer-panel">
+    <div class="drawer-header">
+      <div class="drawer-title" id="drawerNewUserTitle">+ Novo Usuário</div>
+      <button class="drawer-close" onclick="closeDrawerNewUser()" aria-label="Fechar painel">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-field">
+        <label class="drawer-label">Nome completo <span style="color:#EF4444">*</span></label>
+        <input class="drawer-input" type="text" id="dnuName" placeholder="Ex: Carlos Henrique Silva"/>
+      </div>
+      <div class="drawer-field">
+        <label class="drawer-label">E-mail <span style="color:#EF4444">*</span></label>
+        <input class="drawer-input" type="email" id="dnuEmail" placeholder="email@exemplo.com"/>
+      </div>
+      <div class="drawer-field">
+        <label class="drawer-label">Senha temporária <span style="color:#EF4444">*</span></label>
+        <input class="drawer-input" type="password" id="dnuPassword" placeholder="Mín. 8 chars, 1 maiúscula, 1 número"/>
+      </div>
+      <div class="drawer-field">
+        <label class="drawer-label">Função / Role <span style="color:#EF4444">*</span></label>
+        <div class="csel" id="dnuRoleSel" data-target="dnuRole" data-onchange="onDnuRoleChange">
+          <div class="csel-trigger" onclick="toggleCSel(this)">
+            <span class="csel-val">👤 Membro</span>
+            <svg class="csel-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="csel-dropdown">
+            <div class="csel-opt" data-val="membro"     onclick="pickCSel(this)">👤 <span>Membro</span>     <span class="csel-opt-sub">Acesso a conteúdo conforme plano</span></div>
+            <div class="csel-opt" data-val="gestor"     onclick="pickCSel(this)">⚙️ <span>Gestor</span>     <span class="csel-opt-sub">Gerencia membros e conteúdo</span></div>
+            <div class="csel-opt" data-val="admin"      onclick="pickCSel(this)">🛡️ <span>Admin</span>      <span class="csel-opt-sub">Acesso ao painel administrativo</span></div>
+            <div class="csel-opt" data-val="superadmin" onclick="pickCSel(this)">👑 <span>Superadmin</span> <span class="csel-opt-sub">Controle total da plataforma</span></div>
+          </div>
+        </div>
+        <input type="hidden" id="dnuRole" value="membro"/>
+      </div>
+      <div class="drawer-field">
+        <label class="drawer-label">Status inicial</label>
+        <div class="csel" id="dnuStatusSel" data-target="dnuStatus">
+          <div class="csel-trigger" onclick="toggleCSel(this)">
+            <span class="csel-val">✅ Ativo</span>
+            <svg class="csel-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="csel-dropdown">
+            <div class="csel-opt" data-val="active"  onclick="pickCSel(this)">✅ <span>Ativo</span>    <span class="csel-opt-sub">Acesso imediato à plataforma</span></div>
+            <div class="csel-opt" data-val="pending" onclick="pickCSel(this)">⏳ <span>Pendente</span> <span class="csel-opt-sub">Aguarda aprovação manual</span></div>
+          </div>
+        </div>
+        <input type="hidden" id="dnuStatus" value="active"/>
+      </div>
+      <div class="drawer-field" id="dnuPermsGroup">
+        <label class="drawer-label">Permissões de acesso</label>
+        <div class="drawer-perms" id="dnuPermsGrid">
+          <!-- populado via JS -->
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button style="font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0" onclick="dnuSelectAllPerms(true)">Selecionar todas</button>
+          <span style="color:var(--text-subtle)">·</span>
+          <button style="font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0" onclick="dnuSelectAllPerms(false)">Limpar</button>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="drawer-btn-cancel" onclick="closeDrawerNewUser()">Cancelar</button>
+      <button class="drawer-btn-submit" onclick="submitNewUser()">Criar usuário</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ═══ EDITORIAL ═══ */
+.ed-stat-card { display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:12px;border:1px solid;box-shadow:var(--shadow-sm); }
+.ed-stat-draft { background:var(--warning-bg);border-color:var(--gold-border); }
+.ed-stat-pub   { background:var(--tech-bg);border-color:var(--tech-border); }
+.ed-stat-arch  { background:var(--surface-muted);border-color:var(--border); }
+.ed-stat-icon  { font-size:1.5rem;flex-shrink:0; }
+.ed-stat-val   { font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text-primary); }
+.ed-stat-lbl   { font-size:.72rem;color:var(--text-muted);margin-top:1px; }
+
+.ed-tabs { display:flex;gap:4px;background:var(--surface-muted);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:14px;width:fit-content; }
+.ed-tab  { display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:7px;font-size:.82rem;font-weight:600;color:var(--text-muted);transition:all .2s;font-family:inherit;cursor:pointer; }
+.ed-tab.active { background:var(--surface);color:var(--accent);border:1px solid var(--accent-border);box-shadow:var(--shadow-xs); }
+.ed-tab-count  { background:var(--border);border-radius:4px;padding:1px 6px;font-size:.65rem;color:var(--text-muted); }
+.ed-tab.active .ed-tab-count { background:var(--accent-bg);color:var(--accent); }
+
+.ed-subtabs { display:flex;gap:2px; }
+.ed-subtab  { padding:5px 12px;border-radius:6px;font-size:.76rem;font-weight:600;color:var(--text-muted);transition:all .2s;cursor:pointer;font-family:inherit; }
+.ed-subtab.active { background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-border); }
+.ed-subtab:hover  { color:var(--text-secondary); }
+
+/* type badges */
+.bt-novidade    { background:var(--success-bg); color:var(--success); border:1px solid var(--success-border); }
+.bt-atualizacao { background:var(--tech-bg);    color:var(--tech);    border:1px solid var(--tech-border); }
+.bt-alerta      { background:var(--danger-bg);  color:var(--danger);  border:1px solid var(--danger-border); }
+.bt-procedimento{ background:var(--accent-bg);  color:var(--accent);  border:1px solid var(--accent-border); }
+.bt-artigo      { background:rgba(234,88,12,.1); color:#FB923C; border:1px solid rgba(234,88,12,.25); }
+.ed-type-badge  { font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'Courier New',monospace;letter-spacing:.06em;text-transform:uppercase; }
+
+.ed-status-badge { font-size:.64rem;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em; }
+.es-draft     { background:var(--warning-bg); color:var(--warning); border:1px solid var(--gold-border); }
+.es-published { background:var(--success-bg); color:var(--success); border:1px solid var(--success-border); }
+.es-archived  { background:var(--surface-muted); color:var(--text-muted); border:1px solid var(--border); }
+
+/* ═══ EDITOR MODAL (90% viewport) ═══ */
+#modalEditor { position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px; }
+#modalEditor.open { display:flex; }
+.editor-shell { background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:calc(100vw - 40px);height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg); }
+
+.editor-topbar { display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface-muted); }
+.editor-topbar-title { font-family:'Poppins',sans-serif;font-weight:700;font-size:.9rem;color:var(--text-primary);flex:1; }
+.editor-autosave { font-size:.72rem;color:var(--text-muted);font-family:'Courier New',monospace; }
+.editor-autosave.saved { color:var(--success); }
+.editor-preview-btn { padding:6px 12px;background:var(--surface-muted);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:.75rem;font-weight:600;transition:all .2s;cursor:pointer; }
+.editor-preview-btn.active { background:var(--tech-bg);border-color:var(--tech-border);color:var(--tech); }
+.editor-save-btn    { padding:7px 14px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:7px;color:var(--gold);font-size:.78rem;font-weight:700;transition:all .2s;cursor:pointer; }
+.editor-save-btn:hover { background:rgba(251,191,36,.2); }
+.editor-publish-btn { padding:7px 14px;background:#FF6B35;border:none;border-radius:7px;color:#fff;font-size:.78rem;font-weight:700;transition:all .2s;cursor:pointer;box-shadow:0 2px 8px rgba(255,107,53,.25); }
+.editor-publish-btn:hover { background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,255,255,.12); }
+.editor-close-btn { width:28px;height:28px;background:var(--surface-muted);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);cursor:pointer;transition:all .2s;flex-shrink:0;font-size:.85rem; }
+.editor-close-btn:hover { background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border); }
+
+.editor-main { display:flex;flex:1;overflow:hidden; }
+
+/* Toolbar */
+.editor-toolbar { display:flex;align-items:center;gap:2px;padding:8px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0;background:var(--surface-muted); }
+.ed-tool { display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:5px;color:var(--text-muted);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0; }
+.ed-tool:hover { background:var(--accent-bg);color:var(--accent); }
+.ed-tool.active { background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-border); }
+.ed-tool-sep { width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0; }
+.ed-tool svg { width:13px;height:13px; }
+
+/* Editor area */
+.editor-content-wrap { flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border); }
+.editor-area { flex:1;overflow-y:auto;padding:28px 36px;outline:none;font-size:.9rem;line-height:1.8;color:var(--text-secondary);caret-color:var(--accent); }
+.editor-area:empty::before { content:attr(data-placeholder);color:var(--text-subtle);pointer-events:none; }
+.editor-area h2 { font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:700;color:var(--text-primary);margin:20px 0 8px; }
+.editor-area h3 { font-family:'Poppins',sans-serif;font-size:1rem;font-weight:600;color:var(--text-secondary);margin:16px 0 6px; }
+.editor-area p  { margin-bottom:12px; }
+.editor-area ul,
+.editor-area ol { padding-left:22px;margin-bottom:12px; }
+.editor-area ul li { list-style:disc;margin-bottom:4px; }
+.editor-area ol li { list-style:decimal;margin-bottom:4px; }
+.editor-area hr  { border:none;border-top:1px solid var(--border);margin:20px 0; }
+.editor-area strong { color:var(--text-primary);font-weight:700; }
+.editor-area em { font-style:italic;color:var(--text-muted); }
+.editor-area a { color:var(--accent);text-decoration:underline; }
+.editor-area::-webkit-scrollbar { width:4px; }
+.editor-area::-webkit-scrollbar-thumb { background:var(--border);border-radius:2px; }
+
+/* Preview */
+.editor-preview { flex:1;overflow-y:auto;padding:28px 36px;display:none; }
+.editor-preview.active { display:block; }
+
+/* Metadata sidebar */
+.editor-sidebar { width:280px;flex-shrink:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;background:var(--surface-muted);border-left:1px solid var(--border); }
+.editor-sidebar::-webkit-scrollbar { width:3px; }
+.editor-sidebar::-webkit-scrollbar-thumb { background:var(--border); }
+.ed-meta-group { display:flex;flex-direction:column;gap:5px; }
+.ed-meta-label { font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em; }
+.ed-meta-input { width:100%;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text-primary);font-size:.82rem;transition:border-color .2s ease, box-shadow .2s ease;font-family:inherit;box-sizing:border-box; }
+.ed-meta-input:focus-visible { outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,255,255,.08); }
+.ed-meta-select { appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239896B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center; }
+.ed-brands-grid { display:grid;grid-template-columns:1fr 1fr;gap:4px; }
+.ed-brand-check { display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text-muted);cursor:pointer;padding:3px 0; }
+.ed-brand-check input { accent-color:var(--accent);width:12px;height:12px; }
+
+/* ═══ DRAWER NOVO USUÁRIO ═══ */
+#drawerNewUser { position:fixed;inset:0;z-index:4000;pointer-events:none; }
+#drawerNewUser.open { pointer-events:all; }
+.drawer-backdrop { position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s;backdrop-filter:blur(2px); }
+#drawerNewUser.open .drawer-backdrop { opacity:1; }
+.drawer-panel { position:absolute;right:0;top:0;bottom:0;width:420px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-lg); }
+#drawerNewUser.open .drawer-panel { transform:translateX(0); }
+.drawer-header { padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface-muted); }
+.drawer-title { font-family:'Poppins',sans-serif;font-weight:700;font-size:.95rem;color:var(--text-primary); }
+.drawer-close { width:30px;height:30px;background:var(--surface-muted);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);cursor:pointer;transition:all .2s;font-size:.85rem; }
+.drawer-close:hover { background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border); }
+.drawer-body { flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:14px; }
+.drawer-field { display:flex;flex-direction:column;gap:5px; }
+.drawer-label { font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em; }
+.drawer-input { width:100%;padding:9px 12px;background:var(--surface-muted);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.85rem;transition:border-color .2s ease, box-shadow .2s ease;font-family:inherit;box-sizing:border-box; }
+.drawer-input:focus-visible { outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,255,255,.08); }
+.drawer-select { appearance:none;-webkit-appearance:none; }
+
+/* ── Custom Select (csel) ── */
+.csel { position:relative;width:100%; }
+.csel-trigger { display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface-muted);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:.85rem;cursor:pointer;transition:all .2s;user-select:none; }
+.csel-trigger:hover { background:var(--surface-hover);border-color:var(--border-strong); }
+.csel.open .csel-trigger { border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 3px rgba(255,255,255,.08); }
+.csel-val { flex:1;min-width:0; }
+.csel-arrow { flex-shrink:0;color:var(--text-muted);transition:transform .2s; }
+.csel.open .csel-arrow { transform:rotate(180deg);color:var(--accent); }
+.csel-dropdown { position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);z-index:9999;overflow:hidden;display:none;animation:csel-in .15s ease; }
+.csel.open .csel-dropdown { display:block; }
+@keyframes csel-in { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.csel-opt { display:grid;grid-template-columns:22px 1fr;align-items:center;column-gap:9px;padding:10px 14px;cursor:pointer;transition:background .15s;font-size:.84rem;color:var(--text-secondary); }
+.csel-opt:hover { background:var(--accent-bg);color:var(--text-primary); }
+.csel-opt.selected { background:var(--accent-bg);color:var(--accent); }
+.csel-opt + .csel-opt { border-top:1px solid var(--border); }
+.csel-opt-sub { grid-column:2;font-size:.68rem;color:var(--text-muted);margin-top:1px;line-height:1.3; }
+.csel-opt:hover .csel-opt-sub { color:var(--text-secondary); }
+.csel-opt.selected .csel-opt-sub { color:var(--accent-soft); }
+
+.drawer-perms { display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:160px;overflow-y:auto;padding:8px;background:var(--surface-muted);border:1px solid var(--border);border-radius:8px; }
+.drawer-perm-item { display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text-muted);cursor:pointer; }
+.drawer-perm-item input { accent-color:var(--accent); }
+.drawer-footer { padding:16px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:var(--surface-muted); }
+.drawer-btn-cancel { flex:1;padding:10px;background:var(--surface-muted);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s; }
+.drawer-btn-cancel:hover { background:var(--border);color:var(--text-secondary); }
+.drawer-btn-submit { flex:2;padding:10px;background:#FF6B35;border:none;border-radius:8px;color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(255,107,53,.25); }
+.drawer-btn-submit:hover { background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,255,255,.12); }
+
+/* ═══ MODAL DELETE CONFIRMAÇÃO ═══ */
+#modalDeleteConfirm .modal { max-width:420px; }
+.del-confirm-info { background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;padding:12px 14px;margin-bottom:14px; }
+.del-confirm-name { font-family:'Poppins',sans-serif;font-weight:700;color:var(--text-primary);font-size:.88rem;margin-bottom:2px; }
+.del-confirm-email { font-size:.78rem;color:var(--text-muted); }
+.del-confirm-warn { font-size:.78rem;color:var(--danger);margin-bottom:12px;line-height:1.5; }
+.del-confirm-input { width:100%;padding:9px 12px;background:var(--danger-bg);border:1.5px solid var(--danger-border);border-radius:8px;color:var(--text-primary);font-size:.84rem;transition:border-color .2s ease, box-shadow .2s ease;font-family:'Courier New',monospace;box-sizing:border-box; }
+.del-confirm-input:focus-visible { outline:none;border-color:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,.12); }
+.btn-danger-confirm { padding:9px 18px;background:var(--danger);border:none;border-radius:7px;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;box-shadow:0 2px 6px rgba(239,68,68,.3); }
+.btn-danger-confirm:hover { background:#B91C1C; }
+.btn-danger-confirm:disabled { opacity:.4;cursor:not-allowed; }
+</style>
+
+<script>
+/* ======================================================
+   ADAS PRO — superadmin.js (inline)
+   Segurança: esc() em todos os innerHTML com dados externos
+   Sem eval(), sem document.write()
+   ====================================================== */
+
+/* ── Sanitização XSS ── */
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ── Estado global da sessão ── */
+let _session = null;
+let _allUsers = [];
+let _auditLog = [];
+let _plans = [];
+let _editingPlanIdx = -1;
+
+/* ── Dados simulados ── */
+const MOCK_FAILED_LOGINS = [
+  { email:'hacker@test.com',   ip:'189.56.12.4',  device:'Chrome/Linux',  time:'25/04 08:14', count:3 },
+  { email:'user@unknown.net',  ip:'45.178.90.22', device:'Firefox/Win',   time:'25/04 07:55', count:1 },
+  { email:'admin@adaspro.com', ip:'200.30.1.5',   device:'Mobile Safari', time:'25/04 06:30', count:2 },
+  { email:'root@exploit.io',   ip:'91.108.4.1',   device:'curl/7.68',     time:'24/04 23:11', count:5 },
+  { email:'scan@bot.ru',       ip:'185.220.101.9',device:'Python/3.9',    time:'24/04 21:04', count:8 },
+  { email:'test@phish.com',    ip:'103.152.4.7',  device:'Chrome/Mac',    time:'24/04 19:45', count:1 },
+  { email:'fakeadmin@x.co',    ip:'46.101.9.200', device:'Firefox/Linux', time:'24/04 17:20', count:4 },
+  { email:'probing@attk.xyz',  ip:'5.188.206.13', device:'Wget/1.20',     time:'24/04 15:00', count:6 },
+  { email:'spam@junk.cc',      ip:'179.60.147.3', device:'Chrome/Win',    time:'24/04 13:11', count:2 },
+  { email:'brute@force.net',   ip:'77.88.5.23',   device:'curl/7.81',     time:'24/04 11:00', count:9 },
+];
+
+const MOCK_SESSIONS = [
+  { user:'AutoTech Service', email:'superadmin@adaspro.com.br', ip:'177.12.34.56', device:'Chrome 124 / Windows', since:'25/04 07:00', role:'superadmin' },
+  { user:'Administrador',     email:'admin@adaspro.com.br',    ip:'200.18.5.90',  device:'Firefox 125 / macOS',  since:'25/04 08:30', role:'admin' },
+  { user:'Gestor Principal',  email:'gestor@adaspro.com.br',   ip:'189.10.22.3',  device:'Chrome / Android',     since:'25/04 09:15', role:'gestor' },
+];
+
+const MOCK_AUDIT = [
+  { ts:'25/04/26 09:42', user:'superadmin@adaspro.com.br', action:'Login bem-sucedido',           ip:'177.12.34.56', details:'Sessão iniciada via SUPERADMIN', type:'login',  status:'ok' },
+  { ts:'25/04/26 09:30', user:'admin@adaspro.com.br',    action:'Role alterada: membro→gestor', ip:'200.18.5.90',  details:'Target: carlos@email.com',       type:'role',   status:'ok' },
+  { ts:'25/04/26 09:10', user:'superadmin@adaspro.com.br', action:'Plano Pro atualizado',         ip:'177.12.34.56', details:'Preço: R$97→R$89',               type:'config', status:'ok' },
+  { ts:'25/04/26 08:55', user:'hacker@test.com',         action:'Acesso negado',                ip:'189.56.12.4',  details:'Role insuficiente para /admin',   type:'access', status:'fail' },
+  { ts:'25/04/26 08:40', user:'admin@adaspro.com.br',    action:'Usuário excluído',             ip:'200.18.5.90',  details:'Target: spam@user.com',          type:'delete', status:'ok' },
+  { ts:'25/04/26 08:20', user:'gestor@adaspro.com.br',   action:'Login bem-sucedido',           ip:'189.10.22.3',  details:'Sessão via mobile',              type:'login',  status:'ok' },
+  { ts:'25/04/26 07:50', user:'root@exploit.io',         action:'Acesso negado',                ip:'91.108.4.1',   details:'5 tentativas — IP bloqueado',    type:'access', status:'fail' },
+  { ts:'25/04/26 07:30', user:'superadmin@adaspro.com.br', action:'Modo manutenção: OFF→ON',      ip:'177.12.34.56', details:'Duração: 12 min',                type:'config', status:'warn' },
+  { ts:'25/04/26 07:18', user:'superadmin@adaspro.com.br', action:'Modo manutenção: ON→OFF',      ip:'177.12.34.56', details:'Sistema restaurado',             type:'config', status:'ok' },
+  { ts:'24/04/26 23:45', user:'scan@bot.ru',             action:'Acesso negado',                ip:'185.220.101.9',details:'User-agent suspeito bloqueado',  type:'access', status:'fail' },
+  { ts:'24/04/26 22:10', user:'admin@adaspro.com.br',    action:'Role alterada: gestor→admin',  ip:'200.18.5.90',  details:'Target: novo@gestor.com',        type:'role',   status:'ok' },
+  { ts:'24/04/26 21:00', user:'superadmin@adaspro.com.br', action:'Webhook configurado',          ip:'177.12.34.56', details:'URL: hooks.slack.com/...',       type:'config', status:'ok' },
+  { ts:'24/04/26 20:15', user:'admin@adaspro.com.br',    action:'Login bem-sucedido',           ip:'200.18.5.90',  details:'Sessão renovada',               type:'login',  status:'ok' },
+  { ts:'24/04/26 19:40', user:'testuser@mail.com',       action:'Acesso negado',                ip:'200.0.0.1',    details:'Conta pendente de aprovação',    type:'access', status:'fail' },
+  { ts:'24/04/26 18:55', user:'superadmin@adaspro.com.br', action:'Novo admin adicionado',        ip:'177.12.34.56', details:'Target: novo@admin.com',         type:'role',   status:'ok' },
+  { ts:'24/04/26 17:30', user:'admin@adaspro.com.br',    action:'Conteúdo removido',            ip:'200.18.5.90',  details:'Material: honda-old-v1',         type:'delete', status:'ok' },
+  { ts:'24/04/26 16:00', user:'brute@force.net',         action:'Acesso negado',                ip:'77.88.5.23',   details:'9 tentativas — bloqueio 15min',  type:'access', status:'fail' },
+  { ts:'24/04/26 14:20', user:'superadmin@adaspro.com.br', action:'Mensagem global publicada',    ip:'177.12.34.56', details:'Novos materiais Toyota 2026',    type:'config', status:'ok' },
+  { ts:'24/04/26 12:00', user:'gestor@adaspro.com.br',   action:'Login bem-sucedido',           ip:'189.10.22.3',  details:'Acesso via Chrome mobile',      type:'login',  status:'ok' },
+  { ts:'24/04/26 10:15', user:'admin@adaspro.com.br',    action:'Role alterada: admin→gestor',  ip:'200.18.5.90',  details:'Target: rebaixado@user.com',     type:'role',   status:'ok' },
+];
+
+const MOCK_PLANS = [
+  { id:'free',    name:'Gratuito',  badge:'FREE',    price:0,   period:'',    desc:'Acesso básico com materiais demo e dashboard.',     color:'#9CA3AF' },
+  { id:'modulo',  name:'Módulo',    badge:'MÓDULO',  price:47,  period:'mês', desc:'1 categoria à sua escolha com todos os materiais.', color:'#00B4D8' },
+  { id:'pro',     name:'Pro',       badge:'PRO',     price:97,  period:'mês', desc:'Honda, Toyota e Nissan — suporte prioritário.',     color:'#FF6B35' },
+  { id:'premium', name:'Premium',   badge:'PREMIUM', price:197, period:'mês', desc:'Todas as 12 categorias + consultoria individual.',  color:'#F4A261' },
+];
+
+/* ────────────────────────────────────────────
+   AUDIT LOGS — Supabase (com fallback mock)
+──────────────────────────────────────────── */
+async function _loadAuditLogsFromSupabase() {
+  try {
+    const sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    const { data, error } = await sb
+      .from('audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error || !data?.length) return null;
+
+    const userMap = {};
+    _allUsers.forEach(u => { if (u.id) userMap[u.id] = u.email || u.name || u.id; });
+
+    const actionLabel = {
+      approve_user:        'Usuário aprovado',
+      block_user:          'Usuário bloqueado',
+      unblock_user:        'Usuário desbloqueado',
+      update_permissions:  'Permissões atualizadas',
+      update_role:         'Role alterada',
+      delete_user:         'Usuário excluído',
+      reply_ticket:        'Resposta de ticket',
+      delete_ticket:       'Ticket excluído',
+    };
+    const actionType = a =>
+      a?.includes('delete') ? 'delete' :
+      (a?.includes('role') || a?.includes('permissions')) ? 'role' :
+      a?.includes('login')  ? 'login'  : 'config';
+
+    return data.map(r => ({
+      ts:      new Date(r.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }),
+      user:    userMap[r.actor_id] || (r.actor_id ? r.actor_id.slice(0,8)+'…' : '—'),
+      action:  actionLabel[r.action] || r.action,
+      ip:      r.ip || '—',
+      details: r.details ? (typeof r.details === 'object' ? JSON.stringify(r.details).slice(0,80) : String(r.details)) : '—',
+      type:    actionType(r.action),
+      status:  'ok',
+    }));
+  } catch(e) {
+    return null;
+  }
+}
+
+/* ────────────────────────────────────────────
+   INICIALIZAÇÃO
+──────────────────────────────────────────── */
+AUTH.init().then(async () => {
+  const session = AUTH.requireAuth('superadmin');
+  if (!session) return;
+  _session = session;
+  await initSuperAdmin(session);
+}).catch(err => {
+  console.error('[SUPERADMIN] Auth error:', err);
+  window.location.href = 'login.html';
+});
+
+async function initSuperAdmin(session) {
+  /* Preenche dados da sidebar */
+  const initials = (session.name || 'SA').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sbAvatar').textContent = esc(initials);
+  document.getElementById('sbName').textContent   = esc(session.name || 'Super Admin');
+  document.getElementById('sbRole').textContent   = 'superadmin';
+
+  /* Carrega dados */
+  _allUsers = _loadUsers();
+  _plans    = JSON.parse(JSON.stringify(MOCK_PLANS));
+
+  /* Audit: tenta real, fallback mock */
+  const realAudit = await _loadAuditLogsFromSupabase();
+  _auditLog = (realAudit && realAudit.length > 0) ? realAudit : MOCK_AUDIT;
+
+  /* Renderiza páginas */
+  renderDashboard();
+  renderAdmins();
+  renderSecurity();
+  renderPlans();
+  renderAudit();
+
+  /* Relógio */
+  startClock();
+
+  /* Esconde loading */
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('appShell').style.display      = 'flex';
+
+  if (AUTH.isOfflineMode()) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#b45309;color:#fff;text-align:center;padding:6px 16px;font-size:.78rem;font-weight:600';
+    banner.textContent = '⚠️ Modo Offline — Supabase inacessível. Dados locais de demonstração.';
+    document.body.prepend(banner);
+  }
+}
+
+/* ── Carrega usuários do AUTH ── */
+function _loadUsers() {
+  try {
+    const users = AUTH.getAllUsers();
+    if (Array.isArray(users) && users.length > 0) return users;
+  } catch(e) {}
+  /* Fallback: tenta localStorage */
+  try {
+    const raw = localStorage.getItem('adaspro_users');
+    if (raw) {
+      const obj = JSON.parse(raw);
+      return Object.values(obj).filter(u => u && u.email);
+    }
+  } catch(e) {}
+  /* Demo seed */
+  return [
+    { id:'superadmin', name:'AutoTech Service', email:'superadmin@adaspro.com.br', role:'superadmin', status:'active', createdAt: Date.now()-86400000*90 },
+    { id:'admin1',     name:'Administrador',     email:'admin@adaspro.com.br',     role:'admin',      status:'active', createdAt: Date.now()-86400000*60 },
+    { id:'gestor1',    name:'Gestor Principal',  email:'gestor@adaspro.com.br',    role:'gestor',     status:'active', createdAt: Date.now()-86400000*30 },
+    { id:'m1',         name:'Carlos Técnico',    email:'carlos@email.com',         role:'membro',     status:'active', createdAt: Date.now()-86400000*20 },
+    { id:'m2',         name:'Ana Mecânica',      email:'ana@oficina.com',          role:'membro',     status:'active', createdAt: Date.now()-86400000*10 },
+    { id:'m3',         name:'Roberto ADAS',      email:'roberto@auto.com',         role:'membro',     status:'pending',createdAt: Date.now()-86400000*2  },
+  ];
+}
+
+/* ────────────────────────────────────────────
+   DASHBOARD
+──────────────────────────────────────────── */
+function renderDashboard() {
+  const active  = _allUsers.filter(u => u.status === 'active').length;
+  const admins  = _allUsers.filter(u => u.role === 'admin' || u.role === 'gestor' || u.role === 'superadmin').length;
+  const members = _allUsers.filter(u => u.role === 'membro' && u.status === 'active').length;
+
+  /* Receita estimada simples (demo) */
+  const revenue = members * 47;
+
+  document.getElementById('metricUsers').textContent       = active;
+  document.getElementById('metricAdmins').textContent      = admins;
+  document.getElementById('metricRevenue').textContent     = 'R$ ' + revenue.toLocaleString('pt-BR');
+  document.getElementById('metricUsersDelta').textContent  = '+' + active + ' usuários ativos';
+  document.getElementById('metricRevenueDelta').textContent = 'Baseado em ' + members + ' membros pagantes';
+
+  /* Gráfico de barras */
+  const months = ['Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr'];
+  const values = [28, 35, 44, 52, 48, 41];
+  const max    = Math.max(...values);
+  const chart  = document.getElementById('barChart');
+  chart.innerHTML = values.map((v, i) => {
+    const pct = Math.round((v / max) * 100);
+    return (
+      '<div class="bar-col">' +
+        '<div class="bar" style="height:' + pct + '%">' +
+          '<div class="bar-tip">' + esc(String(v)) + ' novos</div>' +
+        '</div>' +
+        '<div class="bar-label">' + esc(months[i]) + '</div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+/* ────────────────────────────────────────────
+   ADMINS
+──────────────────────────────────────────── */
+const ROLE_META = {
+  superadmin: { level:4, icon:'👑', label:'Superadmin', avatarBg:'linear-gradient(135deg,#475569,#64748B)', color:'var(--accent)' },
+  admin:      { level:3, icon:'🛡️', label:'Admin',      avatarBg:'linear-gradient(135deg,#FF6B35,#e55824)', color:'var(--accent)' },
+  gestor:     { level:2, icon:'⚙️', label:'Gestor',     avatarBg:'linear-gradient(135deg,#00B4D8,#0099b8)', color:'var(--tech)' },
+  membro:     { level:1, icon:'👤', label:'Membro',     avatarBg:'linear-gradient(135deg,#1B2B4D,#2a3f6f)', color:'rgba(255,255,255,.45)' },
+};
+
+function renderAdmins(filter_text, filter_role) {
+  const search = (filter_text || '').toLowerCase();
+  const role   = filter_role  || '';
+
+  let rows = _allUsers.filter(u => {
+    const matchText = !search ||
+      (u.name  || '').toLowerCase().includes(search) ||
+      (u.email || '').toLowerCase().includes(search);
+    const matchRole = !role || u.role === role;
+    return matchText && matchRole;
+  });
+
+  // Atualiza contadores do painel hierárquico
+  ['superadmin','admin','gestor','membro'].forEach(r => {
+    const el = document.getElementById('hCount-' + r);
+    if (el) el.textContent = _allUsers.filter(u => u.role === r).length;
+  });
+
+  document.getElementById('adminsCountLabel').textContent =
+    rows.length + ' usuário(s) encontrado(s)';
+
+  // Ordenar por nível hierárquico decrescente
+  rows.sort((a,b) => (ROLE_META[b.role]?.level||0) - (ROLE_META[a.role]?.level||0));
+
+  const tbody = document.getElementById('adminsTbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">Nenhum resultado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(u => {
+    const date    = u.createdAt ? new Date(u.createdAt).toLocaleDateString('pt-BR') : '—';
+    const isSelf  = _session && u.email === _session.email;
+    const rm      = ROLE_META[u.role] || ROLE_META.membro;
+    const init    = (u.name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+
+    // Barra de nível visual (4 quadradinhos)
+    const levelBar = Array.from({length:4}, (_,i) =>
+      `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${i < rm.level ? rm.color : 'var(--border)'};transition:.2s"></span>`
+    ).join('');
+
+    // Botões de ação contextuais com setas
+    let actions = '';
+    if (isSelf) {
+      actions = '<span style="font-size:.72rem;color:var(--accent-soft);padding:0 4px">● você</span>';
+    } else if (u.role === 'superadmin') {
+      actions = '<span style="font-size:.72rem;color:var(--text-subtle)">protegido</span>';
+    } else if (u.role === 'membro') {
+      actions += '<button class="action-btn btn-promote" title="Promover a Gestor" onclick="promoteUser(\'' + esc(u.id) + '\',\'gestor\')">↑ Gestor</button> ';
+      actions += '<button class="action-btn btn-promote" title="Promover a Admin"  onclick="promoteUser(\'' + esc(u.id) + '\',\'admin\')" style="background:rgba(255,107,53,.12);color:var(--accent)">↑↑ Admin</button> ';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + esc(u.name||'') + '\',\'' + esc(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+    } else if (u.role === 'gestor') {
+      actions += '<button class="action-btn btn-promote" title="Promover a Admin" onclick="promoteUser(\'' + esc(u.id) + '\',\'admin\')">↑ Admin</button> ';
+      actions += '<button class="action-btn btn-demote"  title="Rebaixar a Membro" onclick="promoteUser(\'' + esc(u.id) + '\',\'membro\')">↓ Membro</button> ';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + esc(u.name||'') + '\',\'' + esc(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+    } else if (u.role === 'admin') {
+      actions += '<button class="action-btn btn-demote"  title="Rebaixar a Gestor" onclick="promoteUser(\'' + esc(u.id) + '\',\'gestor\')">↓ Gestor</button> ';
+      actions += '<button class="action-btn btn-remove"  title="Remover acesso admin" onclick="removeAccess(\'' + esc(u.id) + '\')">✕ Remover</button> ';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + esc(u.name||'') + '\',\'' + esc(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+    }
+
+    const statusColor = u.status === 'active' ? 'var(--success)' :
+                        u.status === 'pending' ? 'var(--warning)' : 'var(--danger)';
+    const statusLabel = { active:'Ativo', pending:'Pendente', blocked:'Bloqueado' }[u.status] || u.status;
+
+    return (
+      '<tr>' +
+        '<td><div style="display:flex;align-items:center;gap:10px">' +
+          '<div style="width:36px;height:36px;border-radius:50%;background:' + rm.avatarBg + ';display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0">' + init + '</div>' +
+          '<div><div style="font-weight:600;color:var(--text-primary);font-size:.88rem">' + esc(u.name || '—') + '</div>' +
+          '<div style="font-size:.68rem;color:var(--text-muted)">' + esc(u.level||'—') + '</div></div>' +
+        '</div></td>' +
+        '<td style="font-family:monospace;font-size:.78rem">' + esc(u.email || '—') + '</td>' +
+        '<td><div style="display:flex;gap:3px;align-items:center">' + levelBar + '<span style="font-size:.65rem;color:var(--text-muted);margin-left:5px">Lv' + rm.level + '</span></div></td>' +
+        '<td><span class="role-badge role-' + esc(u.role || 'membro') + '">' + rm.icon + ' ' + rm.label + '</span></td>' +
+        '<td><span style="color:' + statusColor + ';font-size:.78rem;font-weight:600">● ' + esc(statusLabel) + '</span></td>' +
+        '<td style="font-size:.78rem;color:var(--text-muted)">' + esc(date) + '</td>' +
+        '<td style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px">' + actions + '</td>' +
+      '</tr>'
+    );
+  }).join('');
+}
+
+function filterAdmins() {
+  filterAdmins._debounce && clearTimeout(filterAdmins._debounce);
+  filterAdmins._debounce = setTimeout(() => {
+    const search = document.getElementById('adminsSearch').value;
+    const role   = document.getElementById('adminsRoleFilter').value;
+    renderAdmins(search, role);
+  }, 180);
+}
+
+async function promoteUser(userId, newRole) {
+  const u = _allUsers.find(x => x.id === userId);
+  if (!u) return;
+  const oldRole = u.role;
+  const rm = ROLE_META[newRole] || ROLE_META.membro;
+  const direction = (ROLE_META[newRole]?.level||0) > (ROLE_META[oldRole]?.level||0) ? '↑' : '↓';
+  try {
+    await AUTH.updateUserRole(userId, newRole);
+    u.role = newRole;
+    renderAdmins(
+      document.getElementById('adminsSearch').value,
+      document.getElementById('adminsRoleFilter').value
+    );
+    showToast(direction + ' ' + esc(u.name) + ': ' + oldRole + ' → ' + newRole, 'success');
+  } catch(e) {
+    showToast('Erro ao alterar função: ' + e.message, 'error');
+  }
+}
+
+async function removeAccess(userId) {
+  const u = _allUsers.find(x => x.id === userId);
+  if (!u) return;
+  if (!confirm('Remover acesso administrativo de ' + u.name + '?\nO usuário será rebaixado a Membro e bloqueado.')) return;
+  try {
+    await AUTH.updateUserRole(userId, 'membro');
+    await AUTH.blockUser(userId);
+    u.role   = 'membro';
+    u.status = 'blocked';
+    renderAdmins(
+      document.getElementById('adminsSearch').value,
+      document.getElementById('adminsRoleFilter').value
+    );
+    showToast('Acesso removido de ' + esc(u.name), 'success');
+  } catch(e) {
+    showToast('Erro ao remover acesso: ' + e.message, 'error');
+  }
+}
+
+
+function addAdminUser() {
+  const name  = document.getElementById('newAdminName').value.trim();
+  const email = document.getElementById('newAdminEmail').value.trim();
+  const role  = document.getElementById('newAdminRole').value;
+
+  if (!name || !email) { showToast('Preencha nome e e-mail.', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('E-mail inválido.', 'error'); return; }
+  if (_allUsers.find(u => u.email === email)) { showToast('E-mail já cadastrado.', 'error'); return; }
+
+  const newUser = {
+    id: 'user_' + Date.now(),
+    name, email, role,
+    status: 'active',
+    createdAt: Date.now(),
+  };
+  _allUsers.push(newUser);
+  renderAdmins();
+  closeModal('modalAddAdmin');
+  document.getElementById('newAdminName').value  = '';
+  document.getElementById('newAdminEmail').value = '';
+  showToast(name + ' adicionado como ' + role + '.', 'success');
+}
+
+/* ────────────────────────────────────────────
+   SEGURANÇA
+──────────────────────────────────────────── */
+function renderSecurity() {
+  /* Tentativas falhas */
+  const failEl = document.getElementById('failedLoginsList');
+  failEl.innerHTML = MOCK_FAILED_LOGINS.map(f =>
+    '<div class="sec-item">' +
+      '<div>' +
+        '<div class="sec-email">' + esc(f.email) + '</div>' +
+        '<div class="sec-device">' + esc(f.device) + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div class="sec-ip">' + esc(f.ip) + '</div>' +
+        '<div class="sec-time">' + esc(f.time) + ' · ' +
+          '<span style="color:var(--danger);font-weight:700">' + esc(String(f.count)) + 'x</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+
+  /* Sessões ativas */
+  const sesEl = document.getElementById('activeSessionsList');
+  sesEl.innerHTML = MOCK_SESSIONS.map(s =>
+    '<div class="sec-item">' +
+      '<div>' +
+        '<div class="sec-email" style="font-weight:600;color:var(--text-primary)">' + esc(s.user) + '</div>' +
+        '<div class="sec-device">' + esc(s.email) + '</div>' +
+        '<div class="sec-device" style="margin-top:2px">' + esc(s.device) + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div class="sec-ip">' + esc(s.ip) + '</div>' +
+        '<div class="sec-time">' + esc(s.since) + '</div>' +
+        '<span class="session-badge" style="margin-top:4px;display:inline-flex">' + esc(s.role) + '</span>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function terminateAllSessions() {
+  if (!confirm('Encerrar TODAS as sessões ativas? Você também será desconectado.')) return;
+  showToast('Todas as sessões encerradas. Redirecionando...', 'success');
+  setTimeout(() => {
+    try { AUTH.logout(); } catch(e) {}
+    window.location.href = 'login.html';
+  }, 2000);
+}
+
+function onSecurityToggle(key, val) {
+  showToast('Configuração "' + key + '" ' + (val ? 'ativada' : 'desativada') + '.', 'success');
+}
+
+/* ────────────────────────────────────────────
+   PLANOS
+──────────────────────────────────────────── */
+function renderPlans() {
+  const grid = document.getElementById('plansGrid');
+  grid.innerHTML = _plans.map((p, i) => {
+    const priceText = p.price === 0 ? 'Grátis' : 'R$ ' + p.price;
+    const periodText = p.period ? '<span>/' + esc(p.period) + '</span>' : '';
+    return (
+      '<div class="plan-card">' +
+        '<div class="plan-badge" style="color:' + esc(p.color) + ';border-color:' + esc(p.color) + '44;background:' + esc(p.color) + '18">' + esc(p.badge) + '</div>' +
+        '<div class="plan-name">' + esc(p.name) + '</div>' +
+        '<div class="plan-price">' + esc(priceText) + periodText + '</div>' +
+        '<div style="font-size:.78rem;color:var(--text-muted);line-height:1.5">' + esc(p.desc) + '</div>' +
+        '<button class="plan-edit-btn" onclick="openEditPlan(' + i + ')">✏️ Editar plano</button>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+function openEditPlan(idx) {
+  _editingPlanIdx = idx;
+  const p = _plans[idx];
+  document.getElementById('editPlanTitle').textContent  = 'Editar plano — ' + p.name;
+  document.getElementById('editPlanName').value         = p.name;
+  document.getElementById('editPlanPrice').value        = p.price;
+  document.getElementById('editPlanPeriod').value       = p.period;
+  document.getElementById('editPlanDesc').value         = p.desc;
+  openModal('modalEditPlan');
+}
+
+function savePlan() {
+  if (_editingPlanIdx < 0) return;
+  const p     = _plans[_editingPlanIdx];
+  p.name      = document.getElementById('editPlanName').value.trim()   || p.name;
+  p.price     = Number(document.getElementById('editPlanPrice').value)  || 0;
+  p.period    = document.getElementById('editPlanPeriod').value.trim();
+  p.desc      = document.getElementById('editPlanDesc').value.trim()   || p.desc;
+  renderPlans();
+  closeModal('modalEditPlan');
+  showToast('Plano "' + p.name + '" atualizado.', 'success');
+}
+
+function addNewModule() {
+  showToast('Funcionalidade disponível em breve — integração com banco de dados.', 'success');
+}
+
+/* ────────────────────────────────────────────
+   SISTEMA
+──────────────────────────────────────────── */
+function onMaintenanceToggle(active) {
+  const banner = document.getElementById('maintenanceBanner');
+  const dot    = document.getElementById('statusMaintenance');
+  const label  = document.getElementById('statusMaintenanceLabel');
+  if (active) {
+    banner.classList.add('visible');
+    dot.className   = 'status-dot warn';
+    label.textContent = 'ATIVO — plataforma em manutenção';
+    showToast('Modo manutenção ATIVADO. Membros não conseguem acessar.', 'success');
+  } else {
+    banner.classList.remove('visible');
+    dot.className   = 'status-dot neutral';
+    label.textContent = 'Inativo';
+    showToast('Modo manutenção desativado. Plataforma online.', 'success');
+  }
+}
+
+function saveGlobalMessage() {
+  const msg = document.getElementById('globalMessage').value.trim();
+  if (!msg) { showToast('Mensagem em branco — nada publicado.', 'error'); return; }
+  showToast('Mensagem global publicada para todos os membros.', 'success');
+}
+
+function saveWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { showToast('Informe a URL do webhook.', 'error'); return; }
+  showToast('Webhook salvo com sucesso.', 'success');
+}
+
+function testWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { showToast('Informe a URL antes de testar.', 'error'); return; }
+  showToast('Payload de teste enviado para: ' + url.slice(0, 40) + '...', 'success');
+}
+
+/* ────────────────────────────────────────────
+   AUDITORIA
+──────────────────────────────────────────── */
+function renderAudit(filter_text, filter_type) {
+  const search = (filter_text || '').toLowerCase();
+  const type   = filter_type  || '';
+
+  const rows = _auditLog.filter(r => {
+    const matchText = !search ||
+      (r.user    || '').toLowerCase().includes(search) ||
+      (r.action  || '').toLowerCase().includes(search) ||
+      (r.details || '').toLowerCase().includes(search);
+    const matchType = !type || r.type === type;
+    return matchText && matchType;
+  });
+
+  const tbody = document.getElementById('auditTbody');
+  tbody.innerHTML = rows.map(r => {
+    const statusClass = r.status === 'ok'   ? 'audit-status-ok'   :
+                        r.status === 'fail' ? 'audit-status-fail'  : 'audit-status-warn';
+    const statusLabel = r.status === 'ok'   ? '✓ OK'   :
+                        r.status === 'fail' ? '✗ FALHA' : '⚠ AVISO';
+    const typeClass   = 'audit-' + esc(r.type || 'login');
+    const typeLabel   = {
+      login:'LOGIN', role:'ROLE', delete:'EXCLUIR', access:'ACESSO', config:'CONFIG'
+    }[r.type] || esc(r.type || '');
+
+    return (
+      '<tr>' +
+        '<td style="font-family:monospace;font-size:.78rem;color:var(--text-muted);white-space:nowrap">' + esc(r.ts) + '</td>' +
+        '<td style="font-size:.8rem">' + esc(r.user) + '</td>' +
+        '<td>' +
+          '<span class="audit-action-badge ' + typeClass + '">' + typeLabel + '</span> ' +
+          '<span style="font-size:.8rem">' + esc(r.action) + '</span>' +
+        '</td>' +
+        '<td style="font-family:monospace;font-size:.76rem;color:var(--tech)">' + esc(r.ip) + '</td>' +
+        '<td style="font-size:.76rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.details) + '</td>' +
+        '<td class="' + statusClass + '">' + statusLabel + '</td>' +
+      '</tr>'
+    );
+  }).join('');
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">Nenhum resultado encontrado.</td></tr>';
+  }
+}
+
+function filterAudit() {
+  filterAudit._debounce && clearTimeout(filterAudit._debounce);
+  filterAudit._debounce = setTimeout(() => {
+    const search = document.getElementById('auditSearch').value;
+    const type   = document.getElementById('auditTypeFilter').value;
+    renderAudit(search, type);
+  }, 200);
+}
+
+function exportAudit() {
+  const header = 'Data/Hora,Usuario,Acao,IP,Detalhes,Status\n';
+  const rows   = _auditLog.map(r =>
+    [r.ts, r.user, r.action, r.ip, r.details, r.status]
+      .map(v => '"' + String(v || '').replace(/"/g, '""') + '"')
+      .join(',')
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href     = URL.createObjectURL(blob);
+  link.download = 'auditoria-adaspro-' + new Date().toISOString().slice(0,10) + '.csv';
+  link.click();
+  showToast('Auditoria exportada com sucesso.', 'success');
+}
+
+/* ────────────────────────────────────────────
+   NAVEGAÇÃO
+──────────────────────────────────────────── */
+const PAGE_TITLES = {
+  dashboard: ['Dashboard',         'Controle total do sistema ADAS PRO'],
+  admins:    ['Gerenciar Admins',  'Promova, rebaixe e gerencie a equipe'],
+  security:  ['Segurança',         'Logs de acesso e configurações de proteção'],
+  plans:     ['Planos & Módulos',  'Edite planos e gerencie módulos avulsos'],
+  system:    ['Sistema',           'Configurações globais e modo manutenção'],
+  audit:     ['Auditoria',         'Log completo de todas as ações no sistema'],
+};
+
+function showPage(pageId, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(a => a.classList.remove('active'));
+  const target = document.getElementById('page-' + pageId);
+  if (target) target.classList.add('active');
+  if (navEl)  navEl.classList.add('active');
+  const t = PAGE_TITLES[pageId];
+  if (t) {
+    document.getElementById('tbTitle').textContent = t[0];
+    document.getElementById('tbSub').textContent   = t[1];
+  }
+  // Carrega dados ao abrir cada página
+  if (pageId === 'editorial') { loadEditorialStats(); renderEditorialTable(); }
+  if (pageId === 'admins')    { _loadUsers(); }
+  if (pageId === 'audit')     { renderAudit(); }
+}
+
+/* ────────────────────────────────────────────
+   MODAL
+──────────────────────────────────────────── */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+/* ── ESC fecha modal ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+/* ────────────────────────────────────────────
+   TOAST
+──────────────────────────────────────────── */
+let _toastTimer = null;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'toast ' + (type || '');
+  void el.offsetHeight; // reflow
+  el.classList.add('show');
+  _toastTimer && clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ────────────────────────────────────────────
+   RELÓGIO
+──────────────────────────────────────────── */
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('tbClock').textContent =
+      now.toLocaleTimeString('pt-BR', { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* ────────────────────────────────────────────
+   LOGOUT
+──────────────────────────────────────────── */
+function doLogout() {
+  try { AUTH.logout(); } catch(e) {}
+  window.location.href = 'login.html';
+}
+
+/* ══════════════════════════════════════════════════
+   CONTEÚDO EDITORIAL
+══════════════════════════════════════════════════ */
+let _edCurrentType   = 'boletim'; // 'boletim' | 'artigo'
+let _edCurrentStatus = 'all';
+let _edEditingId     = null;
+
+const CATS_LIST = [
+  { id:'honda',      label:'Honda' },
+  { id:'toyota',     label:'Toyota' },
+  { id:'nissan',     label:'Nissan' },
+  { id:'subaru',     label:'Subaru' },
+  { id:'hyundai',    label:'Hyundai' },
+  { id:'vag',        label:'VAG' },
+  { id:'mercedes',   label:'Mercedes' },
+  { id:'ford',       label:'Ford' },
+  { id:'radar',      label:'Radar' },
+  { id:'mazda',      label:'Mazda' },
+  { id:'mitsubishi', label:'Mitsubishi' },
+  { id:'chineses',   label:'Chineses' },
+];
+
+function switchEdType(type, btn) {
+  _edCurrentType = type;
+  document.querySelectorAll('.ed-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderEditorialTable();
+}
+
+function switchEdStatus(status, btn) {
+  _edCurrentStatus = status;
+  document.querySelectorAll('.ed-subtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderEditorialTable();
+}
+
+function loadEditorialStats() {
+  const bulletins = (typeof AUTH !== 'undefined' && AUTH.getBulletins) ? AUTH.getBulletins() : [];
+  const articles  = (typeof AUTH !== 'undefined' && AUTH.getArticles)  ? AUTH.getArticles()  : [];
+  const all = [...bulletins, ...articles];
+  document.getElementById('edCountDraft').textContent = all.filter(x=>x.status==='draft').length;
+  document.getElementById('edCountPub').textContent   = all.filter(x=>x.status==='published').length;
+  document.getElementById('edCountArch').textContent  = all.filter(x=>x.status==='archived').length;
+  document.getElementById('edTabCountBoletim').textContent = bulletins.length;
+  document.getElementById('edTabCountArtigo').textContent  = articles.length;
+
+  const draftCount = all.filter(x=>x.status==='draft').length;
+  const badge = document.getElementById('badgeDrafts');
+  if (badge) { badge.textContent = draftCount; badge.style.display = draftCount > 0 ? '' : 'none'; }
+}
+
+function renderEditorialTable() {
+  const isBulletin = _edCurrentType === 'boletim';
+  const items = isBulletin
+    ? ((typeof AUTH !== 'undefined' && AUTH.getBulletins) ? AUTH.getBulletins() : [])
+    : ((typeof AUTH !== 'undefined' && AUTH.getArticles)  ? AUTH.getArticles()  : []);
+
+  document.getElementById('edTableTitle').textContent = isBulletin ? 'Boletins Técnicos' : 'Artigos';
+  document.getElementById('edTableSub').textContent   = isBulletin
+    ? 'Gerencie e publique boletins para os membros'
+    : 'Gerencie artigos educacionais';
+
+  const search = (document.getElementById('edSearch')?.value || '').toLowerCase().trim();
+  const filtered = items.filter(item => {
+    const matchStatus = _edCurrentStatus === 'all' || item.status === _edCurrentStatus;
+    const matchSearch = !search || (item.title||'').toLowerCase().includes(search) || (item.id||'').toLowerCase().includes(search);
+    return matchStatus && matchSearch;
+  });
+
+  const typeMap = {
+    novidade:'bt-novidade Novidade', atualizacao:'bt-atualizacao Atualização',
+    alerta:'bt-alerta Alerta', procedimento:'bt-procedimento Procedimento', artigo:'bt-artigo Artigo',
+  };
+  const statusMap = {
+    draft:'es-draft Rascunho', published:'es-published Publicado', archived:'es-archived Arquivado',
+  };
+
+  const tbody = document.getElementById('edTbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">Nenhum conteúdo encontrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(item => {
+    const [typeCls, typeLabel] = (typeMap[item.type] || 'bt-artigo Sem tipo').split(' ');
+    const [stCls, stLabel]     = (statusMap[item.status] || 'es-draft Rascunho').split(' ');
+    const brands = (item.brands||[]).slice(0,3).map(b=>`<span style="font-size:.62rem;font-family:'Courier New',monospace;padding:1px 5px;border-radius:3px;background:var(--surface-muted);border:1px solid var(--border);color:var(--text-muted)">${esc(b)}</span>`).join(' ');
+    const moreB = (item.brands||[]).length > 3 ? `<span style="font-size:.62rem;color:var(--text-subtle)">+${(item.brands.length-3)}</span>` : '';
+    return `<tr>
+      <td style="max-width:220px">
+        <div style="font-weight:600;font-size:.84rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(item.title||'Sem título')}</div>
+        <div style="font-size:.65rem;font-family:'Courier New',monospace;color:rgba(0,180,216,.5);margin-top:1px">${esc(item.id||'—')}</div>
+      </td>
+      <td><span class="ed-type-badge ${typeCls}">${typeLabel}</span></td>
+      <td><span class="ed-status-badge ${stCls}">${stLabel}</span></td>
+      <td style="white-space:nowrap">${brands}${moreB}</td>
+      <td style="font-size:.76rem;color:var(--text-muted);white-space:nowrap">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '—'}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);cursor:pointer;transition:all .2s" onclick="openEditor('${esc(item.id)}','${_edCurrentType}')">Editar</button>
+          ${item.status==='draft' ? `<button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);cursor:pointer;transition:all .2s" onclick="publishItem('${esc(item.id)}','${_edCurrentType}')">Publicar</button>` : ''}
+          <button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger);cursor:pointer;transition:all .2s" onclick="deleteItem('${esc(item.id)}','${_edCurrentType}')">Excluir</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function publishItem(id, type) {
+  try {
+    if (type === 'boletim') AUTH.publishBulletin(id);
+    else AUTH.publishArticle(id);
+    loadEditorialStats();
+    renderEditorialTable();
+    showToast('Publicado com sucesso!', 'success');
+  } catch(e) { showToast('Erro ao publicar: ' + e.message, 'error'); }
+}
+
+function deleteItem(id, type) {
+  if (!confirm('Excluir este conteúdo permanentemente?')) return;
+  try {
+    if (type === 'boletim') AUTH.deleteBulletin(id);
+    else AUTH.deleteArticle(id);
+    loadEditorialStats();
+    renderEditorialTable();
+    showToast('Conteúdo excluído.', 'success');
+  } catch(e) { showToast('Erro ao excluir: ' + e.message, 'error'); }
+}
+
+/* ══════════════════════════════════════════════════
+   EDITOR
+══════════════════════════════════════════════════ */
+let _editorAutosaveTimer = null;
+let _editorPreviewMode   = false;
+let _editorDirty         = false;
+
+const BRANDS_LIST = [
+  {id:'honda',label:'Honda'},{id:'toyota',label:'Toyota'},{id:'nissan',label:'Nissan'},
+  {id:'subaru',label:'Subaru'},{id:'hyundai',label:'Hyundai'},{id:'vag',label:'VAG'},
+  {id:'mercedes',label:'Mercedes'},{id:'ford',label:'Ford'},{id:'radar',label:'Radar'},
+  {id:'mazda',label:'Mazda'},{id:'mitsubishi',label:'Mitsubishi'},{id:'chineses',label:'Chineses'},
+];
+
+function _buildBrandsGrid(selected=[]) {
+  const grid = document.getElementById('edBrandsGrid');
+  if (!grid) return;
+  grid.innerHTML = BRANDS_LIST.map(b =>
+    `<label class="ed-brand-check"><input type="checkbox" value="${b.id}" ${selected.includes(b.id)?'checked':''}>${b.label}</label>`
+  ).join('');
+}
+
+function _getSelectedBrands() {
+  return [...document.querySelectorAll('#edBrandsGrid input:checked')].map(i=>i.value);
+}
+
+function openEditor(id=null, type='boletim') {
+  _edEditingId = id;
+  _editorPreviewMode = false;
+  document.getElementById('editorPreviewBtn').classList.remove('active');
+  document.getElementById('editorArea').style.display = '';
+  document.getElementById('editorPreview').classList.remove('active');
+
+  let selBrands = [];
+  let content = '';
+
+  if (id) {
+    const item = type==='boletim'
+      ? (AUTH.getBulletinById ? AUTH.getBulletinById(id) : null)
+      : (AUTH.getArticleById  ? AUTH.getArticleById(id)  : null);
+    if (item) {
+      document.getElementById('edMetaTitle').value = item.title || '';
+      document.getElementById('editorTitle').textContent = item.title || 'Editar conteúdo';
+      document.getElementById('edMetaContentType').value = type;
+      document.getElementById('edMetaBulletinType').value = item.type || 'novidade';
+      document.getElementById('edMetaTags').value = (item.tags||[]).join(', ');
+      document.getElementById('edMetaStatus').value = item.status || 'draft';
+      selBrands = item.brands || [];
+      content = item.content || item.body || '';
+    }
+  } else {
+    document.getElementById('edMetaTitle').value = '';
+    document.getElementById('editorTitle').textContent = type==='boletim' ? 'Novo Boletim Técnico' : 'Novo Artigo';
+    document.getElementById('edMetaContentType').value = type;
+    document.getElementById('edMetaBulletinType').value = 'novidade';
+    document.getElementById('edMetaTags').value = '';
+    document.getElementById('edMetaStatus').value = 'draft';
+  }
+
+  _buildBrandsGrid(selBrands);
+  document.getElementById('editorArea').innerHTML = content;
+  document.getElementById('editorAutosave').textContent = 'rascunho';
+  document.getElementById('editorAutosave').className = 'editor-autosave';
+  onEdMetaTypeChange();
+  _updateWordCount();
+  document.getElementById('modalEditor').classList.add('open');
+  document.getElementById('editorArea').focus();
+
+  clearInterval(_editorAutosaveTimer);
+  _editorAutosaveTimer = setInterval(saveEditorDraft, 30000);
+}
+
+function closeEditor() {
+  document.getElementById('modalEditor').classList.remove('open');
+  clearInterval(_editorAutosaveTimer);
+}
+
+function onEdMetaTypeChange() {
+  const type = document.getElementById('edMetaContentType').value;
+  const btGroup = document.getElementById('edBulletinTypeGroup');
+  if (btGroup) btGroup.style.display = type === 'boletim' ? '' : 'none';
+}
+
+function toggleEditorPreview() {
+  _editorPreviewMode = !_editorPreviewMode;
+  const btn     = document.getElementById('editorPreviewBtn');
+  const area    = document.getElementById('editorArea');
+  const preview = document.getElementById('editorPreview');
+  btn.classList.toggle('active', _editorPreviewMode);
+  area.style.display = _editorPreviewMode ? 'none' : '';
+  if (_editorPreviewMode) {
+    preview.innerHTML = document.getElementById('editorArea').innerHTML;
+    preview.classList.add('active');
+    preview.style.cssText = 'flex:1;overflow-y:auto;padding:28px 36px;font-size:.9rem;line-height:1.8;color:var(--text-secondary);display:block';
+  } else {
+    preview.classList.remove('active');
+    preview.style.display = 'none';
+  }
+}
+
+function onEditorInput() {
+  _editorDirty = true;
+  _updateWordCount();
+  const el = document.getElementById('editorAutosave');
+  el.textContent = 'não salvo';
+  el.className = 'editor-autosave';
+}
+
+function _updateWordCount() {
+  const text = document.getElementById('editorArea').innerText || '';
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const el = document.getElementById('edWordCountLabel');
+  if (el) el.textContent = `Palavras: ${words}`;
+}
+
+function edCmd(cmd) {
+  const area = document.getElementById('editorArea');
+  area.focus();
+
+  if (cmd === 'bold')   { document.execCommand('bold',   false, null); return; }
+  if (cmd === 'italic') { document.execCommand('italic', false, null); return; }
+  if (cmd === 'ul') { document.execCommand('insertUnorderedList', false, null); return; }
+  if (cmd === 'ol') { document.execCommand('insertOrderedList',   false, null); return; }
+  if (cmd === 'hr') {
+    document.execCommand('insertHTML', false, '<hr/>');
+    return;
+  }
+  if (cmd === 'link') {
+    const url = prompt('URL do link:');
+    if (url) document.execCommand('createLink', false, url);
+    return;
+  }
+  if (cmd === 'h2') {
+    document.execCommand('formatBlock', false, 'h2');
+    return;
+  }
+  if (cmd === 'h3') {
+    document.execCommand('formatBlock', false, 'h3');
+    return;
+  }
+}
+
+function saveEditorDraft() {
+  const title   = document.getElementById('edMetaTitle').value.trim();
+  const content = document.getElementById('editorArea').innerHTML;
+  const type    = document.getElementById('edMetaContentType').value;
+  const brands  = _getSelectedBrands();
+  const tags    = (document.getElementById('edMetaTags').value||'').split(',').map(t=>t.trim()).filter(Boolean);
+  const status  = document.getElementById('edMetaStatus').value;
+  const subtype = document.getElementById('edMetaBulletinType')?.value || 'novidade';
+
+  if (!title) { showToast('Adicione um título antes de salvar.', 'error'); return; }
+
+  try {
+    const payload = { title, content, brands, tags, status, type: subtype };
+    if (type === 'boletim') {
+      if (_edEditingId) AUTH.editBulletin(_edEditingId, payload);
+      else { const b = AUTH.addBulletin(payload); _edEditingId = b?.id; }
+    } else {
+      if (_edEditingId) AUTH.editArticle(_edEditingId, payload);
+      else { const a = AUTH.addArticle(payload); _edEditingId = a?.id; }
+    }
+    const el = document.getElementById('editorAutosave');
+    el.textContent = 'salvo ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    el.className = 'editor-autosave saved';
+    _editorDirty = false;
+    loadEditorialStats();
+    renderEditorialTable();
+  } catch(e) { showToast('Erro ao salvar: ' + (e.message||e), 'error'); }
+}
+
+function publishEditorContent() {
+  saveEditorDraft();
+  if (!_edEditingId) return;
+  const type = document.getElementById('edMetaContentType').value;
+  try {
+    if (type === 'boletim') AUTH.publishBulletin(_edEditingId);
+    else AUTH.publishArticle(_edEditingId);
+    document.getElementById('edMetaStatus').value = 'published';
+    loadEditorialStats();
+    renderEditorialTable();
+    showToast('Conteúdo publicado com sucesso!', 'success');
+    closeEditor();
+  } catch(e) { showToast('Erro ao publicar: ' + e.message, 'error'); }
+}
+
+/* ══════════════════════════════════════════════════
+   DRAWER — NOVO USUÁRIO
+══════════════════════════════════════════════════ */
+function openDrawerNewUser() {
+  const grid = document.getElementById('dnuPermsGrid');
+  if (grid) {
+    grid.innerHTML = CATS_LIST.map(c =>
+      `<label class="drawer-perm-item"><input type="checkbox" value="${c.id}"/>${c.label}</label>`
+    ).join('');
+  }
+  ['dnuName','dnuEmail','dnuPassword'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  // Reseta os custom selects
+  const roleOpt = document.querySelector('#dnuRoleSel .csel-opt[data-val="membro"]');
+  if (roleOpt) pickCSel(roleOpt);
+  const statusOpt = document.querySelector('#dnuStatusSel .csel-opt[data-val="active"]');
+  if (statusOpt) pickCSel(statusOpt);
+  onDnuRoleChange();
+  document.getElementById('drawerNewUser').classList.add('open');
+  setTimeout(() => document.getElementById('dnuName')?.focus(), 300);
+}
+
+function closeDrawerNewUser() {
+  document.getElementById('drawerNewUser').classList.remove('open');
+}
+
+function onDnuRoleChange() {
+  const role = document.getElementById('dnuRole').value;
+  const permsGroup = document.getElementById('dnuPermsGroup');
+  if (permsGroup) permsGroup.style.display = ['membro','gestor'].includes(role) ? '' : 'none';
+  if (['admin','superadmin'].includes(role)) dnuSelectAllPerms(true);
+}
+
+function dnuSelectAllPerms(select) {
+  document.querySelectorAll('#dnuPermsGrid input[type=checkbox]').forEach(cb => cb.checked = select);
+}
+
+async function submitNewUser() {
+  const name     = document.getElementById('dnuName').value.trim();
+  const email    = document.getElementById('dnuEmail').value.trim();
+  const password = document.getElementById('dnuPassword').value.trim();
+  const role     = document.getElementById('dnuRole').value;
+  const status   = document.getElementById('dnuStatus').value;
+  const permissions = [...document.querySelectorAll('#dnuPermsGrid input:checked')].map(i=>i.value);
+
+  if (!name || !email || !password) { showToast('Preencha nome, e-mail e senha.', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('E-mail inválido.', 'error'); return; }
+  if (password.length < 8) { showToast('Senha muito curta (mín. 8 chars).', 'error'); return; }
+  if (!/[A-Z]/.test(password)) { showToast('Senha precisa de 1 letra maiúscula.', 'error'); return; }
+  if (!/[0-9]/.test(password)) { showToast('Senha precisa de 1 número.', 'error'); return; }
+
+  try {
+    const btn = document.querySelector('#drawerNewUser .drawer-btn-submit');
+    if (btn) { btn.textContent = 'Criando...'; btn.disabled = true; }
+    await AUTH.createUserDirect({ name, email, password, role, status, permissions, plan: role==='membro'?'free':'premium' });
+    showToast(name + ' criado com sucesso!', 'success');
+    closeDrawerNewUser();
+    renderAdmins();
+    loadEditorialStats();
+    if (btn) { btn.textContent = 'Criar usuário'; btn.disabled = false; }
+  } catch(e) {
+    showToast('Erro: ' + (e.message||'Falha ao criar usuário'), 'error');
+    const btn = document.querySelector('#drawerNewUser .drawer-btn-submit');
+    if (btn) { btn.textContent = 'Criar usuário'; btn.disabled = false; }
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   DELETE USER — com confirmação digitada
+══════════════════════════════════════════════════ */
+let _deleteTargetUserId = null;
+let _deleteTargetEmail  = '';
+
+function openDeleteUserConfirm(userId, name, email) {
+  _deleteTargetUserId = userId;
+  _deleteTargetEmail  = email;
+  document.getElementById('delConfirmName').textContent  = name;
+  document.getElementById('delConfirmEmail').textContent = email;
+  document.getElementById('delConfirmInput').value = '';
+  document.getElementById('delConfirmBtn').disabled = true;
+  openModal('modalDeleteConfirm');
+}
+
+function checkDelConfirm() {
+  const val = document.getElementById('delConfirmInput').value.trim();
+  document.getElementById('delConfirmBtn').disabled = val !== _deleteTargetEmail;
+}
+
+function executeDeleteUser() {
+  if (!_deleteTargetUserId) return;
+  try {
+    AUTH.deleteUser(_deleteTargetUserId);
+    showToast('Usuário excluído.', 'success');
+    closeModal('modalDeleteConfirm');
+    _deleteTargetUserId = null;
+    renderAdmins();
+  } catch(e) { showToast('Erro ao excluir: ' + e.message, 'error'); }
+}
+
+/* ══ Custom Select (csel) ══ */
+function toggleCSel(trigger) {
+  const csel = trigger.closest('.csel');
+  const isOpen = csel.classList.contains('open');
+  // Fecha todos
+  document.querySelectorAll('.csel.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) csel.classList.add('open');
+}
+
+function pickCSel(opt) {
+  const csel   = opt.closest('.csel');
+  const val    = opt.dataset.val;
+  const label  = opt.cloneNode(true);
+  // Remove o sub-texto do label exibido no trigger
+  label.querySelector('.csel-opt-sub')?.remove();
+  csel.querySelector('.csel-val').textContent = label.textContent.trim();
+  // Marca selected
+  csel.querySelectorAll('.csel-opt').forEach(o => o.classList.toggle('selected', o === opt));
+  // Atualiza o hidden input
+  const hiddenId = csel.dataset.target;
+  if (hiddenId) document.getElementById(hiddenId).value = val;
+  // Fecha dropdown
+  csel.classList.remove('open');
+  // Dispara callback se definido
+  const cb = csel.dataset.onchange;
+  if (cb && typeof window[cb] === 'function') window[cb]();
+}
+
+// Fecha ao clicar fora
+document.addEventListener('click', e => {
+  if (!e.target.closest('.csel')) {
+    document.querySelectorAll('.csel.open').forEach(c => c.classList.remove('open'));
+  }
+});
+</script>
+</body>
+</html>

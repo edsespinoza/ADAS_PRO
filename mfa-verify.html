@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADAS PRO — Verificação em 2 Etapas</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/auth.css"/>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
+  <style>
+    :root{--primary:#1B2B4D;--accent:#FF6B35;--tech:#00B4D8;--success:#06A77D;--white:#FFFFFF;--font-h:'Poppins',sans-serif;--font-b:'Inter',sans-serif;--radius:12px;}
+
+    /* Shield icon */
+    .shield-wrap {
+      display:flex;justify-content:center;margin-bottom:20px;
+    }
+    .shield-ring {
+      position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center;
+    }
+    .shield-ring::before {
+      content:'';position:absolute;inset:0;border-radius:50%;
+      border:2px solid rgba(0,180,216,.2);animation:ring-pulse 2s ease infinite;
+    }
+    .shield-ring::after {
+      content:'';position:absolute;inset:8px;border-radius:50%;
+      border:1px solid rgba(0,180,216,.12);animation:ring-pulse 2s ease .5s infinite;
+    }
+    .shield-icon-box {
+      width:52px;height:52px;background:linear-gradient(135deg,rgba(0,180,216,.15),rgba(0,180,216,.05));
+      border:1px solid rgba(0,180,216,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;
+      position:relative;z-index:1;
+    }
+    .shield-icon-box svg { width:24px;height:24px;color:var(--tech); }
+    @keyframes ring-pulse { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:.2;transform:scale(1.08)} }
+
+    /* OTP inputs */
+    .otp-group { display:flex;gap:8px;justify-content:center;margin:24px 0; }
+    .otp-input {
+      width:46px;height:54px;text-align:center;font-size:1.35rem;font-weight:700;
+      font-family:var(--font-h);background:rgba(255,255,255,.06);
+      border:1.5px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;
+      outline:none;transition:all .2s;caret-color:var(--tech);
+    }
+    .otp-input:focus { border-color:var(--tech);box-shadow:0 0 0 3px rgba(0,180,216,.12);background:rgba(0,180,216,.06); }
+    .otp-input.filled { border-color:rgba(0,180,216,.4);background:rgba(0,180,216,.05); }
+    .otp-input.error  { border-color:rgba(255,59,59,.5);animation:shake .3s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+    /* Timer */
+    .otp-timer {
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      font-size:.76rem;color:rgba(255,255,255,.35);margin-top:-8px;margin-bottom:20px;
+      font-family:'Courier New',monospace;
+    }
+    .otp-timer svg { width:13px;height:13px;color:rgba(255,255,255,.3); }
+    .otp-timer-val { color:var(--tech); }
+    .otp-timer.warn .otp-timer-val { color:#F4A261;animation:blink .8s step-end infinite; }
+    .otp-timer.expired .otp-timer-val { color:#FF3B3B; }
+    @keyframes blink { 50%{opacity:.3} }
+
+    /* Separator */
+    .otp-sep { display:flex;align-items:center;gap:8px;margin:0 2px; }
+    .otp-sep span { width:6px;height:2px;background:rgba(255,255,255,.2);border-radius:2px; }
+
+    /* Help link */
+    .mfa-help {
+      text-align:center;font-size:.76rem;color:rgba(255,255,255,.3);margin-top:20px;line-height:1.6;
+    }
+    .mfa-help a { color:rgba(0,180,216,.6);text-decoration:none;transition:color .2s; }
+    .mfa-help a:hover { color:var(--tech); }
+
+    /* App hint */
+    .app-hint {
+      display:flex;align-items:center;gap:10px;padding:12px 14px;
+      background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+      border-radius:10px;margin-bottom:24px;
+    }
+    .app-hint-icon { width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);display:flex;align-items:center;justify-content:center; }
+    .app-hint-icon svg { width:16px;height:16px;color:var(--tech); }
+    .app-hint-text { font-size:.78rem;color:rgba(255,255,255,.45);line-height:1.5; }
+    .app-hint-text strong { color:rgba(255,255,255,.7);display:block;margin-bottom:2px; }
+  </style>
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-grid-bg"></div>
+  <div class="auth-card">
+
+    <a href="login.html" style="display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:rgba(255,255,255,.35);text-decoration:none;margin-bottom:20px;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Voltar ao login
+    </a>
+
+    <div class="auth-logo">
+      <div class="logo-hex">AP</div>
+      <span>ADAS<strong>PRO</strong></span>
+    </div>
+
+    <div class="alert alert-error"   id="alertError"></div>
+    <div class="alert alert-success" id="alertSuccess"></div>
+
+    <!-- Shield icon animado -->
+    <div class="shield-wrap">
+      <div class="shield-ring">
+        <div class="shield-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="font-family:var(--font-h);font-size:1.15rem;font-weight:700;color:#fff;text-align:center;margin-bottom:6px">
+      Verificação em 2 Etapas
+    </h2>
+    <p style="font-size:.82rem;color:rgba(255,255,255,.45);text-align:center;margin-bottom:20px;line-height:1.6">
+      Insira o código de 6 dígitos gerado pelo seu aplicativo autenticador.
+    </p>
+
+    <!-- App hint -->
+    <div class="app-hint">
+      <div class="app-hint-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <div class="app-hint-text">
+        <strong>Google Authenticator / Authy</strong>
+        Abra o app e localize a entrada <em>ADAS PRO</em>
+      </div>
+    </div>
+
+    <!-- Inputs OTP com separador visual no meio -->
+    <div class="otp-group" id="otpGroup">
+      <input class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d0" autocomplete="one-time-code"/>
+      <input class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d1"/>
+      <input class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d2"/>
+      <div class="otp-sep"><span></span></div>
+      <input class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d3"/>
+      <input class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d4"/>
+      <input class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="d5"/>
+    </div>
+
+    <!-- Timer 30s do TOTP -->
+    <div class="otp-timer" id="otpTimer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Código válido por <span class="otp-timer-val" id="timerVal">30s</span>
+    </div>
+
+    <button id="btnVerify" class="auth-btn" onclick="verifyMFA()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Verificar e entrar
+    </button>
+
+    <div class="mfa-help">
+      Perdeu acesso ao autenticador?<br>
+      <a href="#" onclick="requestHelp(event)">Solicitar recuperação de acesso</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  const inputs = Array.from({length:6}, (_,i) => document.getElementById('d'+i));
+
+  /* ── Navegação entre campos ── */
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g,'').slice(-1);
+      inp.classList.toggle('filled', inp.value !== '');
+      inp.classList.remove('error');
+      if (inp.value && i < 5) inputs[i+1].focus();
+      if (getCode().length === 6) verifyMFA();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) { inputs[i-1].focus(); inputs[i-1].value=''; inputs[i-1].classList.remove('filled'); }
+      if (e.key === 'ArrowLeft'  && i > 0) inputs[i-1].focus();
+      if (e.key === 'ArrowRight' && i < 5) inputs[i+1].focus();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,6);
+      paste.split('').forEach((c,j) => {
+        if (inputs[j]) { inputs[j].value=c; inputs[j].classList.add('filled'); }
+      });
+      if (paste.length === 6) setTimeout(verifyMFA, 80);
+    });
+  });
+
+  function getCode() { return inputs.map(i => i.value).join(''); }
+
+  function showAlert(type, msg) {
+    ['alertError','alertSuccess'].forEach(id => document.getElementById(id).classList.remove('show'));
+    const el = document.getElementById(type === 'error' ? 'alertError' : 'alertSuccess');
+    el.textContent = msg; el.classList.add('show');
+  }
+
+  function setError(msg) {
+    showAlert('error', msg);
+    inputs.forEach(i => i.classList.add('error'));
+    setTimeout(() => inputs.forEach(i => i.classList.remove('error')), 600);
+    inputs[0].focus(); inputs.forEach(i => { i.value=''; i.classList.remove('filled'); });
+  }
+
+  /* ── Timer TOTP 30s ── */
+  function startTimer() {
+    const timerEl  = document.getElementById('otpTimer');
+    const timerVal = document.getElementById('timerVal');
+    function tick() {
+      const s = 30 - (Math.floor(Date.now() / 1000) % 30);
+      timerVal.textContent = s + 's';
+      timerEl.className = 'otp-timer' + (s <= 5 ? ' warn' : '');
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  /* ── Verificação MFA ── */
+  async function verifyMFA() {
+    const code = getCode();
+    if (code.length < 6) { showAlert('error','Digite os 6 dígitos.'); return; }
+
+    const btn = document.getElementById('btnVerify');
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Verificando...';
+    btn.disabled = true;
+
+    try {
+      await AUTH.init();
+      const result = await AUTH.verifyMFA(code);
+      if (!result.ok) { setError(result.msg); return; }
+
+      try { sessionStorage.removeItem('adaspro_mfa_uid'); } catch(_) {}
+      showAlert('success', 'Identidade verificada. Redirecionando...');
+      const role = result.session?.role || result.user?.role;
+      setTimeout(() => {
+        window.location.href = role === 'superadmin' ? 'superadmin.html'
+          : (role === 'admin' || role === 'gestor') ? 'admin.html'
+          : 'membros.html';
+      }, 700);
+    } catch(e) {
+      setError('Erro ao verificar. Tente novamente.');
+    } finally {
+      if (document.getElementById('btnVerify').disabled) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Verificar e entrar';
+      }
+    }
+  }
+
+  function requestHelp(e) {
+    e.preventDefault();
+    showAlert('error','Para recuperar o acesso ao autenticador, entre em contato pelo WhatsApp ou envie um e-mail para o administrador.');
+  }
+
+  /* Inicia após o auth.js carregar — verifica se há sessão AAL1 válida */
+  AUTH.init().then(async () => {
+    const hasPendingUid = !!(function(){ try { return sessionStorage.getItem('adaspro_mfa_uid'); } catch(_){ return null; } })();
+    if (!hasPendingUid) { window.location.href = 'login.html'; return; }
+
+    // Valida AAL real via Supabase quando disponível
+    const aal = await AUTH.getMfaLevel();
+    if (aal) {
+      if (aal.currentLevel === 'aal2') {
+        // Sessão já totalmente autenticada — ir direto para o painel
+        const s = AUTH.getSession();
+        const r = s?.role || 'membro';
+        window.location.href = r === 'superadmin' ? 'superadmin.html' : r === 'admin' ? 'admin.html' : 'membros.html';
+        return;
+      }
+      if (aal.currentLevel !== 'aal1') {
+        // Sem sessão parcial legítima no Supabase
+        window.location.href = 'login.html'; return;
+      }
+    }
+
+    inputs[0].focus();
+    startTimer();
+  }).catch(() => { window.location.href = 'login.html'; });
+</script>
+</body>
+</html>

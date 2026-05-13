@@ -11,16 +11,20 @@ npm run build        # Gera js/supabase-config.js a partir de .env.local (obriga
 npm run dev          # Gera config + inicia servidor estático em http://localhost:3000
 ```
 
-**Primeiro uso:** criar `.env.local` na raiz (não existe `.env.local.example` no repo):
+**Primeiro uso:** copiar `.env.example` para `.env.local` e preencher:
 
 ```
 SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<anon-key>
-SITE_URL=https://adaspro.com.br
-DEMO_ENABLED=true          # omitir ou false em produção
+SITE_URL=https://adaspro.com.br   # usado pela Edge Function notify (CORS origin)
+DEMO_ENABLED=true                 # omitir ou false em produção
 ```
 
+> `.env.example` já existe no repo como template — `.env.local` nunca deve ser commitado.
+
 `scripts/build-config.js` lê `.env.local` e escreve `js/supabase-config.js`. **Nunca editar `supabase-config.js` manualmente** — sobrescrito a cada build. Se `SUPABASE_URL` ou `SUPABASE_ANON_KEY` estiverem ausentes, o script sai sem sobrescrever o arquivo existente.
+
+`js/supabase-config.js` **não está no `.gitignore`** — é commitado intencionalmente com a anon key (exposta por design; segurança via RLS). Localmente, qualquer execução de `npm run build` o sobrescreve com os valores do `.env.local` (a condição é `NODE_ENV !== 'production'`, não apenas a flag `--dev`). No Vercel (`NODE_ENV=production`), `.env.local` é ignorado e as variáveis do painel são usadas.
 
 `DEMO_ENABLED` padrão é `true` quando a variável não está definida (`DEMO_ENABLED !== 'false'`). Em produção, definir `DEMO_ENABLED=false` no painel do Vercel.
 
@@ -29,6 +33,8 @@ Deploy via Vercel: o `buildCommand` em `vercel.json` é `npm install && npm run 
 ---
 
 ## Supabase Edge Functions
+
+**Pré-requisito:** `supabase link --project-ref zqydyyticvtmirjzskly` (uma vez por máquina — já executado se `supabase/.temp/linked-project.json` existir).
 
 ```bash
 supabase functions deploy <nome-da-função>
@@ -49,6 +55,8 @@ A função `notify` requer env vars no Supabase Dashboard → Edge Functions →
 ---
 
 ## SQL e Banco de Dados
+
+**Pré-requisito:** mesmo link acima (`supabase link`).
 
 ```bash
 supabase db query --linked -f sql/<arquivo>.sql
@@ -220,35 +228,11 @@ Verificar `memory/iem_tracker.md` para saber quais skills existem. Sempre prefer
 
 ## IEM — Índice de Eficiência do Modelo
 
-Calcular ao final de qualquer tarefa significativa (auditoria, feature, correção, pesquisa com leitura de arquivos).
-
-```
-IEM_real      = (0,45 × Ts + 0,35 × Qs + 0,20 × Cs) × 100
-IEM_potencial = calculado com Ts e Cs do cenário com skill
-Gap           = IEM_potencial − IEM_real
-```
-
-| Variável | Definição |
-|---|---|
-| Ts | `(tokens_A − tokens_B) / tokens_A` — 0 se skill não existir |
-| Qs | Qualidade 1–5 dividida por 5 |
-| Cs | % do arquivo coberto / 100 |
-
-| IEM | Status | Ação |
-|---|---|---|
-| 85–100 | 🟢 EXCELENTE | Nenhuma |
-| 70–84 | ✅ BOM | Monitorar |
-| 50–69 | 🟡 MÉDIO | Alertar — skill ausente |
-| < 50 | 🔴 RUIM | Alertar imediatamente |
-
-Gatilhos automáticos: `IEM_real < 50` → aviso ⚠️ no início da resposta · `Gap > 30` → recomendar criação do skill.
-
-Salvar resultado em `memory/iem_tracker.md`.
+Fórmula e thresholds definidos no global `CLAUDE.md`. Salvar resultados em `memory/iem_tracker.md`.
 
 ---
 
-## Regras de trabalho
+## Testes
 
-- Preferir `Edit` sobre `Write` para arquivos grandes
-- Nunca commitar sem confirmação explícita
-- Confirmar antes de qualquer ação destrutiva
+Não há testes automatizados neste projeto. Verificação manual via browser (dev server em `localhost:3000`) ou URL de preview do Vercel.
+

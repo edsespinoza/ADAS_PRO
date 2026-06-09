@@ -30,18 +30,47 @@ function typeWriter(elementId, texts, speed = 60, pause = 2000) {
   type();
 }
 
-/* ─── Progress Bar Animada ─── */
+/* ─── Progress Bar Animada (com stagger) ─── */
 function animateProgressBars() {
-  const bars = document.querySelectorAll('.prog-bar-fill');
-  const obs  = new IntersectionObserver(entries => {
+  const container = document.querySelector('.market-section .container');
+  if (!container) return;
+  const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        setTimeout(() => { e.target.style.width = (e.target.dataset.width || '0') + '%'; }, 100);
+        const bars = container.querySelectorAll('.prog-bar-fill');
+        bars.forEach((b, i) => {
+          setTimeout(() => {
+            b.style.width = (b.dataset.width || '0') + '%';
+            b.addEventListener('transitionend', () => {
+              b.classList.add('shimmer');
+            }, { once: true });
+          }, 200 + i * 150);
+        });
         obs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.3 });
-  bars.forEach(b => obs.observe(b));
+  }, { threshold: 0.25 });
+  obs.observe(container);
+}
+
+/* ─── Anima números percentuais ao lado das barras ─── */
+function animateProgressLabels() {
+  const container = document.querySelector('.market-section .container');
+  if (!container) return;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        container.querySelectorAll('.prog-label .text-accent').forEach((el, i) => {
+          const pct = parseInt(el.textContent, 10);
+          if (!pct) return;
+          el.textContent = '0%';
+          setTimeout(() => dramaticCounter(el, pct, '%', 1400), 200 + i * 150);
+        });
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.25 });
+  obs.observe(container);
 }
 
 /* ─── Contador Dramático ─── */
@@ -67,4 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     'LIDAR Audi VAS6430-12',
     'Night Vision Infrared',
   ]);
+  animateProgressBars();
+  animateProgressLabels();
 });

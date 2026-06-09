@@ -1118,16 +1118,58 @@ input, textarea, select { font-family: inherit; }
 /* ─── Seção Mercado ─── */
 .market-section { background:var(--light); }
 .market-grid { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
-.prog-item { margin-bottom:20px; }
-.prog-label { display:flex; justify-content:space-between; font-size:.88rem; margin-bottom:8px; color:var(--text); font-weight:500; }
-.prog-bar { background:rgba(0,0,0,.08); border-radius:50px; height:10px; overflow:hidden; }
-.prog-bar-fill { height:100%; border-radius:50px; background:linear-gradient(90deg,var(--accent),var(--warning)); width:0; transition:width 1.4s cubic-bezier(0.22,1,0.36,1); }
+.prog-item {
+  margin-bottom:20px;
+  padding:6px 0;
+  transition:transform .3s ease;
+}
+.prog-item:hover { transform:translateX(4px); }
+.prog-label {
+  display:flex; justify-content:space-between;
+  font-size:.88rem; margin-bottom:8px;
+  color:var(--text); font-weight:500;
+}
+.prog-label .text-accent {
+  font-weight:700;
+  min-width:44px;
+  text-align:right;
+  transition:color .3s;
+}
+.prog-bar {
+  background:rgba(0,0,0,.08);
+  border-radius:50px;
+  height:10px;
+  overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.12);
+}
+.prog-bar-fill {
+  height:100%;
+  border-radius:50px;
+  background:linear-gradient(90deg,var(--accent),var(--warning));
+  width:0;
+  transition:width 1.5s cubic-bezier(0.22,1,0.36,1);
+  position:relative;
+}
+.prog-bar-fill::after {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.35),transparent);
+  border-radius:50px 50px 0 0;
+}
+.prog-bar-fill.shimmer {
+  background:linear-gradient(90deg,var(--accent),var(--warning),var(--accent),var(--warning));
+  background-size:200% 100%;
+  animation:progShimmer 3s linear infinite;
+}
 
 /* ─── Typing Effect Hero ─── */
 .hero-typing-row { display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:.85rem; color:rgba(255,255,255,.45); }
 #heroTyping { color:var(--tech); font-family:monospace; font-weight:600; min-width:1ch; }
 .hero-typing-cursor { color:var(--tech); font-weight:700; font-family:monospace; animation:hudBlink 1s step-end infinite; }
 @keyframes hudBlink { 0%,90% { opacity:1; } 95% { opacity:.2; } 100% { opacity:1; } }
+@keyframes progShimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
 
 /* ─── Seção Quando Recalibrar ─── */
 .recal-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:48px; }

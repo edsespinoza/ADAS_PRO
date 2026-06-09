@@ -378,10 +378,10 @@
   - **CSP update:** depende da conclusão da Fase 2. Atualizar `vercel.json` script-src para remover `'unsafe-inline'` apenas após migrar todos os 262 handlers restantes.
   - **Arquivos Fase 2:** `admin.html` · `membros.html` · `superadmin.html` · `email-config.html` · `vercel.json:27`
 
-- [ ] **#47 — [F-06] `RESEND_API_KEY` armazenada em localStorage plaintext**
+- [x] **#47 — [F-06] `RESEND_API_KEY` armazenada em localStorage plaintext** ✅ 2026-06-09
   - Exfiltrável via XSS — permite spam e phishing via domínio `adaspro.com.br`.
-  - **Fix:** Exigir digitação da chave a cada sessão de teste (não persistir); adicionar aviso explícito e limpeza automática ao fechar `email-config.html`.
-  - **Arquivo:** `email-config.html:598–606`
+  - **Fix:** API key não é mais persistida em nenhum storage — exigida a cada sessão. Aviso de segurança explícito adicionado abaixo do campo. Cleanup automático via `beforeunload`.
+  - **Arquivo:** `email-config.html`
 
 - [x] **#48 — [M-03 + M-04 + M-06] Correções menores no sistema de rate limiting e notificações** ✅ 2026-05-07
   - **M-03:** Mensagem "Aguarde 15 minutos" com janela real de 10 min — corrigido para "10 minutos" (`auth.js`).
@@ -466,6 +466,33 @@
 
 ---
 
+## 🔴 CRÍTICO — Auditoria Multi-Agente 2026-05-14
+
+- [x] **#61 — [R2-CRIT-1] `gestor` com poder de admin/superadmin na Edge Function `approve-user`** ✅ 2026-05-14
+  - **Causa raiz:** Verificação inicial (`line 41`) agrupava `gestor` com `admin` e `superadmin` para **todas** as ações, incluindo `create`, `delete` e `update` — ações que a documentação e as regras de negócio reservam exclusivamente a admin+. A Edge Function usa `service_role` (ignora RLS), então gestor comprometido tinha capacidade real de criar contas, deletar membros e modificar dados arbitrários no banco.
+  - **Fix:** Adicionado bloco de restrição logo após a validação de `VALID_ACTIONS`: `gestor` só pode executar `['approve','block','unblock']`. Qualquer outra ação retorna HTTP 403.
+  - **Arquivo:** `supabase/functions/approve-user/index.ts` — após linha 50
+  - **Deploy necessário:** `supabase functions deploy approve-user`
+
+- [x] **#63 — [UX-MÉDIO] Centralizar tokens CSS — remover blocos `:root` inline duplicados** ✅ 2026-05-14
+  - **Problema:** `login.html`, `admin.html`, `membros.html` e `email-config.html` redefiniam todos os tokens de design em blocos `<style>:root{}</style>` inline, duplicando valores já presentes em `css/style.css`. Divergências silenciosas impossibilitavam atualizações centralizadas.
+  - **Fix `login.html`:** Bloco `<style>` inteiro removido — apenas continha `:root` com duplicatas de `style.css`.
+  - **Fix `admin.html` e `membros.html`:** Bloco `:root{}` removido de cada `<style>` inline; regra `body{background:#0f1923...}` preservada (override dark-theme necessário).
+  - **Fix `email-config.html`:** Adicionado `<link rel="stylesheet" href="css/style.css">` e `preconnect` para `fonts.gstatic.com`. Fonte Inter adicionada ao import do Google Fonts (estava apenas Poppins). Bloco `:root` reduzido a 5 tokens exclusivos/overrides: `--danger`, `--card`, `--border`, `--muted`, `--text`. `body font-family` corrigido de `'Poppins'` para `var(--font-b)` (Inter).
+  - **Arquivos:** `login.html`, `admin.html`, `membros.html`, `email-config.html`
+
+- [x] **#64 — [UX-MÉDIO] Pending card sem prazo nem canal de contato** ✅ 2026-05-14
+  - **Problema:** Card de "Cadastro em análise" no `login.html` não informava prazo estimado nem oferecia alternativa de contato, gerando ansiedade e possíveis contatos desnecessários ao mentor.
+  - **Fix:** Adicionado parágrafo "Geralmente aprovamos em até 24 horas úteis." e botão WhatsApp (`wa.me/5511947591115`) com estilo inline verde (#25d366), hover visual e `rel="noopener noreferrer"`.
+  - **Arquivo:** `login.html` — `#pendingCard`
+
+- [x] **#62 — [R1-CRIT-2] XSS armazenado via mensagem de notificação em `admin.html`** ✅ 2026-05-14
+  - **Causa raiz:** `renderNotifs()` interpolava `${n.message}` e `${n.id}` diretamente em `innerHTML` sem escapamento. Notificação com payload `<img src=x onerror="...">` criada por membro autenticado executava JS no contexto do admin ao abrir o painel.
+  - **Fix:** `${n.message}` → `${esc(n.message)}` e `${n.id}` → `${esc(n.id)}` — usando a função `esc()` já definida em `admin.html:747`.
+  - **Arquivo:** `admin.html:851–854`
+
+---
+
 ## 🔵 BAIXO — Auditoria VoltAgent 2026-05-04 (backlog)
 
 - [x] **#50 — Findings de baixa prioridade (cleanup)** ✅ 2026-05-07
@@ -500,6 +527,31 @@
 - [x] #01–#09 — Segurança crítica e alta (deploy 2026-04-25)
 - [x] #10–#12 — Melhorias de robustez (deploy 2026-04-25 / 2026-04-27)
 - [x] #13–#21 — Infraestrutura, Edge Functions, Storage, aprovação (deploy 2026-04-25 / 2026-04-27)
+
+---
+
+---
+
+## 🟢 MANUTENÇÃO — 2026-06-09
+
+- [x] **#65 — Sincronizar DEFAULT_CONTENT com CONTENT_MAP — filePaths dos PDFs** ✅ 2026-06-09
+  - `DEFAULT_CONTENT` em `js/auth.js` atualizado com `filePath` real dos 21 PDFs em `assets/downloads/`.
+  - Entradas sem PDF (honda-acc, nissan-radar) mantidas como `filePath: null`.
+  - `CONTENT_MAP` da Edge Function já estava atualizado — agora ambos em sincronia.
+  - **Arquivo:** `js/auth.js:47–71`
+
+- [x] **#47 — RESEND_API_KEY não mais persistida** ✅ 2026-06-09
+  - API key removida do sessionStorage — usuário digita a cada sessão.
+  - Aviso de segurança explícito adicionado no campo da chave.
+  - Cleanup automático via `beforeunload`.
+  - **Arquivo:** `email-config.html`
+
+- [x] **Bumps de build** ✅ 2026-06-09
+  - `js/auth.js`: v4.0.2 build 20260609
+  - `admin.html`: build 20260609
+  - `membros.html`: build 20260609
+  - `superadmin.html`: build 20260609
+  - `supabase-config.js`: demoEnabled=false (produção)
 
 ---
 

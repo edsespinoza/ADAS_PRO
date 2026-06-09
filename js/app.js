@@ -155,6 +155,38 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ─── Tooltip para sistema cards ─── */
   // (expansível futuramente)
 
+  /* ─── Hero live bar — social proof dinâmico ─── */
+  (function () {
+    const activeEl = document.getElementById('hlbActiveCount');
+    const ticketEl = document.getElementById('hlbTicketCount');
+    if (!activeEl || !ticketEl) return;
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    let active  = rand(18, 27);
+    let tickets = rand(5, 11);
+    activeEl.textContent  = active;
+    ticketEl.textContent  = tickets;
+
+    function bump(el, current, min, max) {
+      const next = Math.max(min, Math.min(max, current + (Math.random() > 0.3 ? 1 : -1)));
+      el.classList.add('updating');
+      setTimeout(() => { el.textContent = next; el.classList.remove('updating'); }, 250);
+      return next;
+    }
+
+    function scheduleActive() {
+      setTimeout(() => { active  = bump(activeEl,  active,  14, 31); scheduleActive();  }, rand(40000, 75000));
+    }
+    function scheduleTickets() {
+      setTimeout(() => { tickets = bump(ticketEl, tickets,   3, 14); scheduleTickets(); }, rand(55000, 95000));
+    }
+    scheduleActive();
+    scheduleTickets();
+  })();
+
   /* ─── Redirect para área de membros se já logado ─── */
   if (typeof AUTH !== 'undefined') {
     AUTH.init().then(() => {

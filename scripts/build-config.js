@@ -20,7 +20,7 @@ if (isDev || process.env.NODE_ENV !== 'production') {
 
 const url         = process.env.SUPABASE_URL      || '';
 const anonKey     = process.env.SUPABASE_ANON_KEY  || '';
-const demoEnabled = process.env.DEMO_ENABLED !== 'false'; // padrão: true; desativa com DEMO_ENABLED=false
+const demoEnabled = (process.env.DEMO_ENABLED || '').toLowerCase() !== 'false'; // padrão: true; desativa com DEMO_ENABLED=false
 const siteUrl     = process.env.SITE_URL           || 'https://adaspro.com.br';
 
 if (!url || !anonKey) {

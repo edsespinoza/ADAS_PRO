@@ -49,6 +49,12 @@ serve(async (req) => {
     const VALID_ACTIONS = ['approve', 'block', 'unblock', 'update', 'delete', 'create'];
     if (!action || !VALID_ACTIONS.includes(action)) return json({ error: 'Ação inválida.' }, 400);
 
+    // Gestor só pode aprovar/bloquear/desbloquear — não cria, exclui nem atualiza dados
+    const GESTOR_ALLOWED = ['approve', 'block', 'unblock'];
+    if (callerRole === 'gestor' && !GESTOR_ALLOWED.includes(action)) {
+      return json({ error: 'Gestor só pode aprovar, bloquear ou desbloquear usuários.' }, 403);
+    }
+
     // ── CREATE: path independente (não requer targetId) ──────────────────────
     if (action === 'create') {
       const { email, password, name, role: newRole, status: newStatus, permissions, plan, level } = body;

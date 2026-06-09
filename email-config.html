@@ -5,25 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E-mails Transacionais — ADAS PRO</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/auth.css">
   <style>
     :root {
-      --primary: #1B2B4D;
-      --primary-dark: #0D1821;
-      --accent: #FF6B35;
-      --tech: #00B4D8;
-      --success: #06A77D;
-      --warning: #F4A261;
+      /* tokens exclusivos desta página ou overrides dark-theme */
       --danger: #EF4444;
-      --white: #FFFFFF;
-      --card: rgba(255,255,255,.04);
+      --card:   rgba(255,255,255,.04);
       --border: rgba(255,255,255,.08);
-      --muted: rgba(255,255,255,.35);
-      --text: rgba(255,255,255,.85);
+      --muted:  rgba(255,255,255,.35);
+      --text:   rgba(255,255,255,.85);
     }
 
-    body { background: #080f18; color: var(--text); font-family: 'Poppins', sans-serif; }
+    body { background: #080f18; color: var(--text); font-family: var(--font-b); }
 
     /* ── Layout ── */
     .ec-layout { display: flex; min-height: 100vh; }
@@ -333,6 +329,9 @@
             <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="toggleKey()">👁</button>
           </div>
           <p class="ec-input-hint">Gerar em: resend.com/api-keys — nunca exposta no frontend de produção</p>
+          <p class="ec-input-hint" style="color:var(--danger);border:1px solid rgba(239,68,68,.25);background:rgba(239,68,68,.06);padding:8px 10px;border-radius:6px;margin-top:6px;">
+            ⚠️ A chave <strong>não é persistida</strong> entre sessões por segurança. Digite novamente ao recarregar a página.
+          </p>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div class="ec-field" style="margin:0">
@@ -584,17 +583,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Config: salvar / carregar / limpar ────────────────────────────────────────
 function saveConfig() {
-  const cfg = {
-    apiKey:     document.getElementById('cfgApiKey').value.trim(),
-    adminEmail: document.getElementById('cfgAdminEmail').value.trim(),
-    siteUrl:    document.getElementById('cfgSiteUrl').value.trim() || 'https://adaspro.com.br',
-  };
-  if (!cfg.apiKey || !cfg.adminEmail) {
+  const apiKey     = document.getElementById('cfgApiKey').value.trim();
+  const adminEmail = document.getElementById('cfgAdminEmail').value.trim();
+  const siteUrl    = document.getElementById('cfgSiteUrl').value.trim() || 'https://adaspro.com.br';
+  if (!apiKey || !adminEmail) {
     showStatus('saveStatus', 'Preencha API Key e Admin Email', false);
     return;
   }
-  localStorage.setItem(EC_KEY, JSON.stringify(cfg));
-  showStatus('saveStatus', 'Configuração salva localmente ✓', true);
+  // Apenas adminEmail e siteUrl persistem — API key NÃO é salva por segurança
+  localStorage.setItem(EC_KEY, JSON.stringify({ adminEmail, siteUrl }));
+  showStatus('saveStatus', 'Configuração salva (digite a API key novamente ao recarregar) ✓', true);
   updateModeUI();
   toast('Configuração salva!', 'ok');
 }
@@ -602,7 +600,6 @@ function saveConfig() {
 function loadConfig() {
   try {
     const cfg = JSON.parse(localStorage.getItem(EC_KEY) || '{}');
-    if (cfg.apiKey)     document.getElementById('cfgApiKey').value     = cfg.apiKey;
     if (cfg.adminEmail) document.getElementById('cfgAdminEmail').value = cfg.adminEmail;
     if (cfg.siteUrl)    document.getElementById('cfgSiteUrl').value    = cfg.siteUrl;
   } catch(e) {}
@@ -621,10 +618,16 @@ function toggleKey() {
   el.type = el.type === 'password' ? 'text' : 'password';
 }
 
+// ── Cleanup ao sair ───────────────────────────────────────────────────────────
+window.addEventListener('beforeunload', () => {
+  localStorage.removeItem(EC_KEY);
+});
+
 // ── Modo offline / online ─────────────────────────────────────────────────────
 function toggleOnlineMode() {
+  const apiKey = document.getElementById('cfgApiKey').value.trim();
   const cfg = JSON.parse(localStorage.getItem(EC_KEY) || '{}');
-  if (!isOnline && (!cfg.apiKey || !cfg.adminEmail)) {
+  if (!isOnline && (!apiKey || !cfg.adminEmail)) {
     toast('Salve as credenciais antes de ativar o modo online', 'err');
     return;
   }

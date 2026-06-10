@@ -747,6 +747,11 @@ function esc(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
 }
+function jsStr(str) {
+  if (str == null) return '';
+  // Escapa para string literal JS dentro de onclick/html attribute
+  return String(str).replace(/\\/g,'\\\\').replace(/'/g,"\\x27").replace(/"/g,'\\x22').replace(/</g,'\\x3C').replace(/>/g,'\\x3E').replace(/\n/g,'\\n');
+}
 
 /* ─── Auth — aguarda init do Supabase antes de verificar sessão ─── */
 let session = null;
@@ -964,7 +969,7 @@ function filterUsers() {
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:10px">
         <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0" class="${rc.avatarCls}">${init}</div>
-        <div><div style="color:#fff;font-weight:600;font-size:.88rem">${esc(u.name)}</div><div style="font-size:.7rem;color:rgba(255,255,255,.3)">${u.level||'—'}</div></div>
+        <div><div style="color:#fff;font-weight:600;font-size:.88rem">${esc(u.name)}</div><div style="font-size:.7rem;color:rgba(255,255,255,.3)">${esc(u.level||'—')}</div></div>
       </div></td>
       <td style="font-size:.8rem;font-family:monospace">${esc(u.email)}${resetBadge}</td>
       <td><span class="role-badge ${rc.cls}">${rc.icon} ${rc.label}</span></td>
@@ -973,7 +978,7 @@ function filterUsers() {
       <td>${perms}</td>
       <td><div class="action-btns">
         <button class="action-btn action-btn-edit" title="Gerenciar acesso" onclick="openPermModal('${u.id}')">⚙</button>
-        ${u.status==='active'?`<button class="action-btn action-btn-block" title="Bloquear" onclick="confirmAction('Bloquear?','${u.name} perderá acesso.',()=>adminAction('block','${u.id}',this))">🚫</button>`:
+        ${u.status==='active'?`<button class="action-btn action-btn-block" title="Bloquear" onclick="confirmAction('Bloquear?','${jsStr(u.name)} perderá acesso.',()=>adminAction('block','${u.id}',this))">🚫</button>`:
         `<button class="action-btn action-btn-approve" title="Ativar" onclick="adminAction('unblock','${u.id}',this)">✓</button>`}
         ${u.role!=='admin'?`<button class="action-btn action-btn-delete" title="Excluir" onclick="confirmAction('Excluir usuário?','Esta ação é permanente e não pode ser desfeita.',()=>adminAction('delete','${u.id}',null))">🗑</button>`:''}
       </div></td></tr>`;
@@ -1037,7 +1042,7 @@ function selectTicket(id) {
 
   document.getElementById('tvTitle').textContent = ticket.title;
   document.getElementById('tvMeta').innerHTML =
-    `${ticketStatusBadge(ticket.status)} &nbsp;|&nbsp; ${prioLabel(ticket.priority)} &nbsp;|&nbsp; Aberto por <strong style="color:rgba(255,255,255,.6)">${ticket.userName}</strong> em ${fmtDateTime(ticket.createdAt)}`;
+    `${ticketStatusBadge(ticket.status)} &nbsp;|&nbsp; ${prioLabel(ticket.priority)} &nbsp;|&nbsp; Aberto por <strong style="color:rgba(255,255,255,.6)">${esc(ticket.userName)}</strong> em ${fmtDateTime(ticket.createdAt)}`;
 
   // Ações
   const catMap = {'duvida-tecnica':'Dúvida técnica','solicitacao-material':'Solicitar material','upgrade-plano':'Upgrade de plano','outro':'Outro'};
@@ -1105,13 +1110,13 @@ function filterContent() {
     const cat = CATS.find(x=>x.id===c.cat) || { label:c.cat, icon:'📄' };
     const cnt = users.filter(u=>(u.permissions||[]).includes(c.cat)||u.role==='admin'||u.role==='gestor').length;
     return `<tr>
-      <td><div style="display:flex;align-items:center;gap:10px"><span>${c.icon||'📄'}</span><span style="color:#fff;font-weight:500">${c.title}</span>${c.filePath?`<span style="font-size:.62rem;padding:1px 6px;border-radius:4px;background:rgba(6,167,125,.1);color:var(--success);border:1px solid rgba(6,167,125,.2);white-space:nowrap" title="${c.filePath}">⬆ Storage</span>`:''}</div></td>
-      <td><span class="status-badge" style="background:rgba(0,180,216,.1);color:var(--tech)">${cat.icon} ${cat.label}</span></td>
-      <td style="font-size:.78rem;color:rgba(255,255,255,.45)">${(c.type||'PDF').toUpperCase()}</td>
+      <td><div style="display:flex;align-items:center;gap:10px"><span>${esc(c.icon||'📄')}</span><span style="color:#fff;font-weight:500">${esc(c.title)}</span>${c.filePath?`<span style="font-size:.62rem;padding:1px 6px;border-radius:4px;background:rgba(6,167,125,.1);color:var(--success);border:1px solid rgba(6,167,125,.2);white-space:nowrap" title="${esc(c.filePath)}">⬆ Storage</span>`:''}</div></td>
+      <td><span class="status-badge" style="background:rgba(0,180,216,.1);color:var(--tech)">${esc(cat.icon)} ${esc(cat.label)}</span></td>
+      <td style="font-size:.78rem;color:rgba(255,255,255,.45)">${esc((c.type||'PDF').toUpperCase())}</td>
       <td><span style="color:var(--success);font-weight:600">${cnt}</span><span style="font-size:.75rem;color:rgba(255,255,255,.35)"> usuário(s)</span></td>
       <td><div class="action-btns">
         <button class="action-btn action-btn-edit" onclick="openEditContentModal('${c.id}')" title="Editar">✏️</button>
-        <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir material?','${c.title} será removido.',()=>{AUTH.deleteContent('${c.id}');refresh();showToast('Material excluído.')})" title="Excluir">🗑</button>
+        <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir material?','${esc(c.title)} será removido.',()=>{AUTH.deleteContent('${c.id}');refresh();showToast('Material excluído.')})" title="Excluir">🗑</button>
       </div></td></tr>`;
   }).join('');
 }
@@ -1232,14 +1237,14 @@ function loadConfiguracoes() {
     <div class="plan-config-card">
       <div class="plan-config-header">
         <div>
-          <input class="config-input" style="width:180px;display:inline-block;margin-right:12px" id="planName_${p.id}" value="${p.name}" placeholder="Nome do plano"/>
-          <input class="config-input" style="width:120px;display:inline-block" id="planPrice_${p.id}" value="${p.price||'Consulte'}" placeholder="Preço"/>
-          <input class="config-input" style="width:120px;display:inline-block;margin-left:8px" id="planPeriod_${p.id}" value="${p.period||'por mês'}" placeholder="Período"/>
+          <input class="config-input" style="width:180px;display:inline-block;margin-right:12px" id="planName_${p.id}" value="${esc(p.name)}" placeholder="Nome do plano"/>
+          <input class="config-input" style="width:120px;display:inline-block" id="planPrice_${p.id}" value="${esc(p.price||'Consulte')}" placeholder="Preço"/>
+          <input class="config-input" style="width:120px;display:inline-block;margin-left:8px" id="planPeriod_${p.id}" value="${esc(p.period||'por mês')}" placeholder="Período"/>
         </div>
       </div>
       <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-bottom:8px">Categorias padrão incluídas neste plano:</div>
       <div class="plan-config-cats" id="planCats_${p.id}">
-        ${CATS.map(c => `<div class="plan-cat-chip ${p.defaultCategories.includes(c.id)?'active':''}" onclick="togglePlanCat(this,'${p.id}','${c.id}')">${c.icon} ${c.label}</div>`).join('')}
+        ${CATS.map(c => `<div class="plan-cat-chip ${p.defaultCategories.includes(c.id)?'active':''}" onclick="togglePlanCat(this,'${p.id}','${c.id}')">${esc(c.icon)} ${esc(c.label)}</div>`).join('')}
       </div>
     </div>`).join('');
 
@@ -1265,7 +1270,7 @@ function loadGestores() {
     return `<div class="gestor-card">
       <div class="gestor-card-avatar">${init}</div>
       <div><div class="gestor-info-name">${esc(u.name)}</div><div class="gestor-info-role">${esc(u.role)}</div><div class="gestor-info-email">${esc(u.email)}</div></div>
-      ${u.role!=='admin'?`<button class="action-btn action-btn-block" onclick="confirmAction('Remover gestor?','${u.name} voltará a ser membro.',async()=>{await AUTH.updateUserRole('${u.id}','membro');refresh();showToast('Permissão removida.')})" style="margin-left:auto" title="Remover">↓</button>`:''}
+      ${u.role!=='admin'?`        <button class="action-btn action-btn-block" onclick="confirmAction('Remover gestor?','${jsStr(u.name)} voltará a ser membro.',async()=>{await AUTH.updateUserRole('${u.id}','membro');refresh();showToast('Permissão removida.')})" style="margin-left:auto" title="Remover">↓</button>`:''}
     </div>`;
   }).join('') : emptyState('🛡️', 'Nenhum gestor cadastrado', 'Promova um membro abaixo para dar acesso ao painel.');
 
@@ -1355,12 +1360,12 @@ function openPermModal(userId) {
       <div style="font-family:var(--font-h);font-weight:600;color:#fff">${esc(user.name)}</div>
       <div style="font-size:.76rem;color:rgba(255,255,255,.4)">${esc(user.email)}</div>
     </div>
-    <span class="role-badge role-${user.role||'membro'}" style="flex-shrink:0">${roleLabels[user.role]||user.role}</span>`;
+    <span class="role-badge role-${esc(user.role||'membro')}" style="flex-shrink:0">${roleLabels[user.role]||esc(user.role)}</span>`;
 
   // Plano rápido
   const s = AUTH.getSettings();
   document.getElementById('planQuickBtns').innerHTML = s.plans.map(p =>
-    `<button onclick="applyPlan('${userId}','${p.id}')" style="padding:7px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.78rem;cursor:pointer;transition:var(--transition)">📋 ${p.name}</button>`
+    `<button onclick="applyPlan('${userId}','${esc(p.id)}')" style="padding:7px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.78rem;cursor:pointer;transition:var(--transition)">📋 ${esc(p.name)}</button>`
   ).join('');
 
   document.getElementById('pStatus').value = user.status;
@@ -1682,11 +1687,11 @@ function renderAccessContent() {
     const dl = item.downloadLevel||2;
     const fp = item.filePath||'—';
     return `<tr id="row-${item.id}">
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.title}">${item.title}</td>
-      <td>${cat.label}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</td>
+      <td>${esc(cat.label)}</td>
       <td><span class="acc-level-badge acc-level-${al}">L${al}</span></td>
       <td><span class="acc-level-badge acc-level-${dl}">L${dl}</span></td>
-      <td><span class="acc-file-path" title="${fp}">${fp}</span></td>
+      <td><span class="acc-file-path" title="${esc(fp)}">${esc(fp)}</span></td>
       <td><button class="acc-edit-btn" onclick="toggleAccEdit('${item.id}')">Editar</button></td>
     </tr>
     <tr id="edit-${item.id}" style="display:none">
@@ -1709,7 +1714,7 @@ function renderAccessContent() {
             </select>
           </div>
           <div><div class="acc-inline-label">Caminho do arquivo</div>
-            <input class="acc-inline-input" id="fp-${item.id}" value="${item.filePath||''}" placeholder="assets/downloads/categoria/arquivo.pdf"/>
+            <input class="acc-inline-input" id="fp-${item.id}" value="${esc(item.filePath||'')}" placeholder="assets/downloads/categoria/arquivo.pdf"/>
           </div>
           <div><button class="acc-save-btn" onclick="saveAccEdit('${item.id}')">Salvar</button></div>
         </div>
@@ -1797,7 +1802,7 @@ AUTH.init().then(() => {
   setInterval(updateBadges, 15000);
 }).catch(err => {
   const el = document.getElementById('authLoadingMsg');
-  if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + err.message +
+  if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + esc(err.message) +
     '<br><br><small>Verifique as credenciais em <code>js/supabase-config.js</code></small>';
 });
 </script>

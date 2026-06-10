@@ -103,8 +103,16 @@ const AUTH = (function () {
   let _tickets       = {};
   let _notifications = [];
   let _currentSession = null;
-  let _pendingMfaUser = null; // usuário aguardando MFA
-  let _pendingMfaUid  = null; // UUID Supabase do usuário aguardando MFA
+  let _pendingMfaUser = null;       // usuário aguardando MFA
+  let _pendingMfaUid  = null;       // UUID Supabase do usuário aguardando MFA
+  let _pendingMfaTimestamp = null;  // Date.now() quando MFA foi iniciado
+
+  function _browserFingerprint() {
+    // hash curto de propriedades do browser — impede replay básico entre devices
+    const raw = navigator.userAgent + '|' + screen.width + 'x' + screen.height + '|' + new Date().getTimezoneOffset();
+    let h = 0; for (let i = 0; i < raw.length; i++) { h = ((h << 5) - h) + raw.charCodeAt(i); h |= 0; }
+    return h.toString(36);
+  }
 
   /* ════════════════════════════════════════════
      SUPABASE — Operações de banco
@@ -371,11 +379,14 @@ const AUTH = (function () {
         _offlineMode  = true;
         _loadFromLocalStorage();
         await _seedDefaultUsersLocal();
-        // Em modo offline restaura sessão cacheada, mas rejeita se o usuário estiver bloqueado.
+        // Em modo offline restaura sessão cacheada, mas rejeita se o usuário estiver bloqueado
+        // ou se a role na sessão não corresponder à role real do usuário (evita poison).
         const _cached = _readSessionCache();
         if (_cached) {
           const _cachedUser = _users[_cached.userId];
           if (_cachedUser && _cachedUser.status === 'blocked') {
+            localStorage.removeItem(SESSION_KEY);
+          } else if (_cachedUser && _cachedUser.role !== _cached.role) {
             localStorage.removeItem(SESSION_KEY);
           } else {
             _currentSession = _cached;
@@ -397,10 +408,25 @@ const AUTH = (function () {
     return _initPromise;
   }
 
+  function _sessionIntegrity(role) {
+    return role; // placeholder — expansão futura para HMAC
+  }
+
+  function _validateSessionRole(session) {
+    if (!session) return false;
+    const user = _users[session.userId];
+    if (user && user.role !== session.role) {
+      localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+    return true;
+  }
+
   function _buildSession(user, uid, token, expiresAt) {
     return {
       userId:    uid || user.id,
       role:      user.role,
+      roleHash:  _sessionIntegrity(user.role),
       name:      user.name,
       email:     user.email,
       token:     token || _secureToken(),
@@ -416,6 +442,7 @@ const AUTH = (function () {
       const s = JSON.parse(raw);
       if (!s||!s.userId||!s.role||!s.token||!s.expiresAt) return null;
       if (Date.now() > s.expiresAt) { localStorage.removeItem(SESSION_KEY); return null; }
+      if (!_validateSessionRole(s)) return null;
       return s;
     } catch { return null; }
   }
@@ -471,22 +498,41 @@ const AUTH = (function () {
         let user = await _sbLoadUser(data.user.id);
 
         // Supabase Auth aceitou mas public.users não tem registro —
-        // para admin/superadmin/gestor cria o registro automaticamente a partir do seed local.
+        // tenta criar automaticamente.
         if (!user) {
           _loadFromLocalStorage();
           _seedDefaultUsersLocal();
+
+          // 1) Tenta sync de seed local (admin/superadmin/gestor)
           const seedUser = Object.values(_users).find(u => u.email.toLowerCase() === emailClean);
+          let syncUser = null;
+
           if (seedUser && ['superadmin','admin','gestor'].includes(seedUser.role)) {
-            // Upsert com o UUID real do Supabase Auth
-            const syncedUser = { ...seedUser, id: data.user.id };
-            delete syncedUser.passwordHash; // nunca persiste hash local no Supabase
-            const { error: upsertErr } = await _sb.from('users').upsert(syncedUser);
+            syncUser = { ...seedUser, id: data.user.id };
+          }
+
+          // 2) Tenta sync de registro pendente (membro — email confirmation ON)
+          if (!syncUser) {
+            const pendingRaw = localStorage.getItem('adaspro_pending_user');
+            if (pendingRaw) {
+              try {
+                const pending = JSON.parse(pendingRaw);
+                if (pending.email.toLowerCase() === emailClean) {
+                  syncUser = { ...pending, id: data.user.id };
+                  localStorage.removeItem('adaspro_pending_user');
+                }
+              } catch(_) {}
+            }
+          }
+
+          if (syncUser) {
+            delete syncUser.passwordHash; // nunca persiste hash local no Supabase
+            const { error: upsertErr } = await _sb.from('users').upsert(syncUser);
             if (upsertErr) {
               console.warn('[AUTH] public.users upsert bloqueado (RLS?):', upsertErr.message);
             }
-            // Usa em memória independente de o upsert ter persistido ou não
-            _users[data.user.id] = syncedUser;
-            user = syncedUser;
+            _users[data.user.id] = syncUser;
+            user = syncUser;
             console.info('[AUTH] public.users auto-sync para', emailClean, upsertErr ? '(somente memória)' : '(persistido)');
           }
         }
@@ -515,8 +561,12 @@ const AUTH = (function () {
             // Sessão parcial (aal1) — usuário precisa completar MFA
             _pendingMfaUser = user;
             _pendingMfaUid  = data.user.id;
-            // Persiste uid no sessionStorage para mfa-verify.html recuperar após redirect
-            try { sessionStorage.setItem('adaspro_mfa_uid', data.user.id); } catch(_) {}
+            _pendingMfaTimestamp = Date.now();
+            // Persiste uid + fingerprint no sessionStorage para mfa-verify.html recuperar após redirect
+            try {
+              sessionStorage.setItem('adaspro_mfa_uid', data.user.id);
+              sessionStorage.setItem('adaspro_mfa_fp', _browserFingerprint());
+            } catch(_) {}
             return { ok:false, msg:'mfa_required', role: user.role };
           }
         } catch(_) { /* MFA não configurado — continua normalmente */ }
@@ -596,17 +646,19 @@ const AUTH = (function () {
         };
 
         const { error: insertError } = await _sb.from('users').insert(user);
-        if (insertError) {
-          console.error('[AUTH] insert user:', insertError.message);
-          await _sb.auth.signOut();
-          return { ok:false, msg:'Erro ao salvar cadastro. Tente novamente.' };
-        }
-        _users[userId] = user;
 
-        // Insere notificação ANTES do signOut (RLS exige usuário autenticado)
-        const notif = { id:'n_'+Date.now(), type:'new_user', userId, userName:nameSafe, message:`Novo cadastro aguardando aprovação: ${nameSafe}`, createdAt:Date.now(), read:false };
-        _notifications.unshift(notif);
-        await _sbInsertNotif(notif);
+        if (insertError) {
+          // Supabase com confirmação de e-mail ON: auth.uid() é null, RLS bloqueia insert.
+          // Salva em localStorage para sync automático no primeiro login.
+          console.info('[AUTH] insert bloqueado por RLS (sem sessão pós-signUp). Salvando para sync posterior.');
+          try { localStorage.setItem('adaspro_pending_user', JSON.stringify(user)); } catch(_) {}
+        } else {
+          _users[userId] = user;
+          // Insere notificação — só funciona se o insert foi bem-sucedido (sessão ativa)
+          const notif = { id:'n_'+Date.now(), type:'new_user', userId, userName:nameSafe, message:`Novo cadastro aguardando aprovação: ${nameSafe}`, createdAt:Date.now(), read:false };
+          _notifications.unshift(notif);
+          await _sbInsertNotif(notif);
+        }
 
         await _sb.auth.signOut();
 
@@ -639,6 +691,7 @@ const AUTH = (function () {
       if (Date.now() > _currentSession.expiresAt) { logout(); return null; }
       const u = _users[_currentSession.userId];
       if (u && u.status === 'blocked') { logout(); return null; }
+      if (!_validateSessionRole(_currentSession)) { logout(); return null; }
       return _currentSession;
     }
     // Supabase configurado: nunca aceitar sessão do localStorage (evita bypass de role)
@@ -748,7 +801,7 @@ const AUTH = (function () {
     if (!_users[userId]) return false;
     _users[userId].status='active'; _users[userId].approvedAt=Date.now(); _users[userId].approvedBy=approverId;
     if (!(_users[userId].permissions||[]).length) { const s=getSettings(); _users[userId].permissions=s.plans[0]?.defaultCategories||['honda','toyota']; }
-    _sbUpsertUser(_users[userId]); return true;
+    _sbUpsertUser(_users[userId]); await logAudit('approve_user', userId, { approvedBy: approverId }); return true;
   }
 
   async function blockUser(id) {
@@ -760,7 +813,7 @@ const AUTH = (function () {
       return true;
     }
     if (!_users[id]) return false;
-    _users[id].status='blocked'; _sbUpsertUser(_users[id]); return true;
+    _users[id].status='blocked'; _sbUpsertUser(_users[id]); await logAudit('block_user', id); return true;
   }
 
   async function unblockUser(id) {
@@ -772,7 +825,7 @@ const AUTH = (function () {
       return true;
     }
     if (!_users[id]) return false;
-    _users[id].status='active'; _sbUpsertUser(_users[id]); return true;
+    _users[id].status='active'; _sbUpsertUser(_users[id]); await logAudit('unblock_user', id); return true;
   }
 
   async function updateUserPermissions(id, perms) {
@@ -787,7 +840,7 @@ const AUTH = (function () {
       return true;
     }
     if (!_users[id]) return false;
-    _users[id].permissions=perms; _sbUpsertUser(_users[id]); return true;
+    _users[id].permissions=perms; _sbUpsertUser(_users[id]); await logAudit('update_permissions', id, { permissions: perms }); return true;
   }
 
   async function updateUserRole(id, role) {
@@ -799,7 +852,7 @@ const AUTH = (function () {
       return true;
     }
     if (!_users[id]) return false;
-    _users[id].role=role; _sbUpsertUser(_users[id]); return true;
+    _users[id].role=role; _sbUpsertUser(_users[id]); await logAudit('update_role', id, { role }); return true;
   }
 
   function _isAccessExpired(user) {
@@ -819,7 +872,7 @@ const AUTH = (function () {
       return true;
     }
     if (!_users[userId]) return false;
-    _users[userId].accessExpires = val; _sbUpsertUser(_users[userId]); return true;
+    _users[userId].accessExpires = val; _sbUpsertUser(_users[userId]); await logAudit('set_access_expiry', userId, { accessExpires: val }); return true;
   }
 
   async function deleteUser(id) {
@@ -830,6 +883,7 @@ const AUTH = (function () {
       await logAudit('delete_user', id, { email: _users[id]?.email });
     } else {
       _sbDeleteUser(id);
+      await logAudit('delete_user', id, { email: _users[id]?.email });
     }
     delete _users[id]; return true;
   }
@@ -876,6 +930,7 @@ const AUTH = (function () {
       createdAt: Date.now(), approvedAt: Date.now(), approvedBy: getSession()?.userId || 'superadmin',
     };
     _saveUsersLocal();
+    await logAudit('create_user_direct', id, { name: name.trim(), email: emailLc, role: safeRole });
     return { ok:true };
   }
 
@@ -1060,7 +1115,7 @@ const AUTH = (function () {
   function clearAllNotifs() {
     _notifications = [];
     if (_mode==='supabase' && _sb && !_demo) {
-      _sb.from('notifications').delete().eq('user_id', _session?.userId).then(() => {});
+      _sb.from('notifications').delete().eq('userId', _currentSession?.userId).then(() => {});
     } else { _saveNotifsLocal(); }
   }
 
@@ -1097,6 +1152,32 @@ const AUTH = (function () {
     _sbUpsertUser(_users[userId]);
     const c=getContent(); const i=c.findIndex(x=>x.id===contentId);
     if (i>=0) { c[i].downloadCount=(c[i].downloadCount||0)+1; saveContent(c); }
+  }
+
+  /* ─── Favoritos ─── */
+  function _ensureFavorites(userId) {
+    if (!_users[userId]) return [];
+    if (!Array.isArray(_users[userId].favorites)) _users[userId].favorites = [];
+    return _users[userId].favorites;
+  }
+
+  function toggleFavorite(userId, contentId) {
+    const favs = _ensureFavorites(userId);
+    const idx  = favs.indexOf(contentId);
+    if (idx >= 0) { favs.splice(idx, 1); } else { favs.push(contentId); }
+    _sbUpsertUser(_users[userId]);
+    return { ok:true, favorite: idx < 0 };
+  }
+
+  function isFavorite(userId, contentId) {
+    const favs = _ensureFavorites(userId);
+    return favs.indexOf(contentId) >= 0;
+  }
+
+  function getUserFavorites(userId) {
+    const favs = _ensureFavorites(userId);
+    const all  = getContent();
+    return all.filter(c => favs.indexOf(c.id) >= 0);
   }
 
   /* ─── Export / Import ─── */
@@ -1136,6 +1217,24 @@ const AUTH = (function () {
   ════════════════════════════════════════════ */
   async function verifyMFA(code) {
     if (_mode !== 'supabase' || !_sb) return { ok:false, msg:'Supabase não disponível.' };
+
+    // Valida timestamp: MFA deve ser completado em até 5 minutos
+    if (!_pendingMfaTimestamp || Date.now() - _pendingMfaTimestamp > 300000) {
+      _pendingMfaUser = null; _pendingMfaUid = null; _pendingMfaTimestamp = null;
+      try { sessionStorage.removeItem('adaspro_mfa_uid'); sessionStorage.removeItem('adaspro_mfa_fp'); } catch(_) {}
+      return { ok:false, msg:'Sessão expirada. Faça login novamente.' };
+    }
+
+    // Valida browser fingerprint contra replay em outro dispositivo
+    try {
+      const storedFp = sessionStorage.getItem('adaspro_mfa_fp');
+      if (storedFp && storedFp !== _browserFingerprint()) {
+        _pendingMfaUser = null; _pendingMfaUid = null; _pendingMfaTimestamp = null;
+        try { sessionStorage.removeItem('adaspro_mfa_uid'); sessionStorage.removeItem('adaspro_mfa_fp'); } catch(_) {}
+        return { ok:false, msg:'Dispositivo não reconhecido. Faça login novamente.' };
+      }
+    } catch(_) {}
+
     try {
       const { data: factors } = await _sb.auth.mfa.listFactors();
       const totp = factors?.totp?.[0];
@@ -1153,7 +1252,7 @@ const AUTH = (function () {
       let user = _pendingMfaUser || null;
       const fallbackUid = sbUid || (_pendingMfaUser?.id) || null;
       if (!user && fallbackUid) user = await _sbLoadUser(fallbackUid);
-      try { sessionStorage.removeItem('adaspro_mfa_uid'); } catch(_) {}
+      try { sessionStorage.removeItem('adaspro_mfa_uid'); sessionStorage.removeItem('adaspro_mfa_fp'); } catch(_) {}
       if (!user) return { ok:false, msg:'Usuário não encontrado após verificação MFA.' };
 
       if (['admin','gestor','superadmin'].includes(user.role)) {
@@ -1166,6 +1265,7 @@ const AUTH = (function () {
       _currentSession = session;
       _pendingMfaUser = null;
       _pendingMfaUid  = null;
+      _pendingMfaTimestamp = null;
       return { ok:true, user, session };
     } catch(e) { return { ok:false, msg:'Erro na verificação MFA.' }; }
   }
@@ -1241,8 +1341,22 @@ const AUTH = (function () {
   async function updatePassword(newPassword) {
     if (_mode !== 'supabase' || !_sb) return { ok:false, msg:'Supabase não disponível.' };
     if (!newPassword || newPassword.length < 8) return { ok:false, msg:'A senha deve ter no mínimo 8 caracteres.' };
+
+    // Registrar timestamp antes da troca para invalidar sessões emitidas antes
+    const userId = _currentSession?.userId;
+    if (userId && _users[userId]) {
+      _users[userId].passwordChangedAt = Date.now();
+      _sbUpsertUser(_users[userId]);
+    }
+
     const { error } = await _sb.auth.updateUser({ password: newPassword });
     if (error) return { ok:false, msg:'Erro ao atualizar a senha: ' + error.message };
+
+    // Invalidar sessões em outros dispositivos
+    await _sb.auth.signOut({ scope: 'others' });
+
+    await logAudit('password_changed', userId, { method: 'reset' });
+
     return { ok:true };
   }
 
@@ -1293,6 +1407,7 @@ const AUTH = (function () {
     getUserAccessLevel, canViewContent, canDownloadContent, trackDownload,
     setAccessExpiry, getUserDownloads, getRecentResets, revokeAllPermissionsForCategory,
     verifyMFA, logAudit, getAuditLogs, resetPassword, updatePassword,
+    toggleFavorite, getUserFavorites, isFavorite,
     uploadFile, getSignedUrl, callEdgeFunction,
     onAuthStateChange: (cb) => { if (_sb) _sb.auth.onAuthStateChange(cb); },
     isOfflineMode: () => _offlineMode,

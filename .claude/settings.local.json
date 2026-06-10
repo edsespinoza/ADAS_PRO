@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm i *)",
+      "PowerShell(& \"C:\\\\Users\\\\Espinoza\\\\Documents\\\\Obsidian Vault\\\\Skill_Seekers-development\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import skill_seekers; print\\('OK'\\)\" 2>&1)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Read(//c/Users/Espinoza/.claude/**)",
+      "Read(//c/Users/Espinoza/.skills-hub/**)",
+      "Bash(claude --version)",
+      "Bash(claude plugin *)",
+      "Bash(mkdir -p \"C:/Users/Espinoza/.skill-seekers\")",
+      "Read(//c/Users/Espinoza/**)"
+    ]
+  }
+}

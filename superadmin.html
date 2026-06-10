@@ -2431,6 +2431,10 @@ function esc(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+function jsStr(str) {
+  if (str == null) return '';
+  return String(str).replace(/\\/g,'\\\\').replace(/'/g,"\\x27").replace(/"/g,'\\x22').replace(/</g,'\\x3C').replace(/>/g,'\\x3E').replace(/\n/g,'\\n');
+}
 
 /* ── Estado global da sessão ── */
 let _session = null;
@@ -2704,15 +2708,15 @@ function renderAdmins(filter_text, filter_role) {
     } else if (u.role === 'membro') {
       actions += '<button class="action-btn btn-promote" title="Promover a Gestor" onclick="promoteUser(\'' + esc(u.id) + '\',\'gestor\')">↑ Gestor</button> ';
       actions += '<button class="action-btn btn-promote" title="Promover a Admin"  onclick="promoteUser(\'' + esc(u.id) + '\',\'admin\')" style="background:rgba(255,107,53,.12);color:var(--accent)">↑↑ Admin</button> ';
-      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + esc(u.name||'') + '\',\'' + esc(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + jsStr(u.name||'') + '\',\'' + jsStr(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
     } else if (u.role === 'gestor') {
       actions += '<button class="action-btn btn-promote" title="Promover a Admin" onclick="promoteUser(\'' + esc(u.id) + '\',\'admin\')">↑ Admin</button> ';
       actions += '<button class="action-btn btn-demote"  title="Rebaixar a Membro" onclick="promoteUser(\'' + esc(u.id) + '\',\'membro\')">↓ Membro</button> ';
-      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + esc(u.name||'') + '\',\'' + esc(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + jsStr(u.name||'') + '\',\'' + jsStr(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
     } else if (u.role === 'admin') {
       actions += '<button class="action-btn btn-demote"  title="Rebaixar a Gestor" onclick="promoteUser(\'' + esc(u.id) + '\',\'gestor\')">↓ Gestor</button> ';
       actions += '<button class="action-btn btn-remove"  title="Remover acesso admin" onclick="removeAccess(\'' + esc(u.id) + '\')">✕ Remover</button> ';
-      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + esc(u.name||'') + '\',\'' + esc(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + jsStr(u.name||'') + '\',\'' + jsStr(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
     }
 
     const statusColor = u.status === 'active' ? 'var(--success)' :
@@ -3062,7 +3066,7 @@ function filterSaContent() {
     return `<tr>
       <td>
         <div style="font-weight:600;font-size:.83rem">${esc(c.title)}${storageBadge}</div>
-        <div style="font-size:.72rem;color:var(--text-muted)">${(c.type||'pdf').toUpperCase()} · ${c.fileSize||'—'}</div>
+        <div style="font-size:.72rem;color:var(--text-muted)">${esc((c.type||'pdf').toUpperCase())} · ${esc(c.fileSize||'—')}</div>
       </td>
       <td><span style="background:rgba(255,255,255,.06);padding:3px 8px;border-radius:5px;font-size:.77rem">${esc(cat.icon)} ${esc(cat.label)}</span></td>
       <td><span style="font-size:.8rem;font-weight:600;color:${SA_LEVEL_COLORS[al]}">${SA_LEVEL_LABELS[al]||'—'}</span></td>
@@ -3071,7 +3075,7 @@ function filterSaContent() {
       <td>
         <div class="action-btns">
           <button class="action-btn action-btn-edit" onclick="openEditSaContent('${c.id}')" title="Editar">✏️</button>
-          <button class="action-btn" onclick="toggleSaContentVisibility('${c.id}')" title="${c.hidden?'Tornar visível':'Ocultar'}" style="font-size:.85rem">${c.hidden?'👁️':'🙈'}</button>
+          <button class="action-btn" onclick="toggleSaContentVisibility('${c.id}')" title="${c.hidden?'Tornar visível':'Ocultar'}" style="font-size:.85rem">${c.hidden?'👁\uFE0F':'🙈'}</button>
           <button class="action-btn action-btn-delete" onclick="deleteSaContent('${c.id}')" title="Excluir">🗑</button>
         </div>
       </td>

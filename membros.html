@@ -18,6 +18,11 @@
     .progress-ring-label{font-family:var(--font-h);font-weight:700;font-size:.9rem;color:#fff;}
     .progress-ring-sub{font-size:.7rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;}
 
+    /* ─── Fav button ─── */
+    .fav-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px;line-height:1;transition:transform .2s;flex-shrink:0;color:rgba(255,255,255,.25);}
+    .fav-btn:hover{transform:scale(1.25);color:rgba(255,107,53,.7);}
+    .fav-btn.fav-active{color:#FF6B35;}
+
     /* ─── Ticket form ─── */
     .tkt-form-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius-lg);padding:28px 32px;}
     .tkt-header{display:flex;align-items:center;gap:12px;padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.07);}
@@ -413,6 +418,9 @@
   <nav class="sidebar-nav">
     <div class="sidebar-nav-section">Conteúdo</div>
     <a class="sidebar-nav-item active" onclick="showPage('biblioteca',this)"><span class="nav-icon">📚</span>Biblioteca técnica</a>
+    <a class="sidebar-nav-item" onclick="showPage('favoritos',this)"><span class="nav-icon">⭐</span>Favoritos
+      <span class="nav-badge" id="favBadge" style="display:none">0</span>
+    </a>
 
     <div class="sidebar-nav-section" style="margin-top:12px">Categorias liberadas</div>
     <div id="navCats"></div>
@@ -438,6 +446,16 @@
     <a class="sidebar-nav-item" href="index.html"><span class="nav-icon">🏠</span>Página inicial</a>
   </nav>
   <div class="sidebar-footer">
+    <!-- Progress ring -->
+    <div class="progress-ring-wrap" id="progressRingWrap" style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.05);margin-bottom:2px">
+      <svg class="progress-ring" width="68" height="68" viewBox="0 0 68 68">
+        <circle r="28" cx="34" cy="34" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="4"/>
+        <circle id="progressCircle" r="28" cx="34" cy="34" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176"/>
+      </svg>
+      <div class="progress-ring-label" id="progressLabel">0%</div>
+      <div class="progress-ring-sub">Baixados</div>
+    </div>
+
     <div style="padding:8px 14px 4px;border-top:1px solid rgba(255,255,255,.05);margin-bottom:6px;">
       <div style="font-size:.56rem;color:rgba(255,255,255,.18);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">AutoTech Service</div>
       <div id="sbVersionLabel" style="font-size:.58rem;color:rgba(255,255,255,.12);font-family:monospace;">v2.2.0 · build 20260609</div>
@@ -484,6 +502,24 @@
       <div class="cat-filter active" data-cat="all" onclick="filterCat('all',this)">Todos</div>
     </div>
     <div class="content-grid" id="contentGrid"></div>
+  </div>
+
+  <!-- ─── FAVORITOS ─── -->
+  <div class="page" id="pageFavoritos">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1.1rem">⭐ Meus favoritos</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-top:4px">Materiais salvos para acesso rápido</div>
+      </div>
+      <button onclick="showPage('biblioteca')" style="padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.8rem;cursor:pointer">Explorar biblioteca →</button>
+    </div>
+    <div class="content-grid" id="favGrid"></div>
+    <div id="favEmpty" style="display:none;text-align:center;padding:60px 20px">
+      <div style="font-size:3rem;margin-bottom:12px">⭐</div>
+      <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem;margin-bottom:6px">Nenhum favorito ainda</div>
+      <div style="font-size:.85rem;color:rgba(255,255,255,.35);margin-bottom:20px">Clique na estrela ⭐ nos materiais da biblioteca para adicionar aqui</div>
+      <button onclick="showPage('biblioteca')" style="padding:10px 20px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer">Ir para biblioteca</button>
+    </div>
   </div>
 
   <!-- ─── ABRIR TICKET ─── -->
@@ -1103,10 +1139,12 @@ AUTH.init().then(() => {
   });
 
   renderContent();
+  updateProgressRing();
+  updateFavBadge();
 
 }).catch(err => {
   const el = document.getElementById('authLoadingMsg');
-  if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + err.message +
+  if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + esc(err.message) +
     '<br><br><small>Verifique as credenciais em <code>js/supabase-config.js</code></small>';
 });
 
@@ -1142,14 +1180,14 @@ function renderContent() {
     const dlLvl    = item.downloadLevel || 3;
     const canDl    = AUTH.canDownloadContent(session.userId, item.id);
     const dlPlanLbl = (LEVEL_INFO[dlLvl]||LEVEL_INFO[3]).label;
-    const fileInfo  = item.fileSize ? `<span style="font-size:.68rem;color:rgba(255,255,255,.25);margin-left:4px">${item.fileSize}</span>` : '';
+    const fileInfo  = item.fileSize ? `<span style="font-size:.68rem;color:rgba(255,255,255,.25);margin-left:4px">${esc(item.fileSize)}</span>` : '';
 
     const dlButton = canDl
       ? `<button class="content-dl-btn" onclick="downloadContent('${item.id}')">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
            Download${fileInfo}
          </button>`
-      : `<button class="content-dl-locked" onclick="openUpgradeModal('${item.cat}','${cat.label}')">
+      : `<button class="content-dl-locked" onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
            Download — ${dlPlanLbl}+
          </button>`;
@@ -1158,17 +1196,17 @@ function renderContent() {
       const reqPlanLbl = (LEVEL_INFO[accLvl]||LEVEL_INFO[2]).label;
       return `<div class="content-item locked-card">
         <div class="content-item-header">
-          <span class="content-item-icon" style="opacity:.5">${item.icon||cat.icon}</span>
+          <span class="content-item-icon" style="opacity:.5">${esc(item.icon||cat.icon)}</span>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-              <div class="content-item-cat">${cat.label}</div>
+              <div class="content-item-cat">${esc(cat.label)}</div>
               ${levelBadge(accLvl)}
             </div>
-            <div class="content-item-name" style="opacity:.55">${item.title}</div>
+            <div class="content-item-name" style="opacity:.55">${esc(item.title)}</div>
           </div>
         </div>
         <div class="content-item-body">
-          <div class="content-item-desc" style="filter:blur(3px);opacity:.4;pointer-events:none;user-select:none">${item.desc||''}</div>
+          <div class="content-item-desc" style="filter:blur(3px);opacity:.4;pointer-events:none;user-select:none">${esc(item.desc||'')}</div>
         </div>
         <div class="unlock-panel">
           <div class="unlock-panel-info">
@@ -1176,7 +1214,7 @@ function renderContent() {
             <span>Acesso bloqueado</span>
             <span class="unlock-plan-badge">${reqPlanLbl} ou superior</span>
           </div>
-          <button class="unlock-btn" onclick="openUpgradeModal('${item.cat}','${cat.label}')">
+          <button class="unlock-btn" onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/></svg>
             Desbloquear
           </button>
@@ -1184,25 +1222,31 @@ function renderContent() {
       </div>`;
     }
     const metaChips = [
-      item.pages ? `<span style="font-size:.65rem;color:rgba(255,255,255,.3)">📄 ${item.pages}p</span>` : '',
-      item.updatedAt ? `<span style="font-size:.65rem;color:rgba(6,167,125,.6)">${item.updatedAt}</span>` : '',
-      item.version ? `<span style="font-size:.65rem;color:rgba(255,255,255,.2)">${item.version}</span>` : '',
+      item.pages ? `<span style="font-size:.65rem;color:rgba(255,255,255,.3)">📄 ${esc(item.pages)}p</span>` : '',
+      item.updatedAt ? `<span style="font-size:.65rem;color:rgba(6,167,125,.6)">${esc(item.updatedAt)}</span>` : '',
+      item.version ? `<span style="font-size:.65rem;color:rgba(255,255,255,.2)">${esc(item.version)}</span>` : '',
     ].filter(Boolean).join('<span style="color:rgba(255,255,255,.1);margin:0 4px">·</span>');
+
+    const isFav = AUTH.isFavorite(session.userId, item.id);
+    const favBtn = `<button class="fav-btn ${isFav?'fav-active':''}" onclick="toggleFav('${item.id}',this)" title="${isFav?'Remover dos favoritos':'Adicionar aos favoritos'}">
+      ${isFav?'⭐':'☆'}
+    </button>`;
 
     return `<div class="content-item">
       <div class="content-item-header">
-        <span class="content-item-icon">${item.icon||cat.icon}</span>
+        <span class="content-item-icon">${esc(item.icon||cat.icon)}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-            <div class="content-item-cat">${cat.label}</div>
+            <div class="content-item-cat">${esc(cat.label)}</div>
             ${levelBadge(accLvl)}
           </div>
-          <div class="content-item-name">${item.title}</div>
+          <div class="content-item-name">${esc(item.title)}</div>
           ${metaChips?`<div style="margin-top:5px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${metaChips}</div>`:''}
         </div>
+        ${favBtn}
       </div>
       <div class="content-item-body">
-        <div class="content-item-desc">${item.desc||''}</div>
+        <div class="content-item-desc">${esc(item.desc||'')}</div>
         <div class="content-item-actions">
           <button class="content-item-action content-action-open" onclick="openContent('${item.id}')">Ver detalhes →</button>
           ${dlButton}
@@ -1232,23 +1276,23 @@ function openContent(id) {
   const highlightRows = (item.highlights||[]).map(h=>
     `<div style="display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
       <span style="color:#06A77D;font-size:.8rem;flex-shrink:0;margin-top:1px">✓</span>
-      <span style="font-size:.81rem;color:rgba(255,255,255,.6);line-height:1.5">${h}</span>
+      <span style="font-size:.81rem;color:rgba(255,255,255,.6);line-height:1.5">${esc(h)}</span>
     </div>`
   ).join('');
 
   const modelTags = (item.models||[]).slice(0,6).map(m=>
-    `<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;font-size:.68rem;color:rgba(255,255,255,.45);margin:2px">${m}</span>`
+    `<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;font-size:.68rem;color:rgba(255,255,255,.45);margin:2px">${esc(m)}</span>`
   ).join('');
 
   const dlSection = canDl
     ? `<button onclick="downloadContent('${item.id}');this.closest('[data-modal]').remove()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:linear-gradient(135deg,#06A77D,#048a67);color:#fff;border-radius:10px;font-family:var(--font-h);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;border:none;box-shadow:0 4px 14px rgba(6,167,125,.3)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Baixar PDF — ${item.title}
+        Baixar PDF — ${esc(item.title)}
       </button>`
     : `<div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.18);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <span style="font-size:.82rem;color:rgba(255,255,255,.5);flex:1">Download disponível no plano <strong style="color:#FF6B35">PRO ou superior</strong></span>
-        <button onclick="openUpgradeModal('${item.cat}','${cat.label}')" style="padding:6px 12px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:7px;color:#FF6B35;font-size:.75rem;font-weight:600;cursor:pointer">Desbloquear</button>
+        <button onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')" style="padding:6px 12px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:7px;color:#FF6B35;font-size:.75rem;font-weight:600;cursor:pointer">Desbloquear</button>
       </div>`;
 
   const modal = document.createElement('div');
@@ -1263,24 +1307,24 @@ function openContent(id) {
           <div style="width:40px;height:40px;background:rgba(255,255,255,.06);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${cat.icon}</div>
           <div>
             <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-bottom:3px">${cat.label}</div>
-            <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem;line-height:1.3">${item.title}</div>
+            <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem;line-height:1.3">${esc(item.title)}</div>
           </div>
         </div>
         <button onclick="this.closest('[data-modal]').remove()" style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);cursor:pointer;font-size:.85rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:none">✕</button>
       </div>
       <!-- Meta chips -->
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${item.pages?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);border-radius:5px;font-size:.68rem;color:var(--tech)">📄 ${item.pages} páginas</span>`:''}
-        ${item.fileSize?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.4)">${item.fileSize}</span>`:''}
-        ${item.version?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.4)">${item.version}</span>`:''}
-        ${item.updatedAt?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(6,167,125,.08);border:1px solid rgba(6,167,125,.2);border-radius:5px;font-size:.68rem;color:#4dd9a8">Atualizado ${item.updatedAt}</span>`:''}
+        ${item.pages?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);border-radius:5px;font-size:.68rem;color:var(--tech)">📄 ${esc(item.pages)} páginas</span>`:''}
+        ${item.fileSize?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.4)">${esc(item.fileSize)}</span>`:''}
+        ${item.version?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;font-size:.68rem;color:rgba(255,255,255,.4)">${esc(item.version)}</span>`:''}
+        ${item.updatedAt?`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(6,167,125,.08);border:1px solid rgba(6,167,125,.2);border-radius:5px;font-size:.68rem;color:#4dd9a8">Atualizado ${esc(item.updatedAt)}</span>`:''}
       </div>
     </div>
 
     <!-- Body -->
     <div style="padding:22px 28px;display:flex;flex-direction:column;gap:18px">
       <!-- Descrição -->
-      <p style="font-size:.88rem;color:rgba(255,255,255,.55);line-height:1.75;margin:0">${item.desc||''}</p>
+      <p style="font-size:.88rem;color:rgba(255,255,255,.55);line-height:1.75;margin:0">${esc(item.desc||'')}</p>
 
       <!-- Modelos cobertos -->
       ${item.models&&item.models.length?`
@@ -1347,12 +1391,101 @@ async function downloadContent(id) {
     a.click();
     document.body.removeChild(a);
     showToast('⬇️ Download iniciado — ' + item.title);
+    updateProgressRing();
+    updateFavBadge();
 
   } catch (err) {
     showToast('⛔ Erro ao iniciar download. Tente novamente.', 4000);
     console.error('[downloadContent]', err);
   }
 }
+
+/* ─── Favoritos ─── */
+function toggleFav(id, btn) {
+  const result = AUTH.toggleFavorite(session.userId, id);
+  if (result.ok) {
+    btn.classList.toggle('fav-active', result.favorite);
+    btn.title = result.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+    btn.innerHTML = result.favorite ? '⭐' : '☆';
+    updateFavBadge();
+    if (result.favorite) showToast('⭐ Adicionado aos favoritos');
+  }
+}
+
+function updateFavBadge() {
+  const favs = AUTH.getUserFavorites(session.userId);
+  const badge = document.getElementById('favBadge');
+  if (favs.length > 0) { badge.textContent = favs.length; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+}
+
+function renderFavorites() {
+  const favs = AUTH.getUserFavorites(session.userId);
+  const grid = document.getElementById('favGrid');
+  const empty = document.getElementById('favEmpty');
+  if (!favs.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  const prev = currentCat; currentCat = 'all';
+  grid.innerHTML = favs.map(item => {
+    const cat = CATS.find(c=>c.id===item.cat)||{icon:'📄',label:item.cat};
+    const accLvl = item.accessLevel || 1;
+    const canDl = AUTH.canDownloadContent(session.userId, item.id);
+    const dlLvl = item.downloadLevel || 3;
+    const dlPlanLbl = (LEVEL_INFO[dlLvl]||LEVEL_INFO[3]).label;
+    const fileInfo = item.fileSize ? `<span style="font-size:.68rem;color:rgba(255,255,255,.25);margin-left:4px">${esc(item.fileSize)}</span>` : '';
+    const dlButton = canDl
+      ? `<button class="content-dl-btn" onclick="downloadContent('${item.id}')">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+           Download${fileInfo}
+         </button>`
+      : `<button class="content-dl-locked" onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+           Download — ${dlPlanLbl}+
+         </button>`;
+    const metaChips = [
+      item.pages ? `<span style="font-size:.65rem;color:rgba(255,255,255,.3)">📄 ${esc(item.pages)}p</span>` : '',
+      item.updatedAt ? `<span style="font-size:.65rem;color:rgba(6,167,125,.6)">${esc(item.updatedAt)}</span>` : '',
+    ].filter(Boolean).join('<span style="color:rgba(255,255,255,.1);margin:0 4px">·</span>');
+    return `<div class="content-item">
+      <div class="content-item-header">
+        <span class="content-item-icon">${esc(item.icon||cat.icon)}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><div class="content-item-cat">${esc(cat.label)}</div>${levelBadge(accLvl)}</div>
+          <div class="content-item-name">${esc(item.title)}</div>
+          ${metaChips?`<div style="margin-top:5px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${metaChips}</div>`:''}
+        </div>
+        <button class="fav-btn fav-active" onclick="toggleFav('${item.id}',this)" title="Remover dos favoritos">⭐</button>
+      </div>
+      <div class="content-item-body">
+        <div class="content-item-desc">${esc(item.desc||'')}</div>
+        <div class="content-item-actions">
+          <button class="content-item-action content-action-open" onclick="openContent('${item.id}')">Ver detalhes →</button>
+          ${dlButton}
+        </div>
+      </div></div>`;
+  }).join('');
+  currentCat = prev;
+}
+
+/* ─── Progress Ring ─── */
+function updateProgressRing() {
+  const user = AUTH.getUserById(session.userId);
+  const downloads = user?.downloads || [];
+  const downloadedIds = new Set(downloads.map(d => d.contentId));
+  const accessible = contentData.filter(c => !c.locked && AUTH.canViewContent(session.userId, c.id));
+  const total = accessible.length;
+  const done = accessible.filter(c => downloadedIds.has(c.id)).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const circumference = 176;
+  const offset = circumference - (pct / 100) * circumference;
+  const circle = document.getElementById('progressCircle');
+  const label = document.getElementById('progressLabel');
+  circle.style.strokeDashoffset = offset;
+  label.textContent = pct + '%';
+  circle.style.stroke = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--accent)' : 'var(--tech)';
+}
+
+/* ─── Fim helpers ─── */
 
 function suggestUpgrade(catLabel) {
   showToast(`Para acessar ${catLabel}, abra um ticket solicitando upgrade de plano.`, 4000);
@@ -1530,6 +1663,7 @@ function showPage(page, navEl) {
   document.querySelectorAll('.sidebar-nav-item').forEach(n=>n.classList.remove('active'));
   const map = {
     biblioteca:    ['pageBiblioteca','Biblioteca Técnica','Acesse os materiais liberados para sua conta'],
+    favoritos:     ['pageFavoritos','Meus Favoritos','Materiais salvos para acesso rápido'],
     suporte:       ['pageSuport','Abrir Ticket de Suporte','Envie sua dúvida ao especialista'],
     'meus-tickets':['pageMeusTickets','Meus Tickets','Histórico de suporte e atendimento'],
     boletins:      ['pageBoletins','Boletins Técnicos','Atualizações e comunicados do mentor'],
@@ -1549,6 +1683,7 @@ function showPage(page, navEl) {
     document.getElementById('tbBreadcrumbCurrent').textContent = title;
   }
   if (page==='meus-tickets') loadMeusTickets();
+  if (page==='favoritos') renderFavorites();
   if (page==='perfil') { setTimeout(()=>{ document.getElementById('accessBar').style.width = ((AUTH.getUserById(session.userId)?.permissions||[]).length/(CATS.length||1)*100)+'%'; },100); loadPerfil(); }
 }
 

@@ -45,3 +45,11 @@ const SUPABASE_CONFIG = {
 const outPath = path.join(__dirname, '..', 'js', 'supabase-config.js');
 fs.writeFileSync(outPath, content, 'utf8');
 console.log('[build-config] js/supabase-config.js gerado com sucesso.');
+
+// Gera CSP com hashes SHA-256 dos scripts inline
+try {
+  require('./generate-csp.js');
+  console.log('[build-config] CSP gerado com sucesso.');
+} catch (e) {
+  console.warn('[build-config] AVISO: Erro ao gerar CSP:', e.message);
+}

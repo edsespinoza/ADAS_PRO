@@ -1,0 +1,9 @@
+services:
+  adas-pro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autotech-landpage
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

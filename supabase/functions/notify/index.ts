@@ -25,6 +25,7 @@ serve(async (req) => {
   const authHeader = req.headers.get('authorization');
   if (!authHeader) return json({ error: 'Não autorizado.' }, 401);
 
+  let _callerId: string | undefined;
   try {
     const supabaseUser = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -33,6 +34,7 @@ serve(async (req) => {
     );
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) return json({ error: 'Token inválido.' }, 401);
+    _callerId = user.id;
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -43,6 +45,18 @@ serve(async (req) => {
 
     if (!['admin', 'gestor', 'superadmin'].includes(callerData?.role || '')) {
       return json({ error: 'Permissão insuficiente.' }, 403);
+    }
+
+    // Rate limiting — máximo 20 emails/minuto por usuário
+    const { count: recentCount, error: countErr } = await supabaseAdmin
+      .from('audit_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('actor_id', user.id)
+      .eq('action', 'notify')
+      .gte('created_at', new Date(Date.now() - 60_000).toISOString());
+
+    if (!countErr && recentCount && recentCount >= 20) {
+      return json({ error: 'Muitas requisições. Aguarde 1 minuto.' }, 429);
     }
   } catch (_) {
     return json({ error: 'Falha na validação de autenticação.' }, 401);
@@ -83,6 +97,20 @@ serve(async (req) => {
     if (!res.ok) {
       const err = await res.text();
       return json({ error: `Resend erro: ${err}` }, 500);
+    }
+
+    // Auditoria para rate limiting
+    if (_callerId) {
+      try {
+        const sa = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+        );
+        await sa.from('audit_logs').insert({
+          action: 'notify', actor_id: _callerId, target_id: event,
+          details: { event, to }, created_at: new Date().toISOString()
+        });
+      } catch (_) { /* falha na auditoria não bloqueia o envio */ }
     }
 
     return json({ ok: true });

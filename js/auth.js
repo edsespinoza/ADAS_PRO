@@ -1190,20 +1190,36 @@ const AUTH = (function () {
   }
   const _VALID_ROLES   = new Set(['membro','gestor','admin','superadmin']);
   const _VALID_STATUSES = new Set(['active','pending','blocked']);
+  function _sanitizeStr(v) { return typeof v === 'string' ? v.replace(/<[^>]*>/g, '') : v; }
+  function _walkSanitize(obj, keys) {
+    if (!obj || typeof obj !== 'object') return;
+    for (const k of keys) { if (k in obj) obj[k] = _sanitizeStr(obj[k]); }
+  }
   function importData(json) {
     try {
       const d = JSON.parse(json);
-      if (d.users) {
+      if (d.users && typeof d.users === 'object' && !Array.isArray(d.users)) {
         Object.values(d.users).forEach(u => {
+          if (!u || typeof u !== 'object') return;
           if (!_VALID_ROLES.has(u.role))     u.role   = 'membro';
           if (!_VALID_STATUSES.has(u.status)) u.status = 'pending';
+          _walkSanitize(u, ['name','email']);
         });
         _users = d.users;
         Object.values(d.users).forEach(u => _sbUpsertUser(u));
       }
-      if (d.content)  saveContent(d.content);
-      if (d.tickets)  { _tickets=d.tickets; Object.values(d.tickets).forEach(t=>_sbUpsertTicket(t)); }
-      if (d.settings) saveSettings(d.settings);
+      if (d.content && Array.isArray(d.content)) {
+        d.content.forEach(c => { if (c && typeof c === 'object') _walkSanitize(c, ['title','desc']); });
+        saveContent(d.content);
+      }
+      if (d.tickets && typeof d.tickets === 'object' && !Array.isArray(d.tickets)) {
+        Object.values(d.tickets).forEach(t => {
+          if (t && typeof t === 'object') _walkSanitize(t, ['title','message']);
+        });
+        _tickets=d.tickets;
+        Object.values(d.tickets).forEach(t=>_sbUpsertTicket(t));
+      }
+      if (d.settings && typeof d.settings === 'object') saveSettings(d.settings);
       return { ok:true };
     } catch(e) { return { ok:false, msg:'Arquivo inválido: '+e.message }; }
   }

@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+const fs   = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+const ROOT = path.join(__dirname, '..');
+
+const HTML_FILES = [
+  'index.html', 'login.html', 'reset-password.html', 'mfa-verify.html',
+  'admin.html', 'membros.html', 'superadmin.html', 'email-config.html',
+];
+
+const EXCLUDED_CDN = [
+  '_vercel/insights/script.js',
+  '_vercel/speed-insights/script.js',
+];
+
+function extractInlineScripts(html) {
+  const scripts = [];
+  // Ignora blocks JSON-LD (type="application/ld+json") — não executam JS
+  const inlineRegex = /<script\b(?![^>]*\bsrc\s*=)(?![^>]*\btype\s*=\s*["']application\/ld\+json["'])([^>]*)>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = inlineRegex.exec(html)) !== null) {
+    const content = match[2].trim();
+    if (content) {
+      scripts.push(content);
+    }
+  }
+  return scripts;
+}
+
+function sha256Base64(content) {
+  return crypto.createHash('sha256').update(content, 'utf8').digest('base64');
+}
+
+function generate() {
+  const allHashes = new Set();
+
+  for (const file of HTML_FILES) {
+    const filePath = path.join(ROOT, file);
+    if (!fs.existsSync(filePath)) {
+      console.warn(`[generate-csp] Aviso: ${file} não encontrado, ignorando.`);
+      continue;
+    }
+    const html = fs.readFileSync(filePath, 'utf8');
+    const scripts = extractInlineScripts(html);
+
+    for (const script of scripts) {
+      const hash = sha256Base64(script);
+      allHashes.add(hash);
+    }
+    console.log(`[generate-csp] ${file}: ${scripts.length} inline scripts encontrados`);
+  }
+
+  const hashEntries = Array.from(allHashes)
+    .sort()
+    .map(h => `'sha256-${h}'`)
+    .join(' ');
+
+  console.log(`[generate-csp] Total de hashes únicos: ${allHashes.size}`);
+
+  return hashEntries;
+}
+
+const hashEntries = generate();
+
+const CSP = [
+  `default-src 'self'`,
+  `script-src 'self' ${hashEntries}`,
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `font-src 'self' https://fonts.gstatic.com`,
+  `img-src 'self' data:`,
+  `connect-src 'self' https://zqydyyticvtmirjzskly.supabase.co wss://zqydyyticvtmirjzskly.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com`,
+  `object-src 'none'`,
+  `base-uri 'self'`,
+  `form-action 'self'`,
+  `frame-ancestors 'none'`,
+  `worker-src 'none'`,
+  `manifest-src 'self'`,
+  `media-src 'self'`,
+  `upgrade-insecure-requests`,
+].join('; ');
+
+const vercelPath = path.join(ROOT, 'vercel.json');
+const vercelRaw = fs.readFileSync(vercelPath, 'utf8');
+const vercel = JSON.parse(vercelRaw);
+
+for (const headerSet of (vercel.headers || [])) {
+  for (const h of (headerSet.headers || [])) {
+    if (h.key === 'Content-Security-Policy') {
+      h.value = CSP;
+      console.log(`[generate-csp] CSP atualizado em vercel.json`);
+    }
+  }
+}
+
+fs.writeFileSync(vercelPath, JSON.stringify(vercel, null, 2) + '\n', 'utf8');
+console.log('[generate-csp] vercel.json salvo.');

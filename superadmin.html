@@ -10,6 +10,7 @@
   <script src="js/supabase.min.js" integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/purify.min.js"></script>
   <style>
     /* ─────────────────────────────────────────────────────
        VARIÁVEIS — Dark Theme (branco)
@@ -3482,7 +3483,7 @@ function openEditor(id=null, type='boletim') {
   }
 
   _buildBrandsGrid(selBrands);
-  document.getElementById('editorArea').innerHTML = content;
+  document.getElementById('editorArea').innerHTML = DOMPurify.sanitize(content);
   document.getElementById('editorAutosave').textContent = 'rascunho';
   document.getElementById('editorAutosave').className = 'editor-autosave';
   onEdMetaTypeChange();
@@ -3513,7 +3514,7 @@ function toggleEditorPreview() {
   btn.classList.toggle('active', _editorPreviewMode);
   area.style.display = _editorPreviewMode ? 'none' : '';
   if (_editorPreviewMode) {
-    preview.innerHTML = document.getElementById('editorArea').innerHTML;
+    preview.innerHTML = DOMPurify.sanitize(document.getElementById('editorArea').innerHTML);
     preview.classList.add('active');
     preview.style.cssText = 'flex:1;overflow-y:auto;padding:28px 36px;font-size:.9rem;line-height:1.8;color:var(--text-secondary);display:block';
   } else {
@@ -3566,7 +3567,7 @@ function edCmd(cmd) {
 
 function saveEditorDraft() {
   const title   = document.getElementById('edMetaTitle').value.trim();
-  const content = document.getElementById('editorArea').innerHTML;
+  const content = DOMPurify.sanitize(document.getElementById('editorArea').innerHTML);
   const type    = document.getElementById('edMetaContentType').value;
   const brands  = _getSelectedBrands();
   const tags    = (document.getElementById('edMetaTags').value||'').split(',').map(t=>t.trim()).filter(Boolean);

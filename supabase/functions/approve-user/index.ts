@@ -42,6 +42,17 @@ serve(async (req) => {
       return json({ error: 'Permissão insuficiente.' }, 403);
     }
 
+    // 2b. Rate limiting — verificar audit_logs dos últimos 60s
+    const { count: recentCount, error: countErr } = await supabaseAdmin
+      .from('audit_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('actor_id', user.id)
+      .gte('created_at', new Date(Date.now() - 60_000).toISOString());
+
+    if (!countErr && recentCount && recentCount >= 30) {
+      return json({ error: 'Muitas requisições. Aguarde 1 minuto.' }, 429);
+    }
+
     // 3. Executar ação
     const body = await req.json();
     const { action, targetId, updates } = body;

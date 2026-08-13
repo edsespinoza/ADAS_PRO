@@ -607,3 +607,57 @@
   - **Bug:** `superadmin.html` tinha dois elementos com `id="saLibHidden"` — o stat "Ocultos" (div, linha ~1937) e o checkbox do modal de edição (input, linha ~2118). `getElementById` retorna o primeiro no DOM (o div), então `saveSaContent()`/`openEditSaContent()` liam/escreviam `.checked` num div — o checkbox nunca refletia nem salvava o estado `hidden`.
   - **Fix:** stat renomeado para `saLibHiddenCount` (+ referência em `loadSaLibrary()`). Checkbox `saLibHidden` mantém o ID original.
   - **Arquivo:** `superadmin.html`
+
+## 🟠 ALTA — Revisão aba admin (painel de gestão) 2026-08-13
+
+> Diagnóstico com agentes paralelos (API AUTH vs admin.html; DOM; handlers; hash integrity) + testes funcionais em Node (VM sandbox). Todos os fixes abaixo aplicados e verificados por sintaxe (`node --check`) e testes de unidade em modo local.
+
+- [x] **Fix — F5 recarregava a landing page em vez do painel** ✅ 2026-08-13
+  - **Bug:** `history.replaceState({}, document.title, '/')` em `admin.html:740` e `membros.html:997` trocava a URL para `/` — ao apertar F5/refresh o browser abria a landing page (sessão parecia "não persistir").
+  - **Fix:** `window.location.pathname` preserva a rota atual.
+  - **Arquivos:** `admin.html` · `membros.html`
+
+- [x] **Fix — `switchConfigTab` apagava abas de Membros/Acesso (páginas em branco)** ✅ 2026-08-13
+  - **Bug:** `switchConfigTab()` usava seletores globais `.page-tab`/`.page-tab-content` → qualquer mudança de aba em Configurações removia a classe `.active` de TODAS as abas do painel (Usuários e Equipe ficavam vazias).
+  - **Fix:** seletores escopados para `#pageConfiguracoes .page-tab` / `#pageConfiguracoes .page-tab-content`.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — `saveUserPerms` mostrava sucesso mesmo com falha** ✅ 2026-08-13
+  - **Bug:** retornos de `updateUserPermissions`/`updateUserRole`/`setAccessExpiry`/`approveUser`/`blockUser`/`unblockUser` nunca eram verificados — toast "✅ Permissões salvas!" aparecia mesmo quando a operação falhava (ex.: RLS bloqueando).
+  - **Fix:** cada chamada agora checa retorno; falha lança erro com mensagem, toast de erro e botão restaurado no `finally`.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — `applyPlan` e `sendTicketReply` ignoravam retorno de função async** ✅ 2026-08-13
+  - **Bug:** chamavam funções async sem `await` e ignoravam `ok === false` — plano "aplicado"/resposta "enviada" eram reportados mesmo em falha.
+  - **Fix:** handlers agora `async` com `await` e checagem de retorno (`false` → toast de erro e early return).
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — `selectTicket` quebrava com ticket sem mensagens** ✅ 2026-08-13
+  - **Bug:** `ticket.messages.map` sem guard → erro se `messages` ausente (tickets antigos/importados).
+  - **Fix:** `(ticket.messages || []).map`.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — Crash `session.name.split` / `u.name.split` com nome nulo** ✅ 2026-08-13
+  - **Bug:** usuários criados por admin/superadmin às vezes não têm `name` (só `email`) → `initials` quebrava o render de `filterUsers()`, `loadGestores()` e o header do painel.
+  - **Fix:** guards `(name || '')` nos 3 pontos.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — `saveContent` abortava salvamento em modo offline** ✅ 2026-08-13
+  - **Bug:** em modo local o `uploadFile` retorna `{ok:false, msg:'Supabase não disponível.'}` → o save inteiro era abortado, impossibilitando cadastrar materiais offline.
+  - **Fix:** em `AUTH.isOfflineMode()` salva os metadados sem arquivo (toast de aviso); erro real de upload continua abortando.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — `getAllTickets` ordenava com `NaN` (timestamps ISO do Supabase)** ✅ 2026-08-13
+  - **Bug:** `b.updatedAt - a.updatedAt` com `updatedAt` em ISO string (retornado pelo PostgREST) → subtração `NaN`, ordenação indefinida.
+  - **Fix:** `ts()` normaliza número ou ISO para millis antes de subtrair.
+  - **Arquivo:** `js/auth.js`
+
+- [x] **Fix — `getUserDownloads` retornava vazio no modo local** ✅ 2026-08-13
+  - **Bug:** modo local (`_mode !== 'supabase'`) retornava `{ok:false, data:[]}` sempre — aba de downloads do usuário ficava vazia mesmo com downloads registrados por `trackDownload`.
+  - **Fix:** fallback local lê `user.downloads` gravados por `trackDownload` e mapeia para o shape esperado (`target_id`, `created_at`).
+  - **Arquivo:** `js/auth.js`
+
+- [x] **Testes aplicados** ✅ 2026-08-13
+  - Sintaxe: `node --check` em `auth.js` e scripts inline de `admin.html`/`membros.html` (via `new Function`).
+  - Funcionais (VM sandbox, modo local): `getAllTickets` com ISO, `getUserDownloads` (2 downloads), `applyPlanToUser`, `replyTicket`, `updateTicketStatus`, `deleteTicket`, `approveUser`, `blockUser`, `unblockUser` — todos OK.
+  - **Pendência manual:** teste visual no browser (`localhost:3000` ou preview Vercel) para confirmar UX das abas de Configurações.

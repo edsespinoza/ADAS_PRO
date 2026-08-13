@@ -737,7 +737,7 @@
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script>
-history.replaceState({}, document.title, '/');
+history.replaceState({}, document.title, window.location.pathname);
 /* ─── Sanitização XSS — escapa HTML especial antes de inserir no innerHTML ─── */
 function esc(str) {
   if (str == null) return '';
@@ -951,7 +951,7 @@ function filterUsers() {
   };
   const _now = Date.now();
   document.getElementById('usersTbody').innerHTML = users.length ? users.map(u => {
-    const init  = u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    const init  = (u.name || '').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
     const rc    = ROLE_CFG[u.role] || ROLE_CFG.membro;
     const perms = u.permissions?.length
       ? `<div style="display:flex;align-items:center;gap:5px"><span style="font-size:.72rem;color:rgba(255,255,255,.6);font-weight:600">${u.permissions.length}</span><span style="font-size:.68rem;color:rgba(255,255,255,.3)">/ ${CATS.length} cats</span></div>`
@@ -1058,7 +1058,7 @@ function selectTicket(id) {
 
   // Mensagens
   const chat = document.getElementById('tvMessages');
-  chat.innerHTML = ticket.messages.map(m => `
+  chat.innerHTML = (ticket.messages || []).map(m => `
     <div class="chat-msg ${m.role==='member'?'member':'admin'}">
       <div style="font-weight:600;font-size:.78rem;margin-bottom:4px;color:${m.role==='member'?'var(--tech)':'var(--accent)'}">${esc(m.authorName)}</div>
       <div>${esc(m.message)}</div>
@@ -1072,11 +1072,12 @@ function selectTicket(id) {
   document.getElementById('tvReply').value = '';
 }
 
-function sendTicketReply() {
+async function sendTicketReply() {
   if (!selectedTicketId) return;
   const msg = document.getElementById('tvReply').value.trim();
   if (!msg) return;
-  AUTH.replyTicket(selectedTicketId, session.userId, msg);
+  const ok = await AUTH.replyTicket(selectedTicketId, session.userId, msg);
+  if (ok === false) { showToast('⛔ Erro ao enviar resposta.'); return; }
   selectTicket(selectedTicketId);
   renderTicketList();
   showToast('Resposta enviada!');
@@ -1200,12 +1201,18 @@ async function saveContent() {
     if (!result.ok) {
       document.getElementById('uploadProgressBar').style.width = '0%';
       document.getElementById('uploadProgress').classList.remove('show');
-      showToast(`⚠️ Erro no upload: ${result.msg}`);
-      return;
+      if (AUTH.isOfflineMode()) {
+        // Modo local: salva os metadados mesmo sem Storage
+        showToast('⚠️ Upload indisponível no modo offline — salvando sem arquivo.');
+      } else {
+        showToast(`⚠️ Erro no upload: ${result.msg}`);
+        return;
+      }
+    } else {
+      filePath = result.path;
+      document.getElementById('uploadProgressBar').style.width = '100%';
+      document.getElementById('uploadCurrentPath').textContent = `Salvo em: ${filePath}`;
     }
-    filePath = result.path;
-    document.getElementById('uploadProgressBar').style.width = '100%';
-    document.getElementById('uploadCurrentPath').textContent = `Salvo em: ${filePath}`;
   }
 
   const item = { title, cat, desc, type, icon, ...(filePath && { filePath }) };
@@ -1267,13 +1274,12 @@ function togglePlanCat(el, planId, catId) {
 function loadGestores() {
   const gestores = AUTH.getAllUsers().filter(u=>u.role==='admin'||u.role==='gestor');
   document.getElementById('gestoresGrid').innerHTML = gestores.length ? gestores.map(u => {
-    const init = u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    const init = (u.name || '').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
     return `<div class="gestor-card">
       <div class="gestor-card-avatar">${init}</div>
       <div><div class="gestor-info-name">${esc(u.name)}</div><div class="gestor-info-role">${esc(u.role)}</div><div class="gestor-info-email">${esc(u.email)}</div></div>
       ${u.role!=='admin'?`        <button class="action-btn action-btn-block" onclick="confirmAction('Remover gestor?','${jsStr(u.name)} voltará a ser membro.',async()=>{await AUTH.updateUserRole('${u.id}','membro');refresh();showToast('Permissão removida.')})" style="margin-left:auto" title="Remover">↓</button>`:''}
-    </div>`;
-  }).join('') : emptyState('🛡️', 'Nenhum gestor cadastrado', 'Promova um membro abaixo para dar acesso ao painel.');
+    </div>`;  }).join('') : emptyState('🛡️', 'Nenhum gestor cadastrado', 'Promova um membro abaixo para dar acesso ao painel.');
 
   // Select de promoção
   const membros = AUTH.getAllUsers().filter(u=>u.role==='membro'&&u.status==='active');
@@ -1330,8 +1336,8 @@ function saveConfigurations() {
 }
 
 function switchConfigTab(tab, el) {
-  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.page-tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#pageConfiguracoes .page-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#pageConfiguracoes .page-tab-content').forEach(t=>t.classList.remove('active'));
   el?.classList.add('active');
   document.getElementById('config'+tab.charAt(0).toUpperCase()+tab.slice(1))?.classList.add('active');
 }
@@ -1385,8 +1391,9 @@ function openPermModal(userId) {
   if (dlIcon) dlIcon.textContent = '▼ ver';
   openModal('permModal');
 }
-function applyPlan(userId, planId) {
-  AUTH.applyPlanToUser(userId, planId);
+async function applyPlan(userId, planId) {
+  const ok = await AUTH.applyPlanToUser(userId, planId);
+  if (ok === false) { showToast('⛔ Falha ao aplicar o plano.'); return; }
   // Atualiza checkboxes
   const s = AUTH.getSettings();
   const plan = s.plans.find(p=>p.id===planId);
@@ -1395,7 +1402,7 @@ function applyPlan(userId, planId) {
       cb.checked = plan.defaultCategories.includes(cb.value);
     });
   }
-  showToast(`✅ Plano "${planId}" aplicado!`);
+  showToast(`✅ Plano "${plan?.name || planId}" aplicado!`);
 }
 async function saveUserPerms() {
   if (!editingUserId) return;
@@ -1407,24 +1414,29 @@ async function saveUserPerms() {
   const btn = document.getElementById('btnSavePerms');
   if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
   try {
-    await AUTH.updateUserPermissions(editingUserId, perms);
-    await AUTH.updateUserRole(editingUserId, role);
-    await AUTH.setAccessExpiry(editingUserId, accessExpires);
+    const permOk = await AUTH.updateUserPermissions(editingUserId, perms);
+    if (permOk === false) throw new Error('falha ao atualizar permissões');
+    const roleOk = await AUTH.updateUserRole(editingUserId, role);
+    if (roleOk === false) throw new Error('falha ao atualizar o perfil');
+    const expOk = await AUTH.setAccessExpiry(editingUserId, accessExpires);
+    if (expOk === false) throw new Error('falha ao atualizar a data de acesso');
+    let stOk = true;
     if (status === 'active') {
       const currentUser = AUTH.getUserById(editingUserId);
       if (currentUser?.status === 'pending') {
-        await AUTH.approveUser(editingUserId, session.userId);
+        stOk = await AUTH.approveUser(editingUserId, session.userId);
       } else {
-        await AUTH.unblockUser(editingUserId);
+        stOk = await AUTH.unblockUser(editingUserId);
       }
     } else {
-      await AUTH.blockUser(editingUserId);
+      stOk = await AUTH.blockUser(editingUserId);
     }
+    if (stOk === false) throw new Error('falha ao atualizar o status');
     closeModal('permModal');
     showToast('✅ Permissões salvas!');
     refresh();
   } catch(e) {
-    showToast('⛔ Erro ao salvar permissões.');
+    showToast('⛔ Erro ao salvar permissões: ' + e.message);
   } finally {
     if (btn) { btn.disabled=false; btn.textContent='Salvar alterações'; }
   }
@@ -1768,7 +1780,7 @@ AUTH.init().then(() => {
   session = AUTH.requireAuth('gestor');
   if (!session) return;
 
-  const initials = session.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const initials = (session.name || '').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('sbAvatar').textContent = initials;
   document.getElementById('sbName').textContent   = session.name;
   document.getElementById('sbRole').textContent   = {

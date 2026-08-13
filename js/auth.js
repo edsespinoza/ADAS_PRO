@@ -1105,7 +1105,10 @@ const AUTH = (function () {
     addNotification({ type:'new_ticket', ticketId:id, userId, userName:user?.name, message:`Novo ticket: ${data.title}` });
     return { ok:true, id };
   }
-  function getAllTickets()         { return Object.values(_tickets).sort((a,b) => b.updatedAt - a.updatedAt); }
+  function getAllTickets() {
+    const ts = (x) => { const n = +x; return n > 0 ? n : (x ? new Date(x).getTime() : 0); };
+    return Object.values(_tickets).sort((a,b) => ts(b.updatedAt) - ts(a.updatedAt));
+  }
   function getUserTickets(userId)  { return getAllTickets().filter(t => t.userId === userId); }
   function getTicketById(id)      { return _tickets[id] || null; }
   function replyTicket(ticketId, authorId, message) {
@@ -1334,7 +1337,16 @@ const AUTH = (function () {
   }
 
   async function getUserDownloads(userId, limit = 20) {
-    if (_mode !== 'supabase' || !_sb) return { ok:false, data:[], msg:'Supabase não disponível.' };
+    if (_mode !== 'supabase' || !_sb) {
+      // Modo local: lê downloads gravados por trackDownload
+      const u = getUserById(userId);
+      const data = (u?.downloads || []).slice(-limit).reverse().map(d => ({
+        id: 'local-' + d.contentId + '-' + d.at,
+        target_id: d.contentId,
+        created_at: new Date(d.at).toISOString(),
+      }));
+      return { ok:true, data };
+    }
     try {
       const { data, error } = await _sb.from('audit_logs')
         .select('id,target_id,details,created_at')

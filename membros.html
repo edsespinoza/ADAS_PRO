@@ -994,7 +994,7 @@
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script>
-history.replaceState({}, document.title, '/');
+history.replaceState({}, document.title, window.location.pathname);
 /* ─── Auth — aguarda init do Supabase antes de verificar sessão ─── */
 let session = null;
 

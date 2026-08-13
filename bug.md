@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-05-07 (Fix #45 + #46-fase1 — PBKDF2, migração handlers auth pages)  
+**Última atualização:** 2026-08-13 (Auditoria segurança + hardening MFA/RLS)  
 **Responsável:** AutoTech Service
 
 ---
@@ -561,3 +561,43 @@
 - Vercel Dashboard: https://vercel.com
 - Produção: https://adaspro.com.br
 - OWASP Top 10: https://owasp.org/www-project-top-ten/
+
+---
+
+## 🔴 CRÍTICO/ALTO — Auditoria de segurança 2026-08-13
+
+- [x] **#66 — [CRÍT] CSP com hashes `.trim()` quebrava todos os painéis em produção** ✅ 2026-08-13
+  - **Causa raiz:** `scripts/generate-csp.js` chamava `.trim()` no conteúdo dos scripts inline antes de hashear. O browser (CSP3) hasheia o conteúdo **exato** do elemento `<script>` (incluindo quebra de linha inicial). Resultado: os 4 hashes de `vercel.json` nunca batiam → CSP `script-src 'self'` **bloqueava** o script inline de `admin.html`, `membros.html`, `superadmin.html` e `email-config.html` em produção.
+  - **Fix:** `.trim()` removido do cálculo de hash em `generate-csp.js` (mantido apenas na checagem de conteúdo vazio). `vercel.json` regenerado com hashes corretos.
+  - **Arquivos:** `scripts/generate-csp.js` · `vercel.json`
+  - **Regenerar sempre com:** `npm run build` (não editar hashes manualmente).
+
+- [~] **#67 — Hardening MFA: fechar bypass de navegação direta (sessão aal1)** ⚠️ Código pronto, deploy pendente — 2026-08-13
+  - **Problema:** Sessão aal1 persistida pelo SDK (MFA pendente) podia ser usada para abrir `admin.html`/`superadmin.html` diretamente sem completar a 2ª etapa.
+  - **Fixes em `js/auth.js`:**
+    - `_doInit()`: se `getAuthenticatorAssuranceLevel()` retorna `nextLevel='aal2'` e `currentLevel!=='aal2'`, NÃO constrói sessão — seta `_pendingMfaUid`/`_pendingMfaTimestamp`, persiste `adaspro_mfa_uid` + fingerprint no `sessionStorage` e retorna cedo (força passagem por `mfa-verify.html`).
+    - `requireAuth()`: defesa em profundidade — role privilegiada com MFA pendente redireciona para `mfa-verify.html` mesmo se sessão for construída.
+    - `callEdgeFunction()`: bloqueia chamadas a Edge Functions com sessão aal1 em roles privilegiadas.
+    - `reset()`: limpa estado MFA pendente (`_pendingMfaUser/Uid/Timestamp` + sessionStorage).
+  - **Fixes em `js/login.js`:** `AUTH.init()` detecta `adaspro_mfa_uid` pendente e redireciona para `mfa-verify.html` (fluxo login → painel → verificação).
+  - **Arquivos:** `js/auth.js` · `js/login.js`
+
+- [~] **#68 — Hardening RLS: impedir escalada de privilégio entre roles** ⚠️ SQL pronto, aplicação pendente — 2026-08-13
+  - Novas funções: `role_level(r)`, `can_manage_role(target_role)` (só gerencia role ESTRITAMENTE inferior), `is_admin_staff()` (admin+ cria contas; gestor NÃO).
+  - `users_insert`: registro próprio nasce sem privilégios (`permissions='{}'`, `plan='free'`, `accessType='trial'`, `accessExpires IS NULL`) — impede auto-inflação.
+  - `users_update`: membro não pode tocar em `role/status/permissions/plan/accessType/accessExpires/boughtModules` (comparação `IS NOT DISTINCT FROM`); admin+ só altera roles inferiores via `can_manage_role`.
+  - **Aplicar:** `supabase db query --linked -f sql/rls_policies.sql`
+
+- [~] **#69 — Hardening Edge Functions: MFA + status ativo obrigatórios** ⚠️ Código pronto, deploy pendente — 2026-08-13
+  - `approve-user`, `get-download-url`, `notify`: agora verificam `status='active'` do caller (conta pendente/suspensa não executa ações) e exigem `currentLevel='aal2'` quando a conta tem fator MFA configurado (`nextLevel='aal2'`).
+  - **Deploy:** `supabase functions deploy approve-user` · `supabase functions deploy get-download-url` · `supabase functions deploy notify`
+  - **Arquivos:** `supabase/functions/{approve-user,get-download-url,notify}/index.ts`
+
+- [ ] **#70 — [CRÍT] GitHub PAT exposto no remote origin** ⚠️ Ação manual obrigatória
+  - `.git/config` remote `origin` contém `https://edsespinoza:ghp_***@github.com/...` — token pessoal commitado num repo **PÚBLICO**.
+  - **Ação:** revogar o token em github.com/settings/tokens e trocar o remote por URL limpa (ou configurar credential helper).
+
+- [x] **Bumps de build** ✅ 2026-08-13
+  - `js/auth.js`: v4.0.3 build 20260813
+  - `admin.html` / `membros.html`: build 20260813
+  - `superadmin.html`: build 20260813

@@ -145,7 +145,12 @@ async function enterDemoMode(role) {
 // ── Initialization ──────────────────────────────────────────────────
 try { history.replaceState({}, document.title, '/'); } catch(e) {}
 
-AUTH.init().catch(err => console.warn('[ADAS PRO] init error:', err));
+AUTH.init().then(() => {
+  // MFA pendente (sessão aal1) já persistida — segue direto para a verificação
+  try {
+    if (sessionStorage.getItem('adaspro_mfa_uid')) { window.location.href = 'mfa-verify.html'; }
+  } catch(_) {}
+}).catch(err => console.warn('[ADAS PRO] init error:', err));
 
 const _loginParams = new URLSearchParams(window.location.search);
 if (_loginParams.get('tab') === 'register') switchTab('register');

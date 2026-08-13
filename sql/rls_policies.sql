@@ -39,6 +39,41 @@ AS $$
   SELECT public.get_my_role() = 'superadmin';
 $$;
 
+-- Nível numérico de cada role (membro=1 · gestor=2 · admin=3 · superadmin=4)
+CREATE OR REPLACE FUNCTION public.role_level(r text)
+RETURNS int
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE r
+    WHEN 'superadmin' THEN 4
+    WHEN 'admin'      THEN 3
+    WHEN 'gestor'     THEN 2
+    WHEN 'membro'     THEN 1
+    ELSE 0 END;
+$$;
+
+-- O caller só pode gerenciar (inserir/atualizar) contas com role ESTRITAMENTE
+-- inferior à sua — admin não promove outro admin, gestor não age sobre gestores.
+CREATE OR REPLACE FUNCTION public.can_manage_role(target_role text)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT public.role_level(target_role) < public.role_level(public.get_my_role());
+$$;
+
+-- Staff com poder de CRIAR contas: apenas admin e superadmin (gestor não cria).
+CREATE OR REPLACE FUNCTION public.is_admin_staff()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT public.get_my_role() IN ('admin', 'superadmin');
+$$;
+
 
 -- ────────────────────────────────────────────────
 -- 2. TABELA: public.users
@@ -62,21 +97,36 @@ CREATE POLICY "users_select" ON public.users
 
 -- INSERT: novo usuário insere o próprio perfil (registro)
 --         role deve ser 'membro' e status 'pending' — impede registro como admin
---         OU admin+ faz upsert de qualquer usuário
+--         superadmin cria qualquer conta (inclusive superadmin);
+--         admin cria apenas roles inferiores (membro/gestor — via can_manage_role);
+--         gestor NÃO cria contas;
+--         registro próprio nasce SEM privilégios: role=membro, status=pending,
+--         permissions/plan/"accessType"/"accessExpires"/"boughtModules" zerados
+--         (impede auto-inflação de permissões)
 CREATE POLICY "users_insert" ON public.users
   FOR INSERT
   WITH CHECK (
-    public.is_admin()
+    public.is_superadmin()
+    OR (
+      public.is_admin_staff()
+      AND public.can_manage_role(role)
+    )
     OR (
       auth.uid() = id
-      AND role   = 'membro'
-      AND status = 'pending'
+      AND role          = 'membro'
+      AND status        = 'pending'
+      AND permissions   = '{}'
+      AND plan          = 'free'
+      AND "accessType"  = 'trial'
+      AND "accessExpires" IS NULL
     )
   );
 
--- UPDATE: admin+ atualiza qualquer usuário sem restrição de campos
---         Membro só atualiza o próprio registro E não pode mudar role/status
---         (WITH CHECK lê os valores atuais — impede escalada de privilégio)
+-- UPDATE: superadmin altera qualquer usuário;
+--         admin+ altera apenas roles inferiores (can_manage_role lê a role ALVO);
+--         membro só altera o próprio registro e NÃO pode tocar em campos de
+--         privilégio (role/status/permissions/plan/"accessType"/"accessExpires"/
+--         "boughtModules") — WITH CHECK compara com os valores atuais
 CREATE POLICY "users_update" ON public.users
   FOR UPDATE
   USING (
@@ -84,11 +134,20 @@ CREATE POLICY "users_update" ON public.users
     OR public.is_admin()
   )
   WITH CHECK (
-    public.is_admin()
+    public.is_superadmin()
+    OR (
+      public.is_admin()
+      AND public.can_manage_role(role)
+    )
     OR (
       auth.uid() = id
-      AND role   = (SELECT role   FROM public.users WHERE id = auth.uid())
-      AND status = (SELECT status FROM public.users WHERE id = auth.uid())
+      AND role          IS NOT DISTINCT FROM (SELECT role          FROM public.users WHERE id = auth.uid())
+      AND status        IS NOT DISTINCT FROM (SELECT status        FROM public.users WHERE id = auth.uid())
+      AND permissions   IS NOT DISTINCT FROM (SELECT permissions   FROM public.users WHERE id = auth.uid())
+      AND plan          IS NOT DISTINCT FROM (SELECT plan          FROM public.users WHERE id = auth.uid())
+      AND "accessType"  IS NOT DISTINCT FROM (SELECT "accessType"  FROM public.users WHERE id = auth.uid())
+      AND "accessExpires" IS NOT DISTINCT FROM (SELECT "accessExpires" FROM public.users WHERE id = auth.uid())
+      AND "boughtModules" IS NOT DISTINCT FROM (SELECT "boughtModules" FROM public.users WHERE id = auth.uid())
     )
   );
 

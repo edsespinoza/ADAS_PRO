@@ -70,7 +70,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-7bbPRAOQDTFRVCWjePg3kajvbNHconDZyy//BH/EHmM=' 'sha256-FXibcRckQJF0ELm88FeRgwrvox3C4/pfYN6mnbzLqOs=' 'sha256-NLftS8OpfwD/b1czjj9nSMdCIWaCdi4ud2raa0jN+QA=' 'sha256-bRzqVXeX4sXaBV98dMJgmGGPKbW+0UCN2PDsquxeDfQ='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://zqydyyticvtmirjzskly.supabase.co wss://zqydyyticvtmirjzskly.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'none'; manifest-src 'self'; media-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'sha256-/sOg3TBIcXjv15l5e7nZ7lG/BbvKKb5ltqUMEDCTSEk=' 'sha256-ISfFHOvKijtZ06xI6Qrj/vxiO07myYgskTHrfyfYEtg=' 'sha256-KVpayWWuV8TjaqIVVuFOfmQc7lcxBE14SKNi/cMARoM=' 'sha256-vdO8wC6EpLpbuOGv+2AsZjY+dfeCUizZuFuWBT865iI='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://zqydyyticvtmirjzskly.supabase.co wss://zqydyyticvtmirjzskly.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; worker-src 'none'; manifest-src 'self'; media-src 'self'; upgrade-insecure-requests"
         },
         {
           "key": "X-Frame-Options",

@@ -3,7 +3,7 @@
    ================================================
    Empresa:     AutoTech Service
    Produto:     ADAS PRO Platform
-   Versão:      4.0.2  build 20260609
+   Versão:      4.0.3  build 20260813
    Modos:       1) Supabase Auth + PostgreSQL
                 2) localStorage (demo/local fallback)
    Copyright:   © 2024-2026 AutoTech Service
@@ -12,9 +12,9 @@
 const AUTH = (function () {
 
   const VERSION = {
-    major:4,minor:0,patch:2,build:'20260609',codename:'Supabase',
-    company:'AutoTech Service',product:'ADAS PRO Platform',full:'v4.0.2',
-    display:'v4.0.2 build 20260609',stamp:'v4.0.2-20260609',
+    major:4,minor:0,patch:3,build:'20260813',codename:'Supabase',
+    company:'AutoTech Service',product:'ADAS PRO Platform',full:'v4.0.3',
+    display:'v4.0.3 build 20260813',stamp:'v4.0.3-20260813',
   };
 
   /* ─── Chaves localStorage ─── */
@@ -339,6 +339,23 @@ const AUTH = (function () {
             const { data: { session } } = await _sb.auth.getSession();
             if (_cancelled) return;
             if (session) {
+              // MFA: sessão aal1 com fator configurado = MFA pendente.
+              // NÃO constrói sessão — força passagem por mfa-verify.html.
+              // Fecha o bypass de navegação direta (abrir admin.html sem
+              // completar a 2ª etapa — sessão aal1 persistida pelo SDK).
+              try {
+                const { data: aalData } = await _sb.auth.mfa.getAuthenticatorAssuranceLevel();
+                if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+                  _pendingMfaUid  = session.user.id;
+                  _pendingMfaTimestamp = Date.now();
+                  try {
+                    sessionStorage.setItem('adaspro_mfa_uid', session.user.id);
+                    sessionStorage.setItem('adaspro_mfa_fp', _browserFingerprint());
+                  } catch(_) {}
+                  return;
+                }
+              } catch(_) { /* MFA não configurado — segue normalmente */ }
+
               const user = await _sbLoadUser(session.user.id);
               if (_cancelled) return;
               if (user && user.status === 'active') {
@@ -708,6 +725,8 @@ const AUTH = (function () {
     _currentSession = null;
     _users = {}; _tickets = {}; _notifications = [];
     localStorage.removeItem('adaspro_demo');
+    _pendingMfaUser = null; _pendingMfaUid = null; _pendingMfaTimestamp = null;
+    try { sessionStorage.removeItem('adaspro_mfa_uid'); sessionStorage.removeItem('adaspro_mfa_fp'); } catch(_) {}
     if (_mode === 'supabase' && _sb && !_demo) {
       _sb.auth.signOut().catch(() => {});
     } else {
@@ -718,6 +737,20 @@ const AUTH = (function () {
   function requireAuth(role) {
     const s = getSession();
     if (!s) { window.location.href = 'login.html'; return null; }
+    // Defesa em profundidade: role privilegiada com MFA pendente (aal1) nunca
+    // opera o painel — redireciona para mfa-verify.html assim que confirmado.
+    if (['admin','gestor','superadmin'].includes(s.role)) {
+      try {
+        const _aal = _sb?.auth?.mfa?.getAuthenticatorAssuranceLevel;
+        if (_aal) _aal().then(({ data: d } = {}) => {
+          if (d && d.nextLevel === 'aal2' && d.currentLevel !== 'aal2') {
+            _pendingMfaTimestamp = Date.now();
+            try { sessionStorage.setItem('adaspro_mfa_uid', s.userId); sessionStorage.setItem('adaspro_mfa_fp', _browserFingerprint()); } catch(_) {}
+            window.location.href = 'mfa-verify.html';
+          }
+        });
+      } catch(_) {}
+    }
     if (role && !hasRole(s.role, role)) { window.location.href = 'login.html'; return null; }
     return s;
   }
@@ -1398,6 +1431,16 @@ const AUTH = (function () {
   ════════════════════════════════════════════ */
   async function callEdgeFunction(name, payload) {
     if (_mode !== 'supabase' || !_sb) return { ok:false, msg:'Supabase não disponível.' };
+    // MFA pendente (aal1) em role privilegiada: bloqueia a chamada à edge function
+    const _sess = getSession();
+    if (_sess && ['admin','gestor','superadmin'].includes(_sess.role)) {
+      try {
+        const { data: aalData } = await _sb.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+          return { ok:false, msg:'Complete a verificação em duas etapas para continuar.' };
+        }
+      } catch(_) {}
+    }
     try {
       const { data, error } = await _sb.functions.invoke(name, { body: payload });
       if (error) return { ok:false, msg: error.message };

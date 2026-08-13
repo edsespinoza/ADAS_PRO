@@ -21,8 +21,11 @@ function extractInlineScripts(html) {
   const inlineRegex = /<script\b(?![^>]*\bsrc\s*=)(?![^>]*\btype\s*=\s*["']application\/ld\+json["'])([^>]*)>([\s\S]*?)<\/script>/gi;
   let match;
   while ((match = inlineRegex.exec(html)) !== null) {
-    const content = match[2].trim();
-    if (content) {
+    // IMPORTANTE: NÃO usar .trim() aqui. O browser hasheia o conteúdo EXATO
+    // do elemento <script> (incluindo quebras de linha e espaços), não a
+    // versão limpa. Hash de conteúdo trimado = CSP bloqueia o script em produção.
+    const content = match[2];
+    if (content.trim()) {
       scripts.push(content);
     }
   }

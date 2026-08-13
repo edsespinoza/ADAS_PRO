@@ -41,10 +41,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
     const { data: callerData } = await supabaseAdmin
-      .from('users').select('role').eq('id', user.id).single();
+      .from('users').select('role, status').eq('id', user.id).single();
 
     if (!['admin', 'gestor', 'superadmin'].includes(callerData?.role || '')) {
       return json({ error: 'Permissão insuficiente.' }, 403);
+    }
+    // Conta suspensa/pendente nunca dispara emails administrativos
+    if (callerData?.status !== 'active') {
+      return json({ error: 'Conta inativa ou pendente de aprovação.' }, 403);
+    }
+    // MFA: se a conta possui fator configurado mas a sessão ainda é aal1,
+    // a 2ª etapa é obrigatória (usuários sem MFA têm nextLevel aal1 — passam)
+    const { data: aalData } = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+      return json({ error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' }, 403);
     }
 
     // Rate limiting — máximo 20 emails/minuto por usuário

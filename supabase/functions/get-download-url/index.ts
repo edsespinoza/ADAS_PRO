@@ -55,6 +55,13 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) return json({ error: 'Token inválido.' }, 401);
 
+    // MFA: se a conta possui fator configurado mas a sessão ainda é aal1,
+    // a 2ª etapa é obrigatória (usuários sem MFA têm nextLevel aal1 — passam)
+    const { data: aalData } = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+      return json({ error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' }, 403);
+    }
+
     // 2. Buscar permissões do usuário no banco (não confiar no frontend)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,

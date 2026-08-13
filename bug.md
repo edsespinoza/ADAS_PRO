@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-13 (Deploy produção completo: Vercel + Edge Functions v3 + RLS + audit_logs + storage)  
+**Última atualização:** 2026-08-13 (Deploy produção + perf + fix #70 PAT)  
 **Responsável:** AutoTech Service
 
 ---
@@ -593,9 +593,10 @@
   - **Deploy:** `supabase functions deploy approve-user` · `supabase functions deploy get-download-url` · `supabase functions deploy notify`
   - **Arquivos:** `supabase/functions/{approve-user,get-download-url,notify}/index.ts`
 
-- [ ] **#70 — [CRÍT] GitHub PAT exposto no remote origin** ⚠️ Ação manual obrigatória
-  - `.git/config` remote `origin` contém `https://edsespinoza:ghp_***@github.com/...` — token pessoal commitado num repo **PÚBLICO**.
-  - **Ação:** revogar o token em github.com/settings/tokens e trocar o remote por URL limpa (ou configurar credential helper).
+- [x] **#70 — [CRÍT] GitHub PAT exposto no remote origin** ✅ Resolvido 2026-08-13
+  - Remote corrigido para URL limpa `https://github.com/edsespinoza/ADAS_PRO.git` (sem token embutido).
+  - Autenticação via gh CLI (device flow) + `gh auth setup-git` (credential helper). Push `main` OK.
+  - **Ação manual pendente:** o PAT antigo foi exposto no histórico — **revogar em github.com/settings/tokens** se ainda estiver ativo.
 
 - [x] **Bumps de build** ✅ 2026-08-13
   - `js/auth.js`: v4.0.3 build 20260813

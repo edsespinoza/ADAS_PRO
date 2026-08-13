@@ -661,3 +661,9 @@
   - Sintaxe: `node --check` em `auth.js` e scripts inline de `admin.html`/`membros.html` (via `new Function`).
   - Funcionais (VM sandbox, modo local): `getAllTickets` com ISO, `getUserDownloads` (2 downloads), `applyPlanToUser`, `replyTicket`, `updateTicketStatus`, `deleteTicket`, `approveUser`, `blockUser`, `unblockUser` — todos OK.
   - **Pendência manual:** teste visual no browser (`localhost:3000` ou preview Vercel) para confirmar UX das abas de Configurações.
+
+- [x] **Fix — CSP desatualizado no deploy (repeat do #66)** ✅ 2026-08-13
+  - **Situação:** o 1º deploy desta rodada subiu `vercel.json` com hashes CSP ANTIGOS (`/sOg3...`, `KVpay...`), pois o build rodou antes dos edits inline serem persistidos — scripts inline do admin/membros seriam bloqueados em produção (mesmo sintoma do #66).
+  - **Detecção:** hashes recalculados à mão vs. `vercel.json` commitado divergiam. `npm run build` re-gerou os hashes corretos (`45r5...`, `zupOo...`).
+  - **Ação:** commit `8730de3` (só `vercel.json`) + re-deploy. `adaspro.com.br/admin` agora retorna CSP com os 4 hashes atuais — batendo com os arquivos.
+  - **Lição:** SEMPRE rodar `npm run build` logo antes de `vercel --prod` se algum `<script>` inline foi editado, e conferir `git diff vercel.json` após o build.

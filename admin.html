@@ -147,16 +147,6 @@
     .acc-save-btn { padding: 8px 16px; background: var(--tech); color: #fff; border-radius: 7px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; transition: all .2s; white-space: nowrap; }
     .acc-save-btn:hover { opacity: .85; }
 
-    /* Access levels cards */
-    .access-levels-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
-    .access-level-card { background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.08); border-radius: var(--radius-lg); padding: 22px 18px; }
-    .level-badge-large { display: inline-flex; padding: 4px 12px; border-radius: 6px; font-size: .7rem; font-weight: 800; letter-spacing: .06em; border: 1px solid; margin-bottom: 10px; }
-    .level-name-lg { font-family: var(--font-h); font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 3px; }
-    .level-price-lg { font-size: .82rem; color: rgba(255,255,255,.4); margin-bottom: 16px; }
-    .level-permission-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
-    .level-permission-row:last-child { border-bottom: none; }
-    .level-perm-label { font-size: .8rem; color: rgba(255,255,255,.6); }
-
     /* ─── Role badges + hierarquia ─── */
     .role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:.67rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid;}
     .role-admin  {color:#FF6B35;border-color:rgba(255,107,53,.35);background:rgba(255,107,53,.1);}
@@ -197,7 +187,7 @@
     .upload-progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--tech));border-radius:2px;width:0%;transition:width .4s;}
     .upload-current-path{font-size:.72rem;color:rgba(0,180,216,.6);margin-top:5px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
-    @media(max-width:900px){ .module-access-grid{grid-template-columns:repeat(2,1fr);} .access-levels-grid{grid-template-columns:repeat(2,1fr);} .acc-inline-edit{grid-template-columns:1fr 1fr;} }
+    @media(max-width:900px){ .module-access-grid{grid-template-columns:repeat(2,1fr);} .acc-inline-edit{grid-template-columns:1fr 1fr;} }
 
     @media(max-width:768px){
       .config-row{grid-template-columns:1fr;}
@@ -1320,10 +1310,15 @@ function saveConfigurations() {
     }).filter(Boolean);
   });
 
-  AUTH.saveSettings(s);
-  const msg = document.getElementById('saveMsg');
-  msg.classList.add('show');
-  setTimeout(() => msg.classList.remove('show'), 2500);
+  AUTH.saveSettings(s).then(res => {
+    const msg = document.getElementById('saveMsg');
+    if (res && res.ok) {
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 2500);
+    } else {
+      showToast('Não foi possível salvar as configurações.');
+    }
+  });
 }
 
 function switchConfigTab(tab, el) {

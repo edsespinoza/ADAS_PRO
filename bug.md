@@ -695,3 +695,46 @@
   - VM sandbox (modo local): módulo OFF → `canView=false`, `canDl=false`, 0 itens honda visíveis, toyota intacto; `minLevel=3` → membro free bloqueado, itens `locked`; staff com módulo OFF continua `canView=true`.
   - VM sandbox (Supabase mock): `_sbLoadAll` carrega `moduleAccess` do "servidor" e o aplica; `saveSettings` dispara upsert em `settings` com `key:'app'`.
 
+
+---
+
+## 🟠 ALTA — Revisão de segurança e UX (módulos/níveis/login) 2026-08-14
+
+> Revisão dedicada (4 agentes) sobre o fluxo de módulos e RLS. Achados corrigidos: RLS `users_update` permitia admin editar/se demitir outro admin; Edge Function ignorava `accessLevel`/`downloadLevel` por item; membros ganhavam sessão local no login mesmo com Supabase ativo; gestor alterava `settings` sem erro; aba "Níveis" era decorativa; favoritos vazavam conteúdo de módulos desativados.
+
+- [x] **Fix — [CRÍTICO] RLS `users_update` validava role contra a linha NOVA** ✅ 2026-08-14
+  - **Bug:** a política usava `is_admin()` no USING e `can_manage_role(role)` só no WITH CHECK. Como **USING avalia a linha ANTIGA** e **WITH CHECK a NOVA**, admin/gestor podia USAR o UPDATE numa linha de role >= à sua (ex.: rebaixar outro admin via SET role='membro' — a role nova 1 < 3 passava no check).
+  - **Fix:** USING agora exige `auth.uid() = id OR (public.is_admin() AND public.can_manage_role(role))` — `role` no USING é a **role atual** da linha, então admin/gestor nem alcança linha com role >= à sua. WITH CHECK mantido (impede promoção a role >= própria dentro do UPDATE). Comentários atualizados no arquivo.
+  - **Arquivo:** `sql/rls_policies.sql` · **requer re-execução do arquivo no banco** (`supabase db query --linked -f sql/rls_policies.sql`)
+
+- [x] **Fix — Edge Function `get-download-url` ignora `accessLevel`/`downloadLevel` por item** ✅ 2026-08-14
+  - **Bug:** a função validava `permissions` e `moduleAccess` mas não os níveis mínimos por conteúdo — URL assinada gerada para quem não poderia ver/baixar o item.
+  - **Fix:** `CONTENT_MAP` agora carrega `accessLevel`/`downloadLevel` por item (sincronizado com `DEFAULT_CONTENT` de `js/auth.js`); novo check `3a.1` deriva o nível do usuário (`plan` → free1/modulo2/pro3/premium4) e bloqueia com 403 se `< accessLevel` (visualizar) ou `< downloadLevel` (baixar). Staff sempre passa, como no cliente.
+  - **Arquivo:** `supabase/functions/get-download-url/index.ts` · **requer deploy da função**
+
+- [x] **Fix — Membro recebia fallback local no login mesmo com Supabase ativo** ✅ 2026-08-14
+  - **Bug:** com Supabase configurado, se `signInWithPassword` retornasse erro, `login()` concedia sessão local a QUALQUER usuário (incl. membros) se a senha batesse com o seed offline — bypass de credenciais reais em produção.
+  - **Fix:** bloco de concessão de sessão local removido. Com Supabase ativo **nenhum** fallback local no login (nem membros, nem privilegiados); sessões locais são exclusivas do modo offline. Comentário atualizado.
+  - **Arquivo:** `js/auth.js`
+
+- [x] **Fix — Gestor alterava módulos/níveis sem erro aparente (persistência silenciosa)** ✅ 2026-08-14
+  - **Bug:** RLS de `settings` bloqueia write p/ gestor, mas `toggleModuleAccess`/`setModuleLevel` mostravam "ativado/desativado" mesmo assim (upsert falhava em silêncio e o estado revertia no reload).
+  - **Fix:** `saveSettings` agora retorna `Promise` com `{ok:true}`/`{ok:false,error}`; os toggles aguardam o resultado, exibem toast de erro e re-renderizam em caso de falha; UI marca os controles como `disabled` + "somente leitura" quando `session.role==='gestor'`; guard explícito impede a chamada.
+  - **Arquivos:** `js/auth.js` · `admin.html`
+
+- [x] **Fix — Aba "Níveis" órfã e função decorativa `renderAccessLevels`** ✅ 2026-08-14
+  - **Bug:** `accTabNiveis` + `accNiveisGrid` sem aba correspondente no HTML; `renderAccessLevels` montava cards de planos com checkboxes que não salvavam nada (decorativos) e era chamada no load.
+  - **Fix:** div órfã, função e chamada removidas.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — `getUserFavorites` vazava itens de módulos desativados** ✅ 2026-08-14
+  - **Bug:** favoritos filtravam só pelo catálogo; item de módulo desligado continuava aparecendo na lista de favoritos.
+  - **Fix:** filtro extra `_modulePolicy(c.cat).enabled` no `getUserFavorites`.
+  - **Arquivo:** `js/auth.js`
+
+- [x] **Sidebar de `membros.html`: nenhuma mudança necessária** ✅ 2026-08-14
+  - O guard `hasItems = contentData.some(c=>c.cat===cat.id)` já esconde categorias de módulos desativados (porque `getContentForUser` filtra). Revisado e mantido.
+
+- [x] **Testes aplicados** ✅ 2026-08-14
+  - VM sandbox (`/tmp/opencode/test-revisao.js`): login com Supabase ativo + erro de auth → membro **não** recebe sessão local (10/10 PASS, incluindo regressão dos testes de módulos anteriores).
+  - `node --check` em `js/auth.js` e no script inline de `admin.html` (sem `renderAccessLevels`/`accTabNiveis` residuais).

@@ -507,8 +507,10 @@ const AUTH = (function () {
         const { data, error } = await _sb.auth.signInWithPassword({ email: emailClean, password: passClean });
 
         if (error) {
-          // Quando Supabase está configurado, roles privilegiados não recebem fallback local.
-          // Impede bypass via seed offline se a rede/Supabase estiver comprometido.
+          // Com Supabase configurado, NENHUM fallback local é concedido no login
+          // (nem membros, nem roles privilegiados). Impede bypass via seeds offline
+          // se a rede/Supabase estiver comprometido — sessões locais são exclusivas
+          // do modo offline (Supabase ausente).
           // Distingue erro de credenciais (400/401) de falha de conectividade para mensagem correta.
           const isCredentialError = error.status === 400 || error.status === 401 ||
             /invalid.*login|invalid.*credential|email.*not.*confirm/i.test(error.message || '');
@@ -520,13 +522,6 @@ const AUTH = (function () {
             return { ok:false, msg: isCredentialError
               ? 'E-mail ou senha incorretos.'
               : 'Sistema de autenticação temporariamente indisponível. Tente novamente em instantes.' };
-          }
-          if (localUser && await checkHash(passClean, localUser.passwordHash)) {
-            _clearRateLimit(emailClean);
-            const localSession = _buildSession(localUser, localUser.id);
-            _currentSession = localSession;
-            localStorage.setItem(SESSION_KEY, JSON.stringify(localSession));
-            return { ok:true, user:localUser, session:localSession };
           }
           _hitRateLimit(emailClean, rate);
           return { ok:false, msg:'E-mail ou senha incorretos.' };
@@ -1161,10 +1156,16 @@ const AUTH = (function () {
   function saveSettings(s) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
     if (_mode === 'supabase' && _sb && !_demo) {
-      _sb.from('settings').upsert({ key:'app', value:s, updated_at:new Date().toISOString() })
-        .then(({ error }) => { if (error) console.error('[AUTH] saveSettings:', error.message); });
+      // Retorna o resultado do upsert p/ o caller reagir (gestor bloqueado pela RLS
+      // de settings recebe erro em vez de falso sucesso).
+      return _sb.from('settings').upsert({ key:'app', value:s, updated_at:new Date().toISOString() })
+        .then(({ error }) => {
+          if (error) { console.error('[AUTH] saveSettings:', error.message); return { ok:false, error:error.message }; }
+          return { ok:true };
+        })
+        .catch(err => ({ ok:false, error: err?.message || 'network' }));
     }
-    return true;
+    return Promise.resolve({ ok:true });
   }
 
   /* ─── Notificações ─── */
@@ -1248,7 +1249,9 @@ const AUTH = (function () {
   function getUserFavorites(userId) {
     const favs = _ensureFavorites(userId);
     const all  = getContent();
-    return all.filter(c => favs.indexOf(c.id) >= 0);
+    // Filtra itens de módulos desativados (moduleAccess) — evita vazar conteúdo
+    // cujo módulo foi desligado, mesmo que o usuário tenha favoritado antes.
+    return all.filter(c => favs.indexOf(c.id) >= 0 && _modulePolicy(c.cat).enabled);
   }
 
   /* ─── Export / Import ─── */

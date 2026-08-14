@@ -459,15 +459,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Sub-tab Níveis -->
-    <div class="page-tab-content" id="accTabNiveis">
-      <div class="config-section">
-        <div class="config-section-title">🏆 Configuração dos Níveis de Acesso</div>
-        <div class="config-section-sub">Defina as permissões de visualização e download para cada nível de plano.</div>
-        <div class="access-levels-grid" id="accNiveisGrid"></div>
-      </div>
-    </div>
   </div>
 
   <!-- ─── CONFIGURAÇÕES ─── -->
@@ -1624,7 +1615,6 @@ function refresh() { showPage(currentPage); }
 function loadAcesso() {
   renderAccessModules();
   renderAccessContent();
-  renderAccessLevels();
 }
 
 function switchAcessoTab(tab, el) {
@@ -1641,6 +1631,7 @@ function renderAccessModules() {
   const grid = document.getElementById('accModulosGrid');
   if (!grid) return;
   const settings = AUTH.getSettings();
+  const readOnly = session?.role === 'gestor'; // settings write é admin+ (RLS is_admin_staff)
   grid.innerHTML = AUTH.CATEGORIES.map(cat => {
     const items = content.filter(c => c.cat === cat.id);
     const isEnabled = settings.moduleAccess?.[cat.id]?.enabled !== false;
@@ -1651,17 +1642,17 @@ function renderAccessModules() {
           <span class="module-acc-icon">${cat.icon}</span>
           <div>
             <div class="module-acc-name">${cat.label}</div>
-            <div class="module-acc-count">${items.length} materiais</div>
+            <div class="module-acc-count">${items.length} materiais${readOnly?' · somente leitura':''}</div>
           </div>
         </div>
         <label class="toggle-sw">
-          <input type="checkbox" ${isEnabled?'checked':''} onchange="toggleModuleAccess('${cat.id}',this.checked)"/>
+          <input type="checkbox" ${isEnabled?'checked':''} ${readOnly?'disabled':''} onchange="toggleModuleAccess('${cat.id}',this.checked)"/>
           <span class="toggle-track"></span>
         </label>
       </div>
       <div class="module-acc-footer">
         <span style="font-size:.75rem;color:rgba(255,255,255,.35)">Nível mínimo</span>
-        <select class="module-level-select" onchange="setModuleLevel('${cat.id}',this.value)">
+        <select class="module-level-select" ${readOnly?'disabled':''} onchange="setModuleLevel('${cat.id}',this.value)">
           <option value="1" ${level==1?'selected':''}>1 — Free</option>
           <option value="2" ${level==2?'selected':''}>2 — Módulo</option>
           <option value="3" ${level==3?'selected':''}>3 — Pro</option>
@@ -1672,21 +1663,25 @@ function renderAccessModules() {
   }).join('');
 }
 
-function toggleModuleAccess(catId, enabled) {
+async function toggleModuleAccess(catId, enabled) {
+  if (session?.role === 'gestor') { showToast('Apenas admin ou superadmin pode alterar módulos.'); renderAccessModules(); return; }
   const s = AUTH.getSettings();
   if (!s.moduleAccess) s.moduleAccess = {};
   if (!s.moduleAccess[catId]) s.moduleAccess[catId] = {};
   s.moduleAccess[catId].enabled = enabled;
-  AUTH.saveSettings(s);
-  showToast(enabled ? `Módulo ${catId} ativado` : `Módulo ${catId} desativado`);
+  const res = await AUTH.saveSettings(s);
+  if (res && res.ok) showToast(enabled ? `Módulo ${catId} ativado` : `Módulo ${catId} desativado`);
+  else { showToast('Não foi possível salvar a alteração.'); renderAccessModules(); }
 }
-function setModuleLevel(catId, level) {
+async function setModuleLevel(catId, level) {
+  if (session?.role === 'gestor') { showToast('Apenas admin ou superadmin pode alterar níveis.'); renderAccessModules(); return; }
   const s = AUTH.getSettings();
   if (!s.moduleAccess) s.moduleAccess = {};
   if (!s.moduleAccess[catId]) s.moduleAccess[catId] = {};
   s.moduleAccess[catId].minLevel = parseInt(level);
-  AUTH.saveSettings(s);
-  showToast(`Nível do módulo ${catId} atualizado`);
+  const res = await AUTH.saveSettings(s);
+  if (res && res.ok) showToast(`Nível do módulo ${catId} atualizado`);
+  else { showToast('Não foi possível salvar a alteração.'); renderAccessModules(); }
 }
 
 /* ─── Controle de Acesso — Conteúdo ─── */
@@ -1748,31 +1743,6 @@ function saveAccEdit(id) {
   document.getElementById('edit-'+id).style.display = 'none';
   renderAccessContent();
   showToast('Configuração salva!');
-}
-
-/* ─── Controle de Acesso — Níveis ─── */
-function renderAccessLevels() {
-  const grid = document.getElementById('accNiveisGrid');
-  if (!grid || !AUTH.PLANS) return;
-  grid.innerHTML = AUTH.PLANS.map((plan,i) => `
-    <div class="access-level-card" style="border-color:${plan.color}22">
-      <div class="level-badge-large" style="color:${plan.color};border-color:${plan.color}44;background:${plan.color}11">${plan.badge}</div>
-      <div class="level-name-lg">${plan.name}</div>
-      <div class="level-price-lg">${plan.price===0?'Gratuito':'R$ '+plan.price+'/'+plan.period}</div>
-      <div class="level-permission-row">
-        <span class="level-perm-label">Visualizar conteúdo</span>
-        <label class="toggle-sw"><input type="checkbox" ${i>=0?'checked':''}/><span class="toggle-track"></span></label>
-      </div>
-      <div class="level-permission-row">
-        <span class="level-perm-label">Baixar arquivos</span>
-        <label class="toggle-sw"><input type="checkbox" ${i>=2?'checked':''}/><span class="toggle-track"></span></label>
-      </div>
-      <div class="level-permission-row">
-        <span class="level-perm-label">Acesso prioritário</span>
-        <label class="toggle-sw"><input type="checkbox" ${i>=3?'checked':''}/><span class="toggle-track"></span></label>
-      </div>
-    </div>
-  `).join('');
 }
 
 /* ─── Init — aguarda Supabase, depois verifica sessão ─── */

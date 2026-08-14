@@ -123,7 +123,13 @@ CREATE POLICY "users_insert" ON public.users
   );
 
 -- UPDATE: superadmin altera qualquer usuário;
---         admin+ altera apenas roles inferiores (can_manage_role lê a role ALVO);
+--         admin+ altera apenas roles ESTRITAMENTE inferiores à sua —
+--         a role VALIDADA é a role ATUAL da linha (USING) e a role NOVA (WITH CHECK):
+--         → USING (linha antiga): impede que admin/gestor sequer alcancem uma linha
+--           cuja role atual >= a sua (ex.: admin não pode tocar em outro admin ou
+--           em superadmin — mesmo que o UPDATE final rebaixe a role);
+--         → WITH CHECK (linha nova): impede promoção a role >= a sua dentro do
+--           mesmo UPDATE (ex.: admin não promove membro a admin/superadmin).
 --         membro só altera o próprio registro e NÃO pode tocar em campos de
 --         privilégio (role/status/permissions/plan/"accessType"/"accessExpires"/
 --         "boughtModules") — WITH CHECK compara com os valores atuais
@@ -131,7 +137,10 @@ CREATE POLICY "users_update" ON public.users
   FOR UPDATE
   USING (
     auth.uid() = id
-    OR public.is_admin()
+    OR (
+      public.is_admin()
+      AND public.can_manage_role(role)
+    )
   )
   WITH CHECK (
     public.is_superadmin()

@@ -11,32 +11,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, content-type',
 };
 
-// Mapa de conteúdo: contentId → { cat, filePath }
-// Mantido server-side para evitar que o cliente forje metadados
-const CONTENT_MAP: Record<string, { cat: string; filePath: string | null }> = {
-  'honda-lkas':      { cat:'honda',      filePath: 'honda/honda-lkas-calibration.pdf' },
-  'honda-avm':       { cat:'honda',      filePath: 'honda/honda-avm-360.pdf' },
-  'honda-acc':       { cat:'honda',      filePath: null },
-  'toyota-ldw':      { cat:'toyota',     filePath: 'toyota/toyota-ldw-120.pdf' },
-  'toyota-180':      { cat:'toyota',     filePath: 'toyota/toyota-lda-180.pdf' },
-  'toyota-avm':      { cat:'toyota',     filePath: 'toyota/toyota-avm.pdf' },
-  'nissan-lka':      { cat:'nissan',     filePath: 'nissan/nissan-lka-tipo1.pdf' },
-  'nissan-propilot': { cat:'nissan',     filePath: 'nissan/nissan-propilot.pdf' },
-  'nissan-radar':    { cat:'nissan',     filePath: null },
-  'subaru-type1':    { cat:'subaru',     filePath: 'subaru/subaru-eyesight-tipo1.pdf' },
-  'subaru-type2':    { cat:'subaru',     filePath: 'subaru/subaru-eyesight-tipo2.pdf' },
-  'hyundai-avm':     { cat:'hyundai',    filePath: 'hyundai/hyundai-avm.pdf' },
-  'hyundai-radar':   { cat:'hyundai',    filePath: 'hyundai/hyundai-radar-acc.pdf' },
-  'audi-lidar':      { cat:'vag',        filePath: 'vag/audi-lidar-vas6430.pdf' },
-  'vag-avm':         { cat:'vag',        filePath: 'vag/vag-avm.pdf' },
-  'mercedes-night':  { cat:'mercedes',   filePath: 'mercedes/mercedes-night-vision.pdf' },
-  'mercedes-rcw':    { cat:'mercedes',   filePath: 'mercedes/mercedes-rcw.pdf' },
-  'ford-avm':        { cat:'ford',       filePath: 'ford/ford-avm-360.pdf' },
-  'radar-univ':      { cat:'radar',      filePath: 'radar/universal-radar-plate.pdf' },
-  'mazda-avm':       { cat:'mazda',      filePath: 'mazda/mazda-avm-fsc.pdf' },
-  'mitsubishi-lka':  { cat:'mitsubishi', filePath: 'mitsubishi/mitsubishi-lka-avm.pdf' },
-  'byd-avm':         { cat:'chineses',   filePath: 'chineses/byd-avm-pattern.pdf' },
-  'mg-chery':        { cat:'chineses',   filePath: 'chineses/mg-chery-avm.pdf' },
+// Mapa de conteúdo: contentId → { cat, filePath, accessLevel, downloadLevel }
+// Mantido server-side para evitar que o cliente forje metadados.
+// SYNCHRONIZATION: accessLevel/downloadLevel devem refletir DEFAULT_CONTENT em js/auth.js
+// e CONTENT_MAP deve ser mantido em sincronia com o catálogo (novo PDF = editar ambos + deploy).
+const CONTENT_MAP: Record<string, { cat: string; filePath: string | null; accessLevel: number; downloadLevel: number }> = {
+  'honda-lkas':      { cat:'honda',      filePath: 'honda/honda-lkas-calibration.pdf', accessLevel:2, downloadLevel:3 },
+  'honda-avm':       { cat:'honda',      filePath: 'honda/honda-avm-360.pdf',           accessLevel:2, downloadLevel:3 },
+  'honda-acc':       { cat:'honda',      filePath: null,                                accessLevel:2, downloadLevel:3 },
+  'toyota-ldw':      { cat:'toyota',     filePath: 'toyota/toyota-ldw-120.pdf',         accessLevel:2, downloadLevel:3 },
+  'toyota-180':      { cat:'toyota',     filePath: 'toyota/toyota-lda-180.pdf',         accessLevel:2, downloadLevel:3 },
+  'toyota-avm':      { cat:'toyota',     filePath: 'toyota/toyota-avm.pdf',             accessLevel:2, downloadLevel:3 },
+  'nissan-lka':      { cat:'nissan',     filePath: 'nissan/nissan-lka-tipo1.pdf',       accessLevel:2, downloadLevel:3 },
+  'nissan-propilot': { cat:'nissan',     filePath: 'nissan/nissan-propilot.pdf',        accessLevel:2, downloadLevel:3 },
+  'nissan-radar':    { cat:'nissan',     filePath: null,                                accessLevel:2, downloadLevel:3 },
+  'subaru-type1':    { cat:'subaru',     filePath: 'subaru/subaru-eyesight-tipo1.pdf',  accessLevel:3, downloadLevel:3 },
+  'subaru-type2':    { cat:'subaru',     filePath: 'subaru/subaru-eyesight-tipo2.pdf',  accessLevel:3, downloadLevel:3 },
+  'hyundai-avm':     { cat:'hyundai',    filePath: 'hyundai/hyundai-avm.pdf',           accessLevel:3, downloadLevel:3 },
+  'hyundai-radar':   { cat:'hyundai',    filePath: 'hyundai/hyundai-radar-acc.pdf',     accessLevel:3, downloadLevel:3 },
+  'audi-lidar':      { cat:'vag',        filePath: 'vag/audi-lidar-vas6430.pdf',        accessLevel:3, downloadLevel:4 },
+  'vag-avm':         { cat:'vag',        filePath: 'vag/vag-avm.pdf',                   accessLevel:3, downloadLevel:4 },
+  'mercedes-night':  { cat:'mercedes',   filePath: 'mercedes/mercedes-night-vision.pdf',accessLevel:3, downloadLevel:4 },
+  'mercedes-rcw':    { cat:'mercedes',   filePath: 'mercedes/mercedes-rcw.pdf',         accessLevel:3, downloadLevel:4 },
+  'ford-avm':        { cat:'ford',       filePath: 'ford/ford-avm-360.pdf',             accessLevel:3, downloadLevel:4 },
+  'radar-univ':      { cat:'radar',      filePath: 'radar/universal-radar-plate.pdf',   accessLevel:3, downloadLevel:4 },
+  'mazda-avm':       { cat:'mazda',      filePath: 'mazda/mazda-avm-fsc.pdf',           accessLevel:3, downloadLevel:4 },
+  'mitsubishi-lka':  { cat:'mitsubishi', filePath: 'mitsubishi/mitsubishi-lka-avm.pdf', accessLevel:3, downloadLevel:4 },
+  'byd-avm':         { cat:'chineses',   filePath: 'chineses/byd-avm-pattern.pdf',      accessLevel:3, downloadLevel:4 },
+  'mg-chery':        { cat:'chineses',   filePath: 'chineses/mg-chery-avm.pdf',         accessLevel:3, downloadLevel:4 },
 };
 
 serve(async (req) => {
@@ -90,6 +92,22 @@ serve(async (req) => {
 
     if (!hasPermission) return json({ error: 'Sem permissão para este conteúdo.' }, 403);
 
+    // 3a. Nível do usuário (plano) — staff (nível 4) sempre passa, como no cliente.
+    const isStaffLevel = isStaff;
+    const userLevel = isStaffLevel ? 4 : { free:1, modulo:2, pro:3, premium:4 }[userData.plan] || (userData.accessLevel || 1);
+
+    // 3a.1 Nível mínimo do item (accessLevel/downloadLevel) — espelha canViewContent/
+    //      canDownloadContent do cliente. A URL assinada habilita visualização e download,
+    //      então o mais restritivo dos dois (downloadLevel) rege — mas validamos ambos.
+    if (!isStaffLevel) {
+      if (userLevel < (content.accessLevel || 1)) {
+        return json({ error: 'Seu plano não permite visualizar este conteúdo.' }, 403);
+      }
+      if (userLevel < (content.downloadLevel || 2)) {
+        return json({ error: 'Seu plano não permite baixar este conteúdo.' }, 403);
+      }
+    }
+
     // 3b. Verificar configuração do módulo (moduleAccess) — desativado ou nível mínimo.
     //     Staff (admin/gestor/superadmin) sempre passa, como no cliente.
     const { data: settingsData } = await supabaseAdmin
@@ -100,7 +118,6 @@ serve(async (req) => {
     const mod = settingsData?.value?.moduleAccess?.[content.cat];
     if (mod && mod.enabled === false && !isStaff) return json({ error: 'Este módulo está desativado.' }, 403);
     if (mod && mod.minLevel && !isStaff) {
-      const userLevel = { free:1, modulo:2, pro:3, premium:4 }[userData.plan] || (userData.accessLevel || 1);
       if (userLevel < mod.minLevel) {
         return json({ error: 'Seu plano não permite acesso a este módulo.' }, 403);
       }

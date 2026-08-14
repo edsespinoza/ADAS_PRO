@@ -43,7 +43,7 @@ supabase functions deploy <nome-da-função>
 | Function | Finalidade |
 |---|---|
 | `approve-user/` | Aprovação/bloqueio/atualização de usuário — actions: `approve \| block \| unblock \| update \| delete \| create` |
-| `get-download-url/` | Valida JWT + permissões, retorna URL assinada (1h) e registra em `audit_logs` |
+| `get-download-url/` | Valida JWT + permissões + `moduleAccess` + `accessLevel`/`downloadLevel` por item (CONTENT_MAP), retorna URL assinada (1h) e registra em `audit_logs` |
 | `notify/` | Dispara emails via Resend API — events: `new_user \| user_approved \| ticket_reply` |
 
 A função `notify` requer env vars no Supabase Dashboard → Edge Functions → notify: `RESEND_API_KEY`, `ADMIN_EMAIL`, `SITE_URL`. Ver pendências abertas em `bug.md` (#24).
@@ -63,6 +63,7 @@ supabase db query --linked -f sql/<arquivo>.sql
 ```
 
 - `rls_policies.sql` — Todas as políticas RLS. **Qualquer mudança de acesso a dados requer atualização aqui.** Inclui `SECURITY DEFINER`: `get_my_role()`, `is_admin()`, `is_superadmin()`. Também cria a tabela `settings` (key/value jsonb — contém `moduleAccess`).
+  - `users_update`: `USING` exige `auth.uid() = id OR (public.is_admin() AND public.can_manage_role(role))` — no USING, `role` é a **role atual** da linha, então admin/gestor não alcança linha com role >= à sua; `WITH CHECK` (role **nova**) impede promoção a role >= própria. Mudanças em auth/permissões devem manter essa semântica.
 - `audit_logs.sql` — Tabela e triggers de auditoria.
 - `storage_setup.sql` — Bucket `materiais` (privado, 50 MB) com RLS.
 - `settings_table.sql` — Script standalone da tabela `settings` + RLS (idempotente). A mesma DDL/políticas está em `rls_policies.sql` (executar inteiro mantém tudo consistente).
@@ -115,7 +116,7 @@ IIFE exposto como `window.AUTH`. É o único ponto de acesso a sessão, roles e 
 
 **Segurança:** O flag `_sbConfigured` impede que sessão forjada no `localStorage` seja aceita quando Supabase está configurado — não remover.
 
-**Fallback local no login Supabase:** quando Supabase está configurado mas retorna erro de autenticação (ex.: usuário local inexistente no Supabase Auth), o fallback local só é tentado para roles `superadmin`, `admin` e `gestor`. Membros comuns nunca recebem fallback local com Supabase ativo — esse é o comportamento intencional.
+**Fallback local no login Supabase:** quando Supabase está configurado e `signInWithPassword` retorna erro, **nenhum** fallback local é concedido no login (nem membros, nem roles privilegiadas) — impede bypass das credenciais reais. Sessões locais são exclusivas do modo offline (Supabase ausente). O fallback local para roles privilegiadas permanece apenas no fluxo offline e em casos de indisponibilidade de rede (onde `_sbConfigured` fica `true` mas o acesso via `localStorage` é o único caminho — sessão revalidada contra o hash local).
 
 **Hierarquia de roles** (numérica — `hasRole(userRole, required)` compara os níveis):
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 const fs   = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -32,12 +31,8 @@ function extractInlineScripts(html) {
   return scripts;
 }
 
-function sha256Base64(content) {
-  return crypto.createHash('sha256').update(content, 'utf8').digest('base64');
-}
-
 function generate() {
-  const allHashes = new Set();
+  let total = 0;
 
   for (const file of HTML_FILES) {
     const filePath = path.join(ROOT, file);
@@ -47,33 +42,22 @@ function generate() {
     }
     const html = fs.readFileSync(filePath, 'utf8');
     const scripts = extractInlineScripts(html);
-
-    for (const script of scripts) {
-      const hash = sha256Base64(script);
-      allHashes.add(hash);
-    }
+    total += scripts.length;
     console.log(`[generate-csp] ${file}: ${scripts.length} inline scripts encontrados`);
   }
 
-  const hashEntries = Array.from(allHashes)
-    .sort()
-    .map(h => `'sha256-${h}'`)
-    .join(' ');
-
-  console.log(`[generate-csp] Total de hashes únicos: ${allHashes.size}`);
-
-  return hashEntries;
+  console.log(`[generate-csp] Total de inline scripts: ${total}`);
 }
-
-const hashEntries = generate();
 
 const CSP = [
   `default-src 'self'`,
   // 'unsafe-inline' é OBRIGATÓRIO: o app usa centenas de event handlers inline
   // (onclick="..."), e hashes CSP não se aplicam a eles. Sem 'unsafe-inline',
-  // TODOS os botões do site param de funcionar em produção. Hashes mantidos
-  // apenas como defesa em profundidade.
-  `script-src 'self' 'unsafe-inline' ${hashEntries}`,
+  // TODOS os botões do site param de funcionar em produção.
+  // IMPORTANTE: NÃO misturar com hashes — segundo o spec, se houver hash ou
+  // nonce na source list o 'unsafe-inline' é IGNORADO e os handlers são
+  // bloqueados de novo. A geração de hashes foi removida por isso.
+  `script-src 'self' 'unsafe-inline'`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
   `font-src 'self' https://fonts.gstatic.com`,
   `img-src 'self' data:`,

@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-13 (Deploy produção + perf + fix #70 PAT)  
+**Última atualização:** 2026-08-14 (Fix CSP event handlers inline — botões produção)  
 **Responsável:** AutoTech Service
 
 ---
@@ -748,3 +748,17 @@
   - VM sandbox (`/tmp/opencode/test-revisao.js`): login com Supabase ativo + erro de auth → membro **não** recebe sessão local (10/10 PASS, incluindo regressão dos testes de módulos anteriores).
   - `node --check` em `js/auth.js` e no script inline de `admin.html` (sem `renderAccessLevels`/`accTabNiveis`/`accNiveisGrid` residuais).
   - CSS órfão: `grep` confirma zero usos de `.access-levels-grid`/`.level-*` em HTML/JS.
+
+## 🟠 ALTA — Botões/configurações sem efeito em produção (CSP bloqueando event handlers inline) 2026-08-14
+
+> **Relatado pelo usuário:** "Os botões de configuração não funcionam" — abas da página Configurações não alternam ("nada acontece"), testado em produção como admin.
+
+- [x] **Causa raiz** ✅ 2026-08-14
+  - **CSP** em `vercel.json` (gerado por `scripts/generate-csp.js`) usava `script-src 'self' 'sha256-...'` **sem `'unsafe-inline'`**. Hashes CSP **não se aplicam a event handlers inline** (`onclick="..."`), apenas a blocos `<script>`. O app usa centenas de handlers inline em todas as páginas → **todo botão/aba/select morre em produção**, silenciosamente (só aparece no console do browser: "Executing inline event handler violates... The action has been blocked").
+  - Regressão introduzida no commit `7b5f984` ("security: CSP hardening" — trocou `'unsafe-inline'` por hashes). O commit inicial `45062f2` tinha `'unsafe-inline'` e funcionava. Verificações anteriores de produção (HTTP 200 / presença de hashes) não pegam isso — precisa interação real em browser.
+- [x] **Reprodução** ✅ 2026-08-14
+  - Playwright headless contra **produção**: entrar como Admin via botão DEMO (`demoEnabled:true`) → clicar aba "Planos" → `configPlanos` **não** ativa, `configGeral` permanece; console com o erro CSP de event handler inline. Localmente (mesmo código, modo offline) as abas **funcionam** → confirma que o bug é só o CSP de produção.
+- [x] **Fix** ✅ 2026-08-14
+  - `scripts/generate-csp.js`: `script-src 'self' 'unsafe-inline' 'sha256-...'` — mantém os hashes (defesa em profundidade) mas restaura o `'unsafe-inline'` **obrigatório** para event handlers inline. Comentário no script explica o invariant para não regredir.
+  - **Arquivo:** `scripts/generate-csp.js`, `vercel.json` (regenerado via `npm run build`).
+  - **⚠️ Manutenção:** NUNCA remover `'unsafe-inline'` de `script-src` sem antes migrar todos os handlers inline para `addEventListener` — caso contrário todos os botões do site param de funcionar de novo.

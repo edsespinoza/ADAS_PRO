@@ -69,7 +69,11 @@ const hashEntries = generate();
 
 const CSP = [
   `default-src 'self'`,
-  `script-src 'self' ${hashEntries}`,
+  // 'unsafe-inline' é OBRIGATÓRIO: o app usa centenas de event handlers inline
+  // (onclick="..."), e hashes CSP não se aplicam a eles. Sem 'unsafe-inline',
+  // TODOS os botões do site param de funcionar em produção. Hashes mantidos
+  // apenas como defesa em profundidade.
+  `script-src 'self' 'unsafe-inline' ${hashEntries}`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
   `font-src 'self' https://fonts.gstatic.com`,
   `img-src 'self' data:`,

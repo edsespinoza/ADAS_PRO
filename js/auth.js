@@ -120,14 +120,24 @@ const AUTH = (function () {
 
   async function _sbLoadAll() {
     try {
-      const [u, t, n] = await Promise.all([
+      const [u, t, n, s] = await Promise.all([
         _sb.from('users').select('*'),
         _sb.from('tickets').select('*').order('updatedAt', { ascending: false }),
         _sb.from('notifications').select('*').order('createdAt', { ascending: false }).limit(50),
+        _sb.from('settings').select('*'),
       ]);
       if (!u.error && u.data) _users         = Object.fromEntries(u.data.map(x => [x.id, x]));
       if (!t.error && t.data) _tickets       = Object.fromEntries(t.data.map(x => [x.id, x]));
       if (!n.error && n.data) _notifications = n.data;
+      if (!s.error && s.data && s.data.length) {
+        const app = s.data.find(x => x.key === 'app');
+        if (app && app.value && typeof app.value === 'object') {
+          const local = localStorage.getItem(SETTINGS_KEY);
+          const merged = local ? { ...JSON.parse(local), ...app.value } : { ...DEFAULT_SETTINGS, ...app.value };
+          if (app.value.moduleAccess) merged.moduleAccess = app.value.moduleAccess;
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+        }
+      }
     } catch(e) { console.warn('[AUTH] _sbLoadAll:', e.message); }
   }
 
@@ -141,12 +151,22 @@ const AUTH = (function () {
 
   async function _sbLoadMemberData(userId) {
     try {
-      const [t, n] = await Promise.all([
+      const [t, n, s] = await Promise.all([
         _sb.from('tickets').select('*').eq('userId', userId).order('updatedAt', { ascending: false }),
         _sb.from('notifications').select('*').eq('userId', userId).order('createdAt', { ascending: false }).limit(50),
+        _sb.from('settings').select('*'),
       ]);
       if (!t.error && t.data) t.data.forEach(tk => _tickets[tk.id] = tk);
       if (!n.error && n.data) _notifications = n.data;
+      if (!s.error && s.data && s.data.length) {
+        const app = s.data.find(x => x.key === 'app');
+        if (app && app.value && typeof app.value === 'object') {
+          const local = localStorage.getItem(SETTINGS_KEY);
+          const merged = local ? { ...JSON.parse(local), ...app.value } : { ...DEFAULT_SETTINGS, ...app.value };
+          if (app.value.moduleAccess) merged.moduleAccess = app.value.moduleAccess;
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
+        }
+      }
     } catch(e) { console.warn('[AUTH] _sbLoadMemberData:', e.message); }
   }
 
@@ -977,11 +997,19 @@ const AUTH = (function () {
   /* ─── Conteúdo (localStorage — estático) ─── */
   function getContent()   { const r=localStorage.getItem(CONTENT_KEY); return r?JSON.parse(r):[...DEFAULT_CONTENT]; }
   function saveContent(c) { localStorage.setItem(CONTENT_KEY, JSON.stringify(c)); }
+  function _modulePolicy(catId) {
+    const s = getSettings();
+    const m = (s && s.moduleAccess && s.moduleAccess[catId]) || {};
+    return { enabled: m.enabled !== false, minLevel: m.minLevel || 1 };
+  }
   function getContentForUser(userId) {
     const u = _users[userId]; if (!u) return [];
     const c = getContent();
     if (u.role==='superadmin'||u.role==='admin'||u.role==='gestor') return c;
-    return c.map(item => ({ ...item, locked: !(u.permissions||[]).includes(item.cat) }));
+    const l = getUserAccessLevel(userId);
+    return c
+      .filter(item => _modulePolicy(item.cat).enabled)
+      .map(item => ({ ...item, locked: !(u.permissions||[]).includes(item.cat) || l < _modulePolicy(item.cat).minLevel }));
   }
   function addContent(item)        { const c=getContent(); const id='cnt_'+Date.now().toString(36); c.push({icon:'📄',...item,id}); saveContent(c); return id; }
   function editContent(id, updates){ const c=getContent(); const i=c.findIndex(x=>x.id===id); if(i<0)return false; c[i]={...c[i],...updates}; saveContent(c); return true; }
@@ -1130,7 +1158,14 @@ const AUTH = (function () {
 
   /* ─── Configurações ─── */
   function getSettings()   { const r=localStorage.getItem(SETTINGS_KEY); return r?JSON.parse(r):{...DEFAULT_SETTINGS}; }
-  function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); return true; }
+  function saveSettings(s) {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    if (_mode === 'supabase' && _sb && !_demo) {
+      _sb.from('settings').upsert({ key:'app', value:s, updated_at:new Date().toISOString() })
+        .then(({ error }) => { if (error) console.error('[AUTH] saveSettings:', error.message); });
+    }
+    return true;
+  }
 
   /* ─── Notificações ─── */
   function getNotifications() { return [..._notifications]; }
@@ -1179,8 +1214,8 @@ const AUTH = (function () {
 
   /* ─── Acesso a conteúdo ─── */
   function getUserAccessLevel(userId) { const u=getUserById(userId); if(!u)return 0; if(u.role==='superadmin'||u.role==='admin'||u.role==='gestor')return 4; return {free:1,modulo:2,pro:3,premium:4}[u.plan||'free']||(u.accessLevel||1); }
-  function canViewContent(userId, contentId) { const l=getUserAccessLevel(userId); if(l>=4)return true; const u=getUserById(userId); const item=getContent().find(c=>c.id===contentId); if(!item)return false; if(u&&u.permissions&&u.permissions.includes(item.cat))return true; return l>=(item.accessLevel||1); }
-  function canDownloadContent(userId, contentId) { const l=getUserAccessLevel(userId); if(l>=4)return true; const item=getContent().find(c=>c.id===contentId); if(!item)return false; return l>=(item.downloadLevel||2); }
+  function canViewContent(userId, contentId) { const l=getUserAccessLevel(userId); if(l>=4)return true; const u=getUserById(userId); const item=getContent().find(c=>c.id===contentId); if(!item)return false; const pol=_modulePolicy(item.cat); if(!pol.enabled)return false; if(l<pol.minLevel)return false; if(u&&u.permissions&&u.permissions.includes(item.cat))return true; return l>=(item.accessLevel||1); }
+  function canDownloadContent(userId, contentId) { const l=getUserAccessLevel(userId); if(l>=4)return true; const item=getContent().find(c=>c.id===contentId); if(!item)return false; const pol=_modulePolicy(item.cat); if(!pol.enabled)return false; if(l<pol.minLevel)return false; return l>=(item.downloadLevel||2); }
   function trackDownload(userId, contentId) {
     if (!_users[userId]) return;
     if (!_users[userId].downloads) _users[userId].downloads = [];

@@ -69,7 +69,7 @@ serve(async (req) => {
     );
     const { data: userData } = await supabaseAdmin
       .from('users')
-      .select('role, status, permissions')
+      .select('role, status, permissions, plan, accessLevel')
       .eq('id', user.id)
       .single();
 
@@ -89,6 +89,22 @@ serve(async (req) => {
     const hasPermission = isStaff || (userData.permissions || []).includes(content.cat);
 
     if (!hasPermission) return json({ error: 'Sem permissão para este conteúdo.' }, 403);
+
+    // 3b. Verificar configuração do módulo (moduleAccess) — desativado ou nível mínimo.
+    //     Staff (admin/gestor/superadmin) sempre passa, como no cliente.
+    const { data: settingsData } = await supabaseAdmin
+      .from('settings')
+      .select('value')
+      .eq('key', 'app')
+      .maybeSingle();
+    const mod = settingsData?.value?.moduleAccess?.[content.cat];
+    if (mod && mod.enabled === false && !isStaff) return json({ error: 'Este módulo está desativado.' }, 403);
+    if (mod && mod.minLevel && !isStaff) {
+      const userLevel = { free:1, modulo:2, pro:3, premium:4 }[userData.plan] || (userData.accessLevel || 1);
+      if (userLevel < mod.minLevel) {
+        return json({ error: 'Seu plano não permite acesso a este módulo.' }, 403);
+      }
+    }
 
     // 4. Gerar URL assinada — expira em 1 hora
     const { data: signedData, error: signErr } = await supabaseAdmin.storage

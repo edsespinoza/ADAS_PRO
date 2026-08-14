@@ -62,9 +62,12 @@ A função `notify` requer env vars no Supabase Dashboard → Edge Functions →
 supabase db query --linked -f sql/<arquivo>.sql
 ```
 
-- `rls_policies.sql` — Todas as políticas RLS. **Qualquer mudança de acesso a dados requer atualização aqui.** Inclui `SECURITY DEFINER`: `get_my_role()`, `is_admin()`, `is_superadmin()`.
+- `rls_policies.sql` — Todas as políticas RLS. **Qualquer mudança de acesso a dados requer atualização aqui.** Inclui `SECURITY DEFINER`: `get_my_role()`, `is_admin()`, `is_superadmin()`. Também cria a tabela `settings` (key/value jsonb — contém `moduleAccess`).
 - `audit_logs.sql` — Tabela e triggers de auditoria.
 - `storage_setup.sql` — Bucket `materiais` (privado, 50 MB) com RLS.
+- `settings_table.sql` — Script standalone da tabela `settings` + RLS (idempotente). A mesma DDL/políticas está em `rls_policies.sql` (executar inteiro mantém tudo consistente).
+
+**`settings` e `moduleAccess`:** configurações globais ficam na tabela `public.settings` (row `key='app'`, value jsonb). `js/auth.js` carrega em `_sbLoadAll`/`_sbLoadMemberData` (merge com localStorage) e `saveSettings()` faz upsert quando `_mode==='supabase'`. RLS: SELECT p/ autenticados, write p/ admin+ (`is_admin_staff`). A autorização de conteúdo (`canViewContent`/`canDownloadContent`/`getContentForUser`) respeita `moduleAccess[cat].enabled` e `moduleAccess[cat].minLevel`; a Edge Function `get-download-url` valida a mesma config server-side. Staff (nível 4) sempre passa.
 
 ---
 

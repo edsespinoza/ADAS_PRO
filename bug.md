@@ -667,3 +667,31 @@
   - **Detecção:** hashes recalculados à mão vs. `vercel.json` commitado divergiam. `npm run build` re-gerou os hashes corretos (`45r5...`, `zupOo...`).
   - **Ação:** commit `8730de3` (só `vercel.json`) + re-deploy. `adaspro.com.br/admin` agora retorna CSP com os 4 hashes atuais — batendo com os arquivos.
   - **Lição:** SEMPRE rodar `npm run build` logo antes de `vercel --prod` se algum `<script>` inline foi editado, e conferir `git diff vercel.json` após o build.
+
+## 🟠 ALTA — Acesso a Módulos sem efeito no painel admin 2026-08-13
+
+> Diagnóstico em VM sandbox: `toggleModuleAccess`/`setModuleLevel` gravavam `settings.moduleAccess`, mas nenhuma função de autorização (`canViewContent`, `canDownloadContent`, `getContentForUser`) lia essa config — desativar um módulo não mudava nada. Além disso, settings eram 100% localStorage (nunca sincronizadas) e a Edge Function `get-download-url` não validava módulos. Fix completo aplicado e testado.
+
+- [x] **Fix — `moduleAccess` agora é aplicado na autorização (cliente)** ✅ 2026-08-13
+  - **Bug:** `auth.js` — `canViewContent`/`canDownloadContent` checavam só `permissions`/`accessLevel`/`downloadLevel`; `getContentForUser` não filtrava. Toggle de módulo no admin era cosmético.
+  - **Fix:** helper `_modulePolicy(catId)` lê `settings.moduleAccess[cat]` → módulo `enabled:false` nega view+download e oculta do catálogo; `minLevel` acima do nível do usuário bloqueia view/download e marca item como `locked`. Staff (nível 4) continua sempre liberado, como antes.
+  - **Arquivo:** `js/auth.js`
+
+- [x] **Fix — settings sincronizadas com Supabase (propagação p/ membros)** ✅ 2026-08-13
+  - **Bug:** `getSettings`/`saveSettings` eram só localStorage mesmo com Supabase ativo → admin mudava módulos no browser dele e membros não recebiam.
+  - **Fix:** nova tabela `public.settings` (key/value jsonb, RLS: select p/ autenticados, write só p/ admin+). `_sbLoadAll` e `_sbLoadMemberData` carregam a row `app` e fazem merge com o localStorage; `saveSettings` faz upsert via Supabase quando `_mode==='supabase'`.
+  - **Arquivos:** `js/auth.js` · `sql/settings_table.sql` · `sql/rls_policies.sql`
+
+- [x] **Fix — Edge Function `get-download-url` valida módulo server-side** ✅ 2026-08-13
+  - **Bug:** download passava pela Edge Function que só checava `permissions` — módulo desativado ainda baixável.
+  - **Fix:** após `hasPermission`, lê `settings` (row `app`) e bloqueia com 403 se `moduleAccess[cat].enabled === false` ou se `minLevel` > nível do usuário (derivado de `plan`/`accessLevel`). Staff sempre passa (consistente com o cliente).
+  - **Arquivo:** `supabase/functions/get-download-url/index.ts` · **requer deploy da função**
+
+- [x] **SQL aplicado no banco** ✅ 2026-08-13
+  - `sql/settings_table.sql` executado via `supabase db query --linked` — tabela + RLS + row inicial `app`.
+  - **Pendência manual:** `supabase functions deploy get-download-url` (env var `SUPABASE_SERVICE_ROLE_KEY` já usada pela função).
+
+- [x] **Testes aplicados** ✅ 2026-08-13
+  - VM sandbox (modo local): módulo OFF → `canView=false`, `canDl=false`, 0 itens honda visíveis, toyota intacto; `minLevel=3` → membro free bloqueado, itens `locked`; staff com módulo OFF continua `canView=true`.
+  - VM sandbox (Supabase mock): `_sbLoadAll` carrega `moduleAccess` do "servidor" e o aplica; `saveSettings` dispara upsert em `settings` com `key:'app'`.
+

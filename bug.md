@@ -735,6 +735,16 @@
 - [x] **Sidebar de `membros.html`: nenhuma mudança necessária** ✅ 2026-08-14
   - O guard `hasItems = contentData.some(c=>c.cat===cat.id)` já esconde categorias de módulos desativados (porque `getContentForUser` filtra). Revisado e mantido.
 
+- [x] **Fix — `saveConfigurations` mostrava falso sucesso em falha de persistência** ✅ 2026-08-14
+  - **Bug:** `admin.html` — ao salvar Configurações, `AUTH.saveSettings(s)` era fire-and-forget; se o upsert falhasse (ex.: gestor, bloqueado pela RLS de `settings`), a página exibia "Configurações salvas" mesmo assim.
+  - **Fix:** `saveConfigurations` agora aguarda o retorno `{ok}`/`{ok:false}` e só mostra sucesso quando ok; em falha exibe toast de erro. Consistente com o fix dos toggles de módulo.
+  - **Arquivo:** `admin.html`
+
+- [x] **Fix — CSS órfão dos "níveis" removido** ✅ 2026-08-14
+  - Removidas as regras `.access-levels-grid`, `.access-level-card`, `.level-badge-large`, `.level-name-lg`, `.level-price-lg`, `.level-permission-row`, `.level-perm-label` e o trecho na media query — usadas apenas pela função decorativa removida.
+  - **Arquivo:** `admin.html`
+
 - [x] **Testes aplicados** ✅ 2026-08-14
   - VM sandbox (`/tmp/opencode/test-revisao.js`): login com Supabase ativo + erro de auth → membro **não** recebe sessão local (10/10 PASS, incluindo regressão dos testes de módulos anteriores).
-  - `node --check` em `js/auth.js` e no script inline de `admin.html` (sem `renderAccessLevels`/`accTabNiveis` residuais).
+  - `node --check` em `js/auth.js` e no script inline de `admin.html` (sem `renderAccessLevels`/`accTabNiveis`/`accNiveisGrid` residuais).
+  - CSS órfão: `grep` confirma zero usos de `.access-levels-grid`/`.level-*` em HTML/JS.

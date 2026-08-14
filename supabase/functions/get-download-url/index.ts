@@ -71,7 +71,7 @@ serve(async (req) => {
     );
     const { data: userData } = await supabaseAdmin
       .from('users')
-      .select('role, status, permissions, plan, accessLevel')
+      .select('role, status, permissions, plan')
       .eq('id', user.id)
       .single();
 
@@ -94,7 +94,7 @@ serve(async (req) => {
 
     // 3a. Nível do usuário (plano) — staff (nível 4) sempre passa, como no cliente.
     const isStaffLevel = isStaff;
-    const userLevel = isStaffLevel ? 4 : { free:1, modulo:2, pro:3, premium:4 }[userData.plan] || (userData.accessLevel || 1);
+    const userLevel = isStaffLevel ? 4 : { free:1, modulo:2, pro:3, premium:4 }[userData.plan] || 1;
 
     // 3a.1 Nível mínimo do item (accessLevel/downloadLevel) — espelha canViewContent/
     //      canDownloadContent do cliente. A URL assinada habilita visualização e download,

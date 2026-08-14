@@ -22,6 +22,7 @@ const AUTH = (function () {
   const TICKETS_KEY  = 'adaspro_tickets';
   const NOTIF_KEY    = 'adaspro_notifications';
   const SESSION_KEY  = 'adaspro_session';
+  const SB_SESSION_KEY = 'adaspro_sb_session'; // sessão do SDK Supabase (formato do SDK)
   const SETTINGS_KEY = 'adaspro_settings';
   const CONTENT_KEY  = 'adaspro_content';
   const ARTICLES_KEY  = 'adaspro_articles';
@@ -341,17 +342,18 @@ const AUTH = (function () {
       _sbConfigured = true;
       try {
         _sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
-          auth: { persistSession: true, autoRefreshToken: true, storageKey: SESSION_KEY },
+          auth: { persistSession: true, autoRefreshToken: true, storageKey: SB_SESSION_KEY },
         });
         _mode = 'supabase';
 
-        // Envolve TODA a sequência Supabase num único timeout de 5s.
+        // Envolve TODA a sequência Supabase num único timeout.
         // getSession() pode retornar rápido, mas _sbLoadUser() e _sbLoadAll()
         // fazem queries no banco — sem timeout travam indefinidamente quando offline.
         // _cancelled impede que a IIFE sobrescreva estado após o timeout disparar.
+        // 15s: rede lenta não deve derrubar uma sessão já validada.
         let _cancelled = false;
         const _sbTimeout = new Promise((_, rej) =>
-          setTimeout(() => { _cancelled = true; rej(new Error('supabase_timeout')); }, 5000)
+          setTimeout(() => { _cancelled = true; rej(new Error('supabase_timeout')); }, 15000)
         );
 
         await Promise.race([
@@ -395,6 +397,10 @@ const AUTH = (function () {
                   }
                   if (_cancelled) return;
                   _currentSession = _buildSession(user, session.user.id, session.access_token, session.expires_at * 1000);
+                  // Persiste a sessão ADAS PRO em chave própria — permite que o
+                  // fallback offline (rede lenta/timeout) restaure a sessão real
+                  // sem depender do formato do SDK (que agora usa SB_SESSION_KEY).
+                  try { localStorage.setItem(SESSION_KEY, JSON.stringify(_currentSession)); } catch(_) {}
                 }
               } else {
                 if (_cancelled) return;
@@ -611,6 +617,10 @@ const AUTH = (function () {
 
         const session = _buildSession(user, data.user.id, data.session.access_token, data.session.expires_at * 1000);
         _currentSession = session;
+        // Persiste a sessão ADAS PRO (formato próprio) — o fallback offline
+        // (init >15s ou Supabase inacessível) restaura a sessão real via
+        // _readSessionCache() sem depender do formato do SDK (SB_SESSION_KEY).
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch(_) {}
         return { ok:true, user, session };
 
       } catch(e) {
@@ -744,6 +754,8 @@ const AUTH = (function () {
     try { sessionStorage.removeItem('adaspro_mfa_uid'); sessionStorage.removeItem('adaspro_mfa_fp'); } catch(_) {}
     if (_mode === 'supabase' && _sb && !_demo) {
       _sb.auth.signOut().catch(() => {});
+      // SDK limpa a própria chave (SB_SESSION_KEY); ADAS PRO também deve limpar a sua.
+      localStorage.removeItem(SESSION_KEY);
     } else {
       localStorage.removeItem(SESSION_KEY);
     }

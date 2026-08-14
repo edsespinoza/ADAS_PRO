@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-14 (Fix CSP event handlers inline — botões produção)  
+**Última atualização:** 2026-08-14 (Fix get-download-url — coluna accessLevel inexistente)  
 **Responsável:** AutoTech Service
 
 ---
@@ -762,3 +762,34 @@
   - `scripts/generate-csp.js`: `script-src 'self' 'unsafe-inline' 'sha256-...'` — mantém os hashes (defesa em profundidade) mas restaura o `'unsafe-inline'` **obrigatório** para event handlers inline. Comentário no script explica o invariant para não regredir.
   - **Arquivo:** `scripts/generate-csp.js`, `vercel.json` (regenerado via `npm run build`).
   - **⚠️ Manutenção:** NUNCA remover `'unsafe-inline'` de `script-src` sem antes migrar todos os handlers inline para `addEventListener` — caso contrário todos os botões do site param de funcionar de novo.
+
+## 🟠 ALTA — Biblioteca de Materiais: downloads falham com "Usuário não encontrado" 2026-08-14
+
+> **Relatado pelo usuário:** "a função Biblioteca de Materiais ainda não funciona". Todos os downloads de PDFs falhavam com erro `{"error":"Usuário não encontrado."}` mesmo com usuário ativo e permissões corretas.
+
+- [x] **Causa raiz** ✅ 2026-08-14
+  - A Edge Function `get-download-url` executava `.select('role, status, permissions, plan, accessLevel')` na tabela `public.users`, mas a coluna **`accessLevel` não existe** nela (a tabela tem `level`, e o nível é derivado de `plan`). O PostgREST rejeitava o select com 400 → `userData` vinha `undefined` → a função retornava "Usuário não encontrado." **para qualquer usuário** (membro ou staff).
+  - O frontend (`membros.html`) primeiro tenta `AUTH.getSignedUrl()` direto no Storage; para membros a RLS bloqueia SELECT (policy `member_download` só permite `is_admin()`), então o fallback via Edge Function era sempre o caminho usado — e estava quebrado. Por isso a biblioteca "não funcionava" para todos.
+- [x] **Fix** ✅ 2026-08-14
+  - Removido `accessLevel` do select (coluna inexistente); nível do usuário derivado só de `plan` (`free1/modulo2/pro3/premium4`, fallback 1), mantendo a semântica de `getUserAccessLevel` de `js/auth.js`.
+  - **Arquivo:** `supabase/functions/get-download-url/index.ts` · deploy feito via `supabase functions deploy get-download-url`.
+- [x] **Verificação end-to-end** ✅ 2026-08-14
+  - Usuário de teste `teste2@adaspro.com.br` (membro, `permissions:['honda','toyota']`, `plan:'pro'`) criado via signup GoTrue + linha em `public.users`.
+  - `get-download-url` retorna `{ok:true, url}` para item permitido (`toyota-ldw`); URL assinada responde HTTP 200 `application/pdf` e baixa o arquivo.
+  - Negados corretos: sem permissão (`subaru-type1`) → 403 "Sem permissão"; `contentId` inexistente → 404; `filePath:null` (`honda-acc`) → 404 "Arquivo ainda não disponível".
+  - **⚠️ Pendência:** os arquivos em `assets/downloads/**` são **placeholders de texto** (~135–207 bytes, "PLACEHOLDER — Substituir pelo PDF técnico real") e foram estes que estão no bucket `materiais`. O download funciona, mas entrega conteúdo placeholder. Substituir os PDFs reais no bucket quando disponíveis (não deletar os nomes de arquivo).
+
+## 🟠 ALTA — Login "volta pro login" após autenticar 2026-08-14
+
+> **Relatado pelo usuário:** "Não consigo nem entrar / volta pro login". O Supabase Auth **aceitava** as credenciais (`auth.users.last_sign_in_at` atualizado), mas o painel redirecionava de volta para `login.html`.
+
+- [x] **Causa raiz** ✅ 2026-08-14
+  - **Colisão de chave localStorage:** o SDK Supabase foi criado com `auth.storageKey = SESSION_KEY` (`adaspro_session`, o MESMO key que `_readSessionCache()` usa para o formato ADAS PRO `{userId, role, token, expiresAt}`). O SDK gravava o próprio formato `{access_token, refresh_token, expires_at, user,...}` na mesma chave → `_readSessionCache()` retornava `null` no fallback offline, e a sessão real nunca era restaurada após reload.
+  - **Timeout de 5s do init:** `_doInit()` envolvia `getSession()` + MFA + `_sbLoadUser()` + `_sbLoadAll()` num `Promise.race` de 5s. Em rede lenta (Supabase fora do Brasil), o init estourava → `_mode='local'` com `_sbConfigured=true` → `getSession()` retorna `null` (guarda `_sbConfigured && !_demo`, auth.js) → `requireAuth()` redireciona para `login.html`.
+  - O login supabase **não persistia** a sessão ADAS PRO (só `_localLogin` gravava em `adaspro_session`).
+- [x] **Fix** ✅ 2026-08-14
+  - **Chave separada para o SDK:** `SB_SESSION_KEY = 'adaspro_sb_session'` usada no `createClient` — `adaspro_session` fica exclusiva do formato ADAS PRO (auth.js).
+  - **Persistência da sessão ADAS PRO** no sucesso do login supabase e ao reconstruir `_currentSession` no init — o fallback offline restaura a sessão real via `_readSessionCache()`.
+  - **Timeout do init de 5s → 15s:** rede lenta não derruba sessão já validada; o fallback offline continua ativo para Supabase inacessível.
+  - **`logout()` limpa ambas as chaves** (`adaspro_session` + chave do SDK).
+  - **Arquivo:** `js/auth.js`. A guarda `_sbConfigured` (nunca aceitar sessão localStorage quando Supabase está online) foi **preservada** — a sessão cacheada só é aceita via `_currentSession` no fallback offline.

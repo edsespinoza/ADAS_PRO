@@ -345,6 +345,8 @@
   .blt-card-desc { font-size:.78rem;color:rgba(255,255,255,.35);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1; }
   .blt-brands { display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px; }
   .blt-brand-chip { font-size:.63rem;font-family:'Courier New',monospace;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.35);letter-spacing:.03em; }
+  .blt-info-row { display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 0; }
+  .blt-info-chip { font-size:.6rem;font-family:'Courier New',monospace;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);letter-spacing:.02em; }
   .blt-card-foot { display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);margin-top:auto; }
   .blt-card-date { font-family:'Courier New',monospace;font-size:.63rem;color:rgba(255,255,255,.2); }
   .blt-read-btn { display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-family:var(--font-h);font-size:.72rem;font-weight:700;cursor:pointer;transition:all .2s;border:none; }
@@ -389,6 +391,46 @@
   .blt-mark-read-btn.read { background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.3);cursor:default; }
   .blt-mark-read-btn.read:hover { transform:none; }
   .blt-mark-read-btn svg { width:13px;height:13px; }
+
+  /* ─── Boletim técnico — formato técnico/científico ─── */
+  .blt-abstract { background:rgba(255,255,255,.03);border:1px solid rgba(0,180,216,.18);border-left:3px solid var(--tech);border-radius:8px;padding:14px 16px;margin-bottom:14px; }
+  .blt-abstract-label { font-family:'Courier New',monospace;font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--tech);margin-bottom:8px;text-transform:uppercase; }
+  .blt-abstract p { margin:0;font-size:.82rem;color:rgba(255,255,255,.66);font-style:italic;line-height:1.8; }
+  .blt-kw-row { display:flex;flex-wrap:wrap;gap:6px;margin-top:10px; }
+  .blt-kw { font-family:'Courier New',monospace;font-size:.6rem;padding:2px 8px;border-radius:3px;background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);color:rgba(0,180,216,.8);letter-spacing:.03em; }
+  .blt-sec { font-family:var(--font-h);font-size:.76rem;font-weight:800;color:rgba(255,255,255,.9);letter-spacing:.05em;text-transform:uppercase;margin:22px 0 10px;display:flex;align-items:center;gap:8px; }
+  .blt-sec::before { content:'';width:14px;height:2px;background:var(--accent);border-radius:1px;flex-shrink:0; }
+  .blt-meta-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:4px 0 6px; }
+  .blt-meta-item { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px; }
+  .blt-meta-label { font-family:'Courier New',monospace;font-size:.58rem;letter-spacing:.08em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:5px; }
+  .blt-meta-value { font-size:.76rem;color:rgba(255,255,255,.78);line-height:1.55;font-weight:600; }
+  .blt-chip { display:inline-block;font-size:.66rem;font-family:'Courier New',monospace;padding:2px 8px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.5);margin:2px 4px 2px 0; }
+  .blt-sev { display:inline-flex;align-items:center;gap:5px;font-family:'Courier New',monospace;font-size:.62rem;padding:2px 8px;border-radius:3px;background:rgba(255,59,59,.1);border:1px solid rgba(255,59,59,.25);color:#FF3B3B; }
+  .blt-spec-table { width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:.74rem; }
+  .blt-spec-table th { text-align:left;font-family:'Courier New',monospace;font-size:.58rem;letter-spacing:.06em;color:rgba(0,180,216,.7);text-transform:uppercase;padding:8px 10px;border-bottom:1px solid rgba(0,180,216,.2);background:rgba(0,180,216,.05); }
+  .blt-spec-table td { padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.68);vertical-align:top; }
+  .blt-spec-table tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+  .blt-spec-table td:first-child { font-family:'Courier New',monospace;color:rgba(255,255,255,.9);font-weight:600;white-space:nowrap; }
+  .blt-step { display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.02);transition:all .2s;cursor:pointer; }
+  .blt-step:hover { border-color:rgba(0,180,216,.25);background:rgba(0,180,216,.04); }
+  .blt-step input[type=checkbox] { accent-color:var(--tech);margin-top:3px;width:15px;height:15px;cursor:pointer;flex-shrink:0; }
+  .blt-step-n { font-family:'Courier New',monospace;font-size:.66rem;color:var(--tech);font-weight:700;flex-shrink:0;min-width:24px;text-align:center;background:rgba(0,180,216,.1);border-radius:4px;padding:1px 4px; }
+  .blt-step-txt { font-size:.78rem;color:rgba(255,255,255,.62);line-height:1.6;flex:1; }
+  .blt-step.done { opacity:.55; }
+  .blt-step.done .blt-step-txt { text-decoration:line-through;text-decoration-color:rgba(255,255,255,.3); }
+  .blt-progress { display:flex;align-items:center;gap:10px;margin-bottom:12px; }
+  .blt-progress-bar { flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden; }
+  .blt-progress-fill { height:100%;width:0%;background:linear-gradient(90deg,var(--tech),var(--accent));border-radius:3px;transition:width .3s ease; }
+  .blt-progress-txt { font-family:'Courier New',monospace;font-size:.62rem;color:rgba(255,255,255,.4);white-space:nowrap; }
+  .blt-ref { font-size:.75rem;color:rgba(255,255,255,.55);padding:5px 0;display:flex;gap:8px; }
+  .blt-ref::before { content:'📎';opacity:.6; }
+  .blt-callout { border:1px solid rgba(255,107,53,.28);background:rgba(255,107,53,.06);border-radius:8px;padding:12px 14px;font-size:.78rem;color:rgba(255,255,255,.66);line-height:1.7;margin:10px 0; }
+  .blt-callout b { color:rgba(255,107,53,.85); }
+  .blt-callout ul { margin:6px 0 0;padding-left:16px; }
+  .blt-callout li { padding:2px 0; }
+  .blt-actions { display:flex;gap:8px;margin-top:18px;flex-wrap:wrap; }
+  .blt-act-btn { display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-family:var(--font-h);font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);transition:all .2s; }
+  .blt-act-btn:hover { border-color:rgba(0,180,216,.35);color:var(--tech);background:rgba(0,180,216,.06); }
 
   @media(max-width:640px) {
     .blt-grid { grid-template-columns:1fr; }
@@ -1143,6 +1185,10 @@ AUTH.init().then(() => {
   updateProgressRing();
   updateFavBadge();
 
+  /* ─── Boletins publicados no painel editorial + deep-link ─── */
+  renderBulletinsDynamic();
+  if (new URLSearchParams(window.location.search).get('page') === 'boletins') showPage('boletins');
+
 }).catch(err => {
   const el = document.getElementById('authLoadingMsg');
   if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + esc(err.message) +
@@ -1773,6 +1819,15 @@ function filterBulletins(type, el) {
 
 function openBulletin(btn) {
   const card = btn.closest('.blt-card');
+  const bltId = card?.dataset.bltId;
+
+  // Boletim dinâmico (publicado no painel editorial) → render completo
+  if (bltId && AUTH.getBulletinById) {
+    const b = AUTH.getBulletinById(bltId);
+    if (b) return _renderBulletin(b);
+  }
+
+  // Fallback: boletim estático (lido direto do DOM do card)
   const type = [...card.classList].find(c=>c.startsWith('type-'))?.replace('type-','') || 'novidade';
   const title  = card.querySelector('.blt-card-title')?.textContent || '';
   const desc   = card.querySelector('.blt-card-desc')?.textContent || '';
@@ -1792,6 +1847,7 @@ function openBulletin(btn) {
     `<p>${esc(desc)}</p><p>Este boletim técnico contém informações detalhadas e procedimentos específicos para os modelos listados. Consulte o material de calibração correspondente na Biblioteca Técnica para o procedimento completo.</p><ul><li>Verifique o material técnico atualizado na biblioteca</li><li>Aplique o procedimento na sequência indicada</li><li>Use a ferramenta de diagnóstico recomendada pelo fabricante</li></ul>`;
   document.getElementById('bltModalDate').textContent = 'Publicado em ' + date;
   document.getElementById('bltModalBrands').innerHTML = brands.map(b=>`<span class="blt-affected-brand">${esc(b)}</span>`).join('');
+  document.getElementById('bltModalAffected').style.display = '';
   const markBtn = document.getElementById('bltMarkReadBtn');
   markBtn.className = 'blt-mark-read-btn';
   markBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Marcar como lido`;
@@ -1800,6 +1856,176 @@ function openBulletin(btn) {
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
+
+/* ─── Render completo do boletim técnico (formato técnico/científico) ─── */
+function _stripHtml(html) { return (html||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim(); }
+function _bltTypeLabel(t) { return ({ novidade:'Novidade', atualizacao:'Atualização', alerta:'Alerta Técnico', procedimento:'Procedimento' })[t] || t; }
+function _bltChips(arr)   { return (arr||[]).map(x=>`<span class="blt-chip">${esc(x)}</span>`).join(''); }
+function _bltMeta(label, val) { return val ? `<div class="blt-meta-item"><div class="blt-meta-label">${label}</div><div class="blt-meta-value">${val}</div></div>` : ''; }
+function _bltSection(n, title, inner) { return `<div class="blt-sec">${n}. ${title}</div>${inner}`; }
+
+function _bltSpecTable(specs) {
+  if (!specs || !specs.length) return '';
+  const rows = specs.map(s => {
+    const cols = [s.param, s.value, s.note || ''];
+    return `<tr>${cols.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`;
+  }).join('');
+  return `<table class="blt-spec-table"><thead><tr><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function _renderBulletin(b) {
+  const type = b.type || 'novidade';
+  document.getElementById('bltModalHeader').className = `blt-modal-header type-${type}`;
+  document.getElementById('bltModalTag').textContent = _bltTypeLabel(type);
+  document.getElementById('bltModalTitle').textContent = b.title || 'Boletim técnico';
+  document.getElementById('bltModalNew').style.display = b.createdAt && (Date.now() - b.createdAt) < 7*24*3600*1000 ? '' : 'none';
+
+  const h = [];
+
+  // Identificação técnica
+  const refChips = [];
+  if (b.bulletinNumber) refChips.push(`<span class="blt-chip" style="border-color:rgba(0,180,216,.3);color:var(--tech)">BT: ${esc(b.bulletinNumber)}</span>`);
+  if (b.classification)  refChips.push(`<span class="blt-chip">CLS: ${esc(b.classification)}</span>`);
+  if (b.reference)       refChips.push(`<span class="blt-chip">REF: ${esc(b.reference)}</span>`);
+  if (b.severity && b.severity !== 'info') refChips.push(`<span class="blt-sev">⚠ SEVERIDADE ${esc(b.severity).toUpperCase()}</span>`);
+  if (refChips.length) h.push(`<div style="margin-bottom:14px">${refChips.join('')}</div>`);
+
+  // Resumo técnico + palavras-chave
+  const summary = b.summary || _stripHtml(b.content).slice(0, 240);
+  h.push(`<div class="blt-abstract"><div class="blt-abstract-label">Resumo técnico</div><p>${esc(summary)}</p>${b.tags && b.tags.length ? `<div class="blt-kw-row">${(b.tags||[]).map(t=>`<span class="blt-kw">${esc(t)}</span>`).join('')}</div>` : ''}</div>`);
+
+  // Ficha técnica (grid)
+  let meta = '';
+  if (b.calibrationType) meta += _bltMeta('Tipo de calibração', `<span class="blt-chip" style="border-color:rgba(6,167,125,.3);color:#06A77D">${esc(b.calibrationType)}</span>`);
+  if (b.appliedVehicles && b.appliedVehicles.length) meta += _bltMeta('Veículos aplicados', b.appliedVehicles.map(v=>`<span class="blt-chip">${esc(v)}</span>`).join(''));
+  if (b.appliedSystems  && b.appliedSystems.length)  meta += _bltMeta('Sistemas aplicados', _bltChips(b.appliedSystems));
+  if (b.component) meta += _bltMeta('Componente', esc(b.component));
+  if (b.dtcs && b.dtcs.length) meta += _bltMeta('DTCs relacionados', b.dtcs.map(d=>`<span class="blt-chip" style="border-color:rgba(139,92,246,.3);color:#8B5CF6">${esc(d)}</span>`).join(''));
+  if (meta) h.push(`<div class="blt-meta-grid">${meta}</div>`);
+
+  // Diagnóstico
+  if (b.reportedSymptoms && b.reportedSymptoms.length)
+    h.push(_bltSection('1','Sintomas relatados', b.reportedSymptoms.map(s=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:.8rem;color:rgba(255,255,255,.65)"><span style="color:rgba(255,59,59,.7);flex-shrink:0">▸</span><span>${esc(s)}</span></div>`).join('')));
+  if (b.rootCause)
+    h.push(_bltSection('2','Causa raiz', `<p style="font-size:.8rem;color:rgba(255,255,255,.66);line-height:1.8;margin:0">${esc(b.rootCause)}</p>`));
+
+  // Procedimento
+  if (b.preconditions && b.preconditions.length)
+    h.push(_bltSection('3','Pré-requisitos', b.preconditions.map(p=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:.8rem;color:rgba(255,255,255,.65)"><span style="color:rgba(6,167,125,.7);flex-shrink:0">✔</span><span>${esc(p)}</span></div>`).join('')));
+  if (b.requiredTools && b.requiredTools.length)
+    h.push(_bltSection('4','Ferramentas necessárias', `<div style="display:flex;flex-wrap:wrap;gap:6px">${_bltChips(b.requiredTools)}</div>`));
+  if (b.specsTable && b.specsTable.length)
+    h.push(_bltSection('5','Especificações de calibração', _bltSpecTable(b.specsTable)));
+  if (b.steps && b.steps.length) {
+    const steps = b.steps.map((s,i)=>`<label class="blt-step" data-idx="${i}"><input type="checkbox" onchange="updateBltStepProgress(this)"/><span class="blt-step-n">${String(i+1).padStart(2,'0')}</span><span class="blt-step-txt">${esc(typeof s==='string' ? s : (s.desc||''))}</span></label>`).join('');
+    h.push(_bltSection('6','Procedimento de calibração',
+      `<div class="blt-progress"><div class="blt-progress-bar"><div class="blt-progress-fill" id="bltStepFill"></div></div><span class="blt-progress-txt" id="bltStepCount">0/${b.steps.length}</span></div><div id="bltStepList">${steps}</div>`));
+  }
+
+  // Verificação
+  if (b.passCriteria && b.passCriteria.length)
+    h.push(_bltSection('7','Critérios de aprovação', b.passCriteria.map(p=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:.8rem;color:rgba(255,255,255,.65)"><span style="color:rgba(6,167,125,.7);flex-shrink:0">✓</span><span>${esc(p)}</span></div>`).join('')));
+  if (b.failureActions && b.failureActions.length)
+    h.push(`<div class="blt-callout"><b>Se a calibração falhar:</b><ul>${b.failureActions.map(f=>`<li>${esc(f)}</li>`).join('')}</ul></div>`);
+
+  // Referências
+  if (b.referenceDocs && b.referenceDocs.length)
+    h.push(_bltSection('8','Referências técnicas', b.referenceDocs.map(r=>`<div class="blt-ref">${esc(r)}</div>`).join('')));
+
+  // Corpo livre do WYSIWYG (se houver algo além do resumo)
+  const body = (b.content || '').trim();
+  if (body && _stripHtml(body) !== summary && _stripHtml(body) !== _stripHtml(b.summary || ''))
+    h.push(_bltSection('9','Informações adicionais', DOMPurify ? DOMPurify.sanitize(body) : body));
+
+  // Ações
+  h.push(`<div class="blt-actions">
+    <button class="blt-act-btn" onclick="copyBulletinSummary(this)">📋 Copiar resumo</button>
+    <button class="blt-act-btn" onclick="printBulletin()">🖨️ Imprimir</button>
+  </div>`);
+
+  document.getElementById('bltModalContent').innerHTML = h.join('');
+  document.getElementById('bltModalAffected').style.display = 'none';
+  document.getElementById('bltModalDate').textContent = 'Publicado em ' + (b.publishedAt || b.createdAt ? fmtDate(b.publishedAt || b.createdAt) : '—');
+  const markBtn = document.getElementById('bltMarkReadBtn');
+  markBtn.className = 'blt-mark-read-btn';
+  markBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Marcar como lido`;
+
+  const modal = document.getElementById('bltModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function updateBltStepProgress(cb) {
+  const step = cb.closest('.blt-step');
+  if (step) step.classList.toggle('done', cb.checked);
+  const steps = document.querySelectorAll('#bltStepList .blt-step');
+  if (!steps.length) return;
+  const done = [...steps].filter(s => s.querySelector('input').checked).length;
+  const fill = document.getElementById('bltStepFill');
+  if (fill) fill.style.width = Math.round(done / steps.length * 100) + '%';
+  const cnt = document.getElementById('bltStepCount');
+  if (cnt) cnt.textContent = done + '/' + steps.length;
+}
+
+function copyBulletinSummary(btn) {
+  const p = document.querySelector('#bltModalContent .blt-abstract p');
+  const text = p ? p.textContent : '';
+  if (!text) return;
+  const done = () => { const old = btn.textContent; btn.textContent = '✓ Copiado'; setTimeout(() => btn.textContent = old, 1600); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(() => {});
+  else { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
+}
+
+function printBulletin() {
+  const title = document.getElementById('bltModalTitle').textContent;
+  const date  = document.getElementById('bltModalDate').textContent || '';
+  const src   = document.getElementById('bltModalContent');
+  const tmp   = document.createElement('div');
+  tmp.innerHTML = src.innerHTML;
+  tmp.querySelectorAll('.blt-actions, .blt-progress').forEach(el => el.remove());
+  tmp.querySelectorAll('input[type=checkbox]').forEach(el => el.remove());
+  tmp.querySelectorAll('label.blt-step').forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'blt-step';
+    div.innerHTML = l.innerHTML;
+    l.replaceWith(div);
+  });
+  const w = window.open('', '_blank');
+  if (!w) { alert('Permita pop-ups para imprimir o boletim.'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${esc(title)}</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;line-height:1.7;max-width:780px;margin:28px auto;padding:0 20px;font-size:13px}
+h1{font-size:20px;border-bottom:2px solid #0b7;padding-bottom:10px}
+.blt-abstract{border:1px solid #ccc;border-left:4px solid #0b7;padding:12px 14px;background:#f6faf9;margin:14px 0}
+.blt-abstract p{margin:0;font-style:italic}
+.blt-kw{display:inline-block;background:#eef6f5;border:1px solid #bcd;padding:2px 8px;border-radius:3px;font-size:11px;margin:2px 4px 2px 0}
+.blt-sec{font-weight:800;text-transform:uppercase;font-size:12px;margin:22px 0 8px;letter-spacing:.04em}
+.blt-chip{display:inline-block;background:#f0f0f0;border:1px solid #ddd;padding:2px 8px;border-radius:3px;font-size:11px;margin:2px 4px 2px 0}
+.blt-sev{display:inline-block;background:#fdecec;border:1px solid #f5b;padding:2px 8px;border-radius:3px;font-size:11px;color:#c00;margin:2px 4px 2px 0}
+.blt-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:8px 0}
+.blt-meta-item{border:1px solid #eee;border-radius:6px;padding:8px 10px}
+.blt-meta-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#888}
+.blt-meta-value{font-weight:600;font-size:12px}
+.blt-spec-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+.blt-spec-table th{text-align:left;background:#f0f7f7;border-bottom:2px solid #0b7;padding:7px 9px;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.blt-spec-table td{border-bottom:1px solid #eee;padding:7px 9px}
+.blt-step{display:flex;gap:8px;padding:7px 0;border-bottom:1px dotted #ddd}
+.blt-step-n{font-family:monospace;color:#0b7;font-weight:700}
+.blt-callout{border:1px solid #f5b;background:#fdf6f3;padding:10px 14px;border-radius:6px;margin:10px 0}
+.blt-ref{font-size:12px;padding:3px 0}
+.blt-ref::before{content:'📎 '}
+.blt-actions{display:none}
+</style></head><body>
+<h1>${esc(title)}</h1>
+<div style="font-size:11px;color:#888;margin-bottom:14px">${esc(date)}</div>
+${tmp.innerHTML}
+</body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+
 
 function closeBulletin() {
   document.getElementById('bltModal').style.display = 'none';
@@ -1815,6 +2041,60 @@ function markBulletinRead() {
 document.getElementById('bltModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeBulletin();
 });
+
+/* ─── Boletins publicados (dinâmico — publicados no painel editorial) ─── */
+function renderBulletinsDynamic() {
+  const grid = document.getElementById('bltGrid');
+  if (!grid) return;
+  const published = (AUTH.getBulletins ? AUTH.getBulletins({ status:'published' }) : []);
+  if (!published.length) return; // sem publicados → mantém cards estáticos como fallback
+
+  const typeMeta = {
+    novidade:     { label:'Novidade',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>' },
+    atualizacao:  { label:'Atualização',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>' },
+    alerta:       { label:'Alerta Técnico', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+    procedimento: { label:'Procedimento',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>' },
+  };
+  const readIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  const NOW = Date.now();
+
+  grid.innerHTML = published.map(b => {
+    const meta = typeMeta[b.type] || typeMeta.novidade;
+    const desc = b.summary || _stripHtml(b.content) || '';
+    const isNew = b.createdAt && (NOW - b.createdAt) < 7*24*3600*1000;
+    const brands = (b.brands || []).map(x=>`<span class="blt-brand-chip">${esc(x)}</span>`).join('');
+    const infoChips = [];
+    if (b.calibrationType) infoChips.push(`<span class="blt-info-chip" style="color:#06A77D;border-color:rgba(6,167,125,.3)">${esc(b.calibrationType)}</span>`);
+    if (b.dtcs && b.dtcs.length) infoChips.push(`<span class="blt-info-chip">DTC ${esc(b.dtcs[0])}${b.dtcs.length>1?' +'+ (b.dtcs.length-1):''}</span>`);
+    if (b.steps && b.steps.length) infoChips.push(`<span class="blt-info-chip">${b.steps.length} passos</span>`);
+    return `
+      <div class="blt-card type-${b.type || 'novidade'}" data-blt-id="${esc(b.id||'')}">
+        <div class="blt-card-stripe"></div>
+        <div class="blt-card-body">
+          <div class="blt-card-top">
+            <div class="blt-card-icon">${meta.icon}</div>
+            <div class="blt-card-header">
+              <div class="blt-card-tags"><span class="blt-type-tag">${meta.label}</span>${isNew?'<span class="blt-new-badge">NOVO</span>':''}</div>
+              <div class="blt-card-title">${esc(b.title || 'Sem título')}</div>
+            </div>
+          </div>
+          <div class="blt-card-desc">${esc(desc.length > 150 ? desc.slice(0,150)+'…' : desc)}</div>
+          <div class="blt-brands">${brands || '<span style="color:rgba(255,255,255,.3);font-size:.72rem">Geral</span>'}</div>
+          ${infoChips.length ? `<div class="blt-info-row">${infoChips.join('')}</div>` : ''}
+          <div class="blt-card-foot">
+            <span class="blt-card-date">${fmtDate(b.publishedAt || b.createdAt)}</span>
+            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim ${readIcon}</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const cnt = document.getElementById('bltCountAll');
+  if (cnt) cnt.textContent = published.length;
+  const badge = document.getElementById('bltUnreadBadge');
+  const newCnt = published.filter(b => b.createdAt && (NOW - b.createdAt) < 7*24*3600*1000).length;
+  if (badge) { badge.textContent = newCnt; badge.style.display = newCnt > 0 ? '' : 'none'; }
+}
 
 /* ─── Inicializar contagem de boletins ─── */
 const _bltCards = document.querySelectorAll('#bltGrid .blt-card');

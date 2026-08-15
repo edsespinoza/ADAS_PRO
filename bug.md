@@ -81,6 +81,16 @@
 
 ## 🟢 MELHORIAS — Funcionalidades e infraestrutura
 
+- [x] **#80 — Seção Ajuda no Superadmin (subpastas Guia / Versões / Orientações)** ✅ 2026-08-15
+  - Novo item "Ajuda" na sidebar (seção Suporte) → `#page-ajuda` com 3 subpastas: 📖 Guia de Uso (roles, planos, aprovação, biblioteca, editorial, tickets/MFA), 🔄 Versões & Changelog (histórico da plataforma) e 🛡️ Orientações & FAQ (segurança, regras operacionais, perguntas frequentes em accordions).
+  - **Arquivo:** `superadmin.html`
+
+- [x] **#81 — Botão "Exemplo" no Conteúdo Editorial (seed de teste)** ✅ 2026-08-15
+  - Botão "🧪 Exemplo" ao lado de "+ Novo" popula conteúdo de demonstração via `seedEditorialDemo()` (3 boletins — procedimento publicado, atualização publicada, alerta rascunho — e 3 artigos — 2 publicados, 1 rascunho) usando `AUTH.addBulletin`/`addArticle`. Persistido no localStorage do browser (design atual do editorial). Confirma antes de duplicar se já existir conteúdo.
+  - **+ Link "👁 Ver publicações"** no toolbar editorial → abre `membros.html?page=boletins` em nova aba (deep-link na aba Boletins do membro).
+  - **+ `renderBulletinsDynamic()` no membros.html**: a aba Boletins do membro agora renderiza os boletins publicados do painel editorial (fallback para os cards estáticos quando não há conteúdo publicado).
+  - **Arquivos:** `superadmin.html`, `membros.html`
+
 - [x] **#13 — Sistema de ambientes dev/prod** ✅ 2026-04-25
   - `package.json` + `scripts/build-config.js`. Variáveis via Vercel Environment Variables.
   - `.env.example` e `.gitignore` atualizados.
@@ -847,3 +857,17 @@
   - Banco: `search_path=""` confirmado nas 5 funções via `pg_proc`.
   - HTML: fixes em `admin.html` e `membros.html` — **deploy Vercel pendente** (`vercel deploy --prod`).
 
+
+## 🟢 FEATURE — Boletins técnicos em formato técnico/científico 2026-08-15
+
+> **Objetivo:** melhorar a apresentação dos boletins técnicos com base em pesquisa web (TSBs reais Nissan NTB25-002/NTB23-076, Ford 21-2389/22-2229/21-2420, Honda 15-046), modelo de dados enriquecido e editor estruturado.
+
+- [x] **#82 — Modelo enriquecido de boletim + editor estruturado + render técnico/científico** ✅ 2026-08-15
+  - **Novos campos** (opcionais): `classification`, `reference`, `severity` (info/moderate/critical), `summary` (abstract), `appliedVehicles[]`, `appliedSystems[]`, `component`, `dtcs[]`, `reportedSymptoms[]`, `rootCause`, `calibrationType` (Estática/Dinâmica), `preconditions[]`, `requiredTools[]`, `specsTable[]` ({param,value,note}), `steps[]`, `passCriteria[]`, `failureActions[]`, `referenceDocs[]`.
+  - **Editor (`superadmin.html`):** 4 grupos `<details>` no sidebar (Ficha técnica / Diagnóstico / Procedimento / Verificação & referências) com ids `edMeta*`; prefill em `openEditor`; parse em `saveEditorDraft` (helpers `_lines`/`_csv`/`_specs` — specs no formato `Parâmetro | Valor | Observação`); CSS `.ed-meta-details`/`.ed-meta-area`/`.ed-meta-hint`.
+  - **Render membro (`membros.html`):** `openBulletin` usa `data-blt-id` + `AUTH.getBulletinById` → `_renderBulletin(b)` com 9 seções numeradas, abstract com keywords, ficha técnica em grid, tabela de especificações, checklist interativo com barra de progresso (`updateBltStepProgress`), botões Copiar resumo / Imprimir (`printBulletin` via DOM copy). Fallback DOM preservado para cards estáticos.
+  - **Cards dinâmicos:** `renderBulletinsDynamic()` agora emite `data-blt-id`, usa `b.summary` na descrição e chips informativos (tipo de calibração / DTC / nº de passos).
+  - **Tabela editorial:** coluna de número mostra `reference` (fallback `id`); busca inclui `reference` e `classification`.
+  - **Seed (`seedEditorialDemo`):** 3 boletins realistas com todos os campos novos (procedimento completo, atualização de scanner, alerta BSM crítico).
+  - **Deploy:** Vercel prod ✅ verificado (membros: `data-blt-id`, `blt-info-chip`, `_renderBulletin`; superadmin: `ed-meta-details`, `edMetaSummary`, `NTP-ADAS-011`, `seedEditorialDemo`).
+  - **Pendências de sincronização:** `DEFAULT_CONTENT` (auth.js) não precisa mudar (boletins são só localStorage); se boletins migrarem para Supabase, `CONTENT_MAP`/`get-download-url` não é afetado (são PDFs).

@@ -1329,6 +1329,11 @@
       <a class="sidebar-nav-item" onclick="showPage('audit',this)">
         <span class="nav-icon">📋</span>Auditoria
       </a>
+
+      <div class="sidebar-nav-section" style="margin-top:10px">Suporte</div>
+      <a class="sidebar-nav-item" onclick="showPage('ajuda',this)">
+        <span class="nav-icon">❓</span>Ajuda
+      </a>
       <a class="sidebar-nav-item" href="email-config.html" style="color:rgba(0,180,216,.85);margin-top:2px;">
         <span class="nav-icon">✉️</span>E-mails Transacionais
         <span style="font-size:.58rem;background:rgba(0,180,216,.18);color:#00B4D8;padding:1px 6px;border-radius:3px;margin-left:auto;letter-spacing:.05em;">CONFIG</span>
@@ -1888,6 +1893,8 @@
               <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
               <input type="text" id="edSearch" placeholder="Buscar..." oninput="renderEditorialTable()"/>
             </div>
+            <button style="padding:9px 14px;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:8px;font-weight:600;font-size:.78rem;cursor:pointer;white-space:nowrap" onclick="seedEditorialDemo()" title="Carrega boletins e artigos de exemplo para testar a plataforma">🧪 Exemplo</button>
+            <a href="membros.html?page=boletins" target="_blank" rel="noopener" style="padding:9px 14px;background:var(--tech-bg);border:1px solid var(--tech-border);color:var(--tech);border-radius:8px;font-weight:600;font-size:.78rem;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Abre a área do membro direto na aba de boletins publicados">👁 Ver publicações</a>
             <button class="btn-primary-sm" onclick="openEditor()">+ Novo</button>
           </div>
         </div>
@@ -1967,6 +1974,167 @@
             </table>
           </div>
         </div>
+      </div>
+
+      <!-- ═══ PAGE: AJUDA & ORIENTAÇÕES ═══ -->
+      <div class="page" id="page-ajuda" style="padding-bottom:40px">
+
+        <div class="ed-tabs" id="ajudaTabs" style="margin-bottom:18px">
+          <button class="ed-tab active" onclick="ajudaTab('guia',this)"><span style="font-size:.95rem">📖</span>&nbsp; Guia de Uso</button>
+          <button class="ed-tab" onclick="ajudaTab('versoes',this)"><span style="font-size:.95rem">🔄</span>&nbsp; Versões &amp; Changelog</button>
+          <button class="ed-tab" onclick="ajudaTab('orientacoes',this)"><span style="font-size:.95rem">🛡️</span>&nbsp; Orientações &amp; FAQ</button>
+        </div>
+
+        <!-- ── SUBPASTA 1: GUIA DE USO ── -->
+        <div id="ajuda-guia">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px">
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">👑 Roles &amp; Hierarquia</div><div class="table-card-sub">Quem acessa o quê</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px">👑</span><div><b style="color:var(--gold)">Superadmin</b> — controle total da plataforma: cria/remove admins, configuração global, billing, auditoria, editorial e biblioteca.</div></div>
+                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px">🛡️</span><div><b style="color:var(--accent)">Admin</b> — gerencia membros (aprovação/bloqueio), tickets, conteúdo e boletins.</div></div>
+                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px">⚙️</span><div><b>Gestor</b> — opera o painel admin (membros + tickets), não cria contas.</div></div>
+                <div style="display:flex;gap:8px;padding:8px 0"><span style="min-width:22px">👤</span><div><b>Membro</b> — área de membros: biblioteca conforme o plano, tickets e boletins.</div></div>
+                <div style="margin-top:8px;font-size:.75rem;color:var(--text-muted)">Hierarquia numérica: superadmin (4) → admin (3) → gestor (2) → membro (1). Ninguém promove/rebaixa role igual ou superior à sua.</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">📦 Planos &amp; Módulos</div><div class="table-card-sub">Liberação de conteúdo por plano</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Free (R$ 0)</b> — materiais demo.</div>
+                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Módulo (R$ 47)</b> — 1 categoria à escolha.</div>
+                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Pro (R$ 97)</b> — Honda, Toyota e Nissan + suporte prioritário.</div>
+                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Premium (R$ 197)</b> — todas as 12 categorias + consultoria.</div>
+                <div style="padding:7px 0 0">Em <b>Planos &amp; Módulos</b> você edita preço, categorias liberadas e nível mínimo de acesso por categoria.</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">✅ Fluxo de Aprovação</div><div class="table-card-sub">Novo usuário cadastrado</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <ol style="margin:6px 0 0 18px;padding-left:4px">
+                  <li style="padding:3px 0">Usuário se cadastra em <b>login.html</b> → status <b>pending</b>.</li>
+                  <li style="padding:3px 0">Admin vê a aba <b>Aprovações</b> (com contador) em Gerenciar Membros.</li>
+                  <li style="padding:3px 0">Aprovar define o plano/role; <b>bloquear</b> recusa o acesso.</li>
+                  <li style="padding:3px 0">Edge Function <b>approve-user</b> valida tudo server-side e registra em auditoria.</li>
+                </ol>
+                <div style="margin-top:8px;font-size:.75rem;color:var(--text-muted)">O e-mail transacional de aprovação depende da <code>RESEND_API_KEY</code> (ver pendências em bug.md).</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">📚 Biblioteca &amp; Downloads</div><div class="table-card-sub">Materiais técnicos (PDF)</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Cada material tem <b>categoria</b>, <b>accessLevel</b> (visualização) e <b>downloadLevel</b> (baixar PDF).</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Upload: dropzone gera slug do título e salva em Storage como <code>categoria/slug.pdf</code>.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Visibilidade <b>🙈/👁</b> oculta ou exibe o material sem deletá-lo.</div>
+                <div style="padding:6px 0 0">O download gera <b>URL assinada (1h)</b> via Edge Function <b>get-download-url</b>, com validação de MFA + permissões + registro em auditoria.</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">✏️ Conteúdo Editorial</div><div class="table-card-sub">Boletins e artigos</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)"><b>Boletins Técnicos</b> — tipos Novidade, Atualização, Alerta e Procedimento; ganham numeração automática (BT-AAAA-NNN).</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)"><b>Artigos</b> — conteúdo educacional mais longo.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Status: <b>rascunho</b> → <b>publicado</b> → <b>arquivado</b>. O editor tem WYSIWYG, preview e autosave a cada 30s.</div>
+                <div style="padding:6px 0 0;font-size:.75rem;color:var(--text-muted)">Conteúdo publicado aparece na aba Boletins da área do membro.</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">🎫 Tickets &amp; Suporte</div><div class="table-card-sub">Atendimento aos membros</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Membro abre ticket com prioridade baixa/média/alta.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Admin/gestor responde no painel; a primeira resposta move o ticket para <b>in-progress</b>.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Fechar resolve e sinaliza na auditoria.</div>
+                <div style="padding:6px 0 0">🔒 <b>MFA:</b> contas com role privilegiada passam por verificação em 2 etapas no login — não desative a TOTP da sua conta.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── SUBPASTA 2: VERSÕES & CHANGELOG ── -->
+        <div id="ajuda-versoes" style="display:none">
+          <div class="table-card">
+            <div class="table-card-header">
+              <div><div class="table-card-title">🔄 Histórico de Versões</div><div class="table-card-sub">Principais entregas da plataforma</div></div>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table">
+                <thead><tr><th>Versão / Data</th><th>Destaques</th></tr></thead>
+                <tbody>
+                  <tr><td style="white-space:nowrap"><b>v3.0.0</b><br/><span style="color:var(--text-muted);font-size:.72rem">build 20260813</span></td><td>Reforma visual dos painéis (superadmin branco/gold), páginas sem extensão .html, MFA, upload de PDFs e módulo de planos.</td></tr>
+                  <tr><td style="white-space:nowrap"><b>2026-08-15</b><br/><span style="color:var(--text-muted);font-size:.72rem">segurança</span></td><td>Endurecimento das Edge Functions <code>approve-user</code> (paridade de roles, whitelist de campos, delete real do Auth) e <code>notify</code> (cap diário + validação de destinatário). Auditoria completa + fixes #77–#79 (XSS, search_path, duplo-escape).</td></tr>
+                  <tr><td style="white-space:nowrap"><b>2026-06-09</b><br/><span style="color:var(--text-muted);font-size:.72rem">manutenção</span></td><td>Manutenção geral de fluxos de login/recuperação e correções de cache.</td></tr>
+                  <tr><td style="white-space:nowrap"><b>2026-05-14</b><br/><span style="color:var(--text-muted);font-size:.72rem">auditoria</span></td><td>Auditoria multi-agente: hardening de RLS, permissões de conteúdo e fluxo de aprovação.</td></tr>
+                  <tr><td style="white-space:nowrap"><b>2026-04-27</b><br/><span style="color:var(--text-muted);font-size:.72rem">lançamento</span></td><td>RLS no banco (12 políticas), autenticação Supabase, roles e fluxo membro/admin/superadmin.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:.75rem;color:var(--text-muted)">Changelog completo e pendências manuais: <code>bug.md</code> (rastreador oficial do projeto).</div>
+        </div>
+
+        <!-- ── SUBPASTA 3: ORIENTAÇÕES & FAQ ── -->
+        <div id="ajuda-orientacoes" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px">
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">🛡️ Segurança — regras de ouro</div><div class="table-card-sub">Procedimentos obrigatórios</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">🔐 <b>MFA obrigatório</b> para admin/superadmin — não desative a TOTP da sua conta.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">🔑 <b>Nunca compartilhe credenciais.</b> Cada admin tem conta própria (auditável).</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">🚫 As senhas de demonstração offline (<code>ADAS_OFFLINE_*</code>) são locais e nunca devem virar senhas reais.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">📧 E-mails transacionais dependem da <code>RESEND_API_KEY</code> (pendência manual em bug.md).</div>
+                <div style="padding:6px 0 0">📋 Qualquer mudança de acesso a dados exige atualizar <code>sql/rls_policies.sql</code> e aplicar no banco.</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">⚠️ Regras operacionais</div><div class="table-card-sub">Para não quebrar produção</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">🔗 <b>CONTENT_MAP ↔ DEFAULT_CONTENT:</b> ao adicionar um PDF, edite <b>os dois</b> (Edge Function get-download-url + js/auth.js) e faça deploy — senão o download quebra com 404.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">📄 <b>Uploads:</b> não renomeie/delete arquivos em <code>assets/downloads/</code> sem atualizar os <code>filePath</code> correspondentes.</div>
+                <div style="padding:6px 0;border-bottom:1px solid var(--border)">🛠️ <b>Deploy:</b> edge functions via <code>supabase functions deploy</code>; front via Vercel. SQL via <code>supabase db query --linked</code>.</div>
+                <div style="padding:6px 0 0">🧪 Modo demo: controle em <code>DEMO_ENABLED</code> (Vercel). Em produção deve estar <code>false</code>.</div>
+              </div>
+            </div>
+
+            <div class="table-card" style="padding:0;overflow:hidden">
+              <div class="table-card-header">
+                <div><div class="table-card-title">❓ FAQ rápido</div><div class="table-card-sub">Perguntas frequentes</div></div>
+              </div>
+              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Como adicionar um PDF na biblioteca?</summary><div style="padding:8px 0;color:var(--text-muted)">Biblioteca de Materiais → "＋ Adicionar material" → preencha os campos e use o dropzone. O slug é gerado do título.</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Como criar um admin/gestor?</summary><div style="padding:8px 0;color:var(--text-muted)">Gerenciar Admins → criar usuário → role admin/gestor. Só superadmin cria superadmin (paridade com a RLS).</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Um membro não vê um material. O que checo?</summary><div style="padding:8px 0;color:var(--text-muted)">Plano do membro × categoria, accessLevel/downloadLevel, visibilidade (🙈/👁) e moduleAccess em Planos &amp; Módulos.</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">O e-mail de aprovação não chega.</summary><div style="padding:8px 0;color:var(--text-muted)">Função notify sem RESEND_API_KEY no Supabase (pendência #24 em bug.md).</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Preciso de um 2º superadmin.</summary><div style="padding:8px 0;color:var(--text-muted)">Por segurança não é possível via painel (nem RLS nem Edge Function permitem). Ação manual no banco.</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Como auditar o que admin fez?</summary><div style="padding:8px 0;color:var(--text-muted)">Menu Auditoria registra todas as ações administrativas com data/hora e alvo.</div></details>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div><!-- /pages-wrap -->
@@ -2057,6 +2225,114 @@
             <option value="archived">Arquivado</option>
           </select>
         </div>
+
+        <details class="ed-meta-details">
+          <summary>📋 Ficha técnica</summary>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Classificação</label>
+            <input class="ed-meta-input" type="text" id="edMetaClassification" placeholder="Ex: DA24-008"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Referência</label>
+            <input class="ed-meta-input" type="text" id="edMetaReference" placeholder="Ex: NTB25-002"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Severidade</label>
+            <select class="ed-meta-input ed-meta-select" id="edMetaSeverity">
+              <option value="info">Informativo</option>
+              <option value="moderate">Moderado</option>
+              <option value="critical">Crítico</option>
+            </select>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Resumo técnico (abstract)</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSummary" rows="3" placeholder="O que o boletim cobre, quando se aplica e o resultado esperado..."></textarea>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Veículos aplicados</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaVehicles" rows="2" placeholder="2025 Rogue (T33)"></textarea>
+            <div class="ed-meta-hint">Um por linha. Ex.: 2023-2025 Civic (FE)</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Sistemas aplicados</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSystems" rows="2" placeholder="Intelligent Around View Monitor"></textarea>
+            <div class="ed-meta-hint">Um por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Componente / categoria</label>
+            <input class="ed-meta-input" type="text" id="edMetaComponent" placeholder="Ex: LANE DEPARTURE: WARNING"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">DTCs relacionados</label>
+            <input class="ed-meta-input" type="text" id="edMetaDtcs" placeholder="C1B00, C1B03"/>
+            <div class="ed-meta-hint">Separados por vírgula.</div>
+          </div>
+        </details>
+
+        <details class="ed-meta-details">
+          <summary>🔍 Diagnóstico</summary>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Sintomas relatados</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSymptoms" rows="2" placeholder="Luz de AEB acesa após troca de para-brisa"></textarea>
+            <div class="ed-meta-hint">Um por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Causa raiz</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaRootCause" rows="2" placeholder="Desalinhamento de 1° no pitch da câmera..."></textarea>
+          </div>
+        </details>
+
+        <details class="ed-meta-details">
+          <summary>🛠️ Procedimento</summary>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Tipo de calibração</label>
+            <select class="ed-meta-input ed-meta-select" id="edMetaCalibType">
+              <option value="">—</option>
+              <option value="Estática">Estática</option>
+              <option value="Dinâmica">Dinâmica</option>
+              <option value="Estática e dinâmica">Estática e dinâmica</option>
+            </select>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Pré-requisitos</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaPreconditions" rows="2" placeholder="Pneus na pressão da etiqueta"></textarea>
+            <div class="ed-meta-hint">Um por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Ferramentas necessárias</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaTools" rows="2" placeholder="Nível a laser"></textarea>
+            <div class="ed-meta-hint">Uma por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Especificações de calibração</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSpecs" rows="3" placeholder="Posição do laser | 800 mm | 45° do veículo"></textarea>
+            <div class="ed-meta-hint">Formato por linha: Parâmetro | Valor | Observação</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Passos do procedimento</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSteps" rows="4" placeholder="1. Centralizar o volante e travar..."></textarea>
+            <div class="ed-meta-hint">Um passo por linha (vira checklist interativo).</div>
+          </div>
+        </details>
+
+        <details class="ed-meta-details">
+          <summary>✅ Verificação &amp; referências</summary>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Critérios de aprovação</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaPass" rows="2" placeholder="Calibração concluída sem DTCs"></textarea>
+            <div class="ed-meta-hint">Um por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Ações se a calibração falhar</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaFailure" rows="2" placeholder="Verificar alinhamento do alvo e repetir"></textarea>
+            <div class="ed-meta-hint">Uma por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Referências técnicas</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaRefs" rows="2" placeholder="ESM: DRIVER INFORMATION & MULTIMEDIA > CALIBRATING CAMERA IMAGE"></textarea>
+            <div class="ed-meta-hint">Uma por linha (manuais, ESM, artigos).</div>
+          </div>
+        </details>
 
         <div class="ed-meta-group">
           <label class="ed-meta-label" id="edWordCountLabel">Palavras: 0</label>
@@ -2331,6 +2607,14 @@
 .ed-meta-label { font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em; }
 .ed-meta-input { width:100%;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text-primary);font-size:.82rem;transition:border-color .2s ease, box-shadow .2s ease;font-family:inherit;box-sizing:border-box; }
 .ed-meta-input:focus-visible { outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,255,255,.08); }
+.ed-meta-area { resize:vertical;min-height:52px;line-height:1.5; }
+.ed-meta-details { border:1px solid var(--border);border-radius:9px;background:var(--surface-muted);padding:10px 12px;margin-bottom:10px; }
+.ed-meta-details > summary { cursor:pointer;font-size:.74rem;font-weight:700;color:var(--text-primary);letter-spacing:.03em;user-select:none; }
+.ed-meta-details > summary::-webkit-details-marker { color:var(--text-subtle); }
+.ed-meta-details > summary:hover { color:var(--gold); }
+.ed-meta-details[open] > summary { margin-bottom:10px; }
+.ed-meta-details .ed-meta-group { margin-top:8px; }
+.ed-meta-hint { font-size:.66rem;color:var(--text-subtle);line-height:1.4;margin-top:2px; }
 .ed-meta-select { appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239896B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center; }
 .ed-brands-grid { display:grid;grid-template-columns:1fr 1fr;gap:4px; }
 .ed-brand-check { display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text-muted);cursor:pointer;padding:3px 0; }
@@ -3227,6 +3511,7 @@ const PAGE_TITLES = {
   system:     ['Sistema',                 'Configurações globais e modo manutenção'],
   audit:      ['Auditoria',               'Log completo de todas as ações no sistema'],
   biblioteca: ['Biblioteca de Materiais', 'Gerencie, controle e configure os materiais técnicos'],
+  ajuda:      ['Ajuda & Orientações', 'Guia de uso, versões e orientações da plataforma'],
 };
 
 function showPage(pageId, navEl) {
@@ -3245,6 +3530,181 @@ function showPage(pageId, navEl) {
   if (pageId === 'admins')     { _loadUsers(); }
   if (pageId === 'audit')      { renderAudit(); }
   if (pageId === 'biblioteca') { loadSaBiblioteca(); }
+}
+
+/* ────────────────────────────────────────────
+   AJUDA — subpastas (Guia / Versões / Orientações)
+──────────────────────────────────────────── */
+function ajudaTab(tab, el) {
+  document.querySelectorAll('#ajudaTabs .ed-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('ajuda-guia').style.display        = tab === 'guia' ? '' : 'none';
+  document.getElementById('ajuda-versoes').style.display     = tab === 'versoes' ? '' : 'none';
+  document.getElementById('ajuda-orientacoes').style.display = tab === 'orientacoes' ? '' : 'none';
+}
+
+/* ────────────────────────────────────────────
+   EDITORIAL — carregar conteúdo de exemplo
+──────────────────────────────────────────── */
+function seedEditorialDemo() {
+  try {
+    const existing = (AUTH.getBulletins ? AUTH.getBulletins().length : 0) + (AUTH.getArticles ? AUTH.getArticles().length : 0);
+    if (existing > 0 && !confirm('Já existe conteúdo editorial. Adicionar os exemplos mesmo assim?')) return;
+
+    if (AUTH.addBulletin) {
+      AUTH.addBulletin({
+        title: 'Calibração de Câmera Frontal ADAS — Procedimento Estático Completo',
+        type: 'procedimento', status: 'published',
+        brands: ['honda', 'toyota', 'nissan', 'ford'],
+        tags: ['calibração estática', 'câmera frontal', 'para-brisa', 'alvo de calibração'],
+        classification: 'CA24-112', reference: 'NTP-ADAS-011', severity: 'moderate',
+        summary: 'Procedimento padrão para calibração estática da câmera frontal ADAS após substituição de para-brisa, reparo de colisão ou desconexão do módulo. Utiliza alvo de calibração, nível a laser e scanner com suporte a calibração. Estima-se 45–60 min de mão de obra. A câmera não deve ser substituída sem recalibração, sob risco de falso negativo do AEB/FCW.',
+        appliedVehicles: ['2023-2025 Civic (FE)', '2023-2025 CR-V (RS)', '2022+ HR-V', '2024+ Accord (LX)'],
+        appliedSystems: ['Honda Sensing', 'Câmera frontal integrada ao espelho', 'AEB / FCW / LKAS'],
+        component: 'LANE DEPARTURE: WARNING / ELECTRICAL SYSTEM',
+        dtcs: ['C1B00', 'C1B03', 'C2A00'],
+        reportedSymptoms: [
+          'Luz de advertência ADAS acesa após troca de para-brisa',
+          'AEB não responde a veículo parado (falso negativo)',
+          'Mensagem "Sistema de câmera indisponível" no painel',
+        ],
+        rootCause: 'Desalinhamento de 1° no pitch da câmera desloca o campo de visão em ~30 m a 100 m de distância, excedendo a tolerância angular do sistema (especificação de fábrica: ±0,3°).',
+        calibrationType: 'Estática',
+        preconditions: [
+          'Pneus na pressão da etiqueta da porta',
+          'Combustível entre ¼ e ¾ do tanque',
+          'Sem carga no banco traseiro (cofre vazio)',
+          'Volante centralizado e alinhamento confirmado',
+          'Piso nivelado (tolerância ≤ 2 mm no vão de calibração)',
+          'Iluminação difusa, sem sol direto ou reflexos no alvo',
+        ],
+        requiredTools: ['Nível a laser', 'Régua dobrável métrica', 'Esquadro de carpinteiro', '7 alvos de calibração', 'Fita adesiva (≥ 48 mm)', 'Marcador permanente', 'Scanner de diagnóstico', 'Trena métrica'],
+        specsTable: [
+          { param: 'Distância do alvo à frente do veículo', value: '2.500 mm', note: 'Linha central do veículo' },
+          { param: 'Posição do nível a laser', value: '800 mm (31,5 in)', note: '45° em relação ao veículo' },
+          { param: 'Largura do vão de calibração', value: '3.000 mm', note: 'Mínimo exigido' },
+          { param: 'Torque de fixação do suporte', value: '9 N·m (6,8 lb-ft)', note: 'Não apertar além' },
+          { param: 'Tolerância de alinhamento do alvo', value: '± 10 mm', note: 'Lateral e vertical (ASE)' },
+          { param: 'Tempo estimado de calibração', value: '45–60 min', note: 'Mão de obra' },
+        ],
+        steps: [
+          'Preparar o veículo: conferir pressão dos pneus, carga e alinhamento conforme pré-requisitos.',
+          'Centralizar o volante e posicionar o veículo em linha reta no vão de calibração.',
+          'Marcar a linha central do veículo com cordão de giz (2.500 mm à frente).',
+          'Posicionar o nível a laser a 800 mm do veículo, a 45°, e traçar a linha de referência.',
+          'Montar e posicionar o alvo de calibração sobre a linha central, na distância do manual do modelo.',
+          'Conferir a planicidade do alvo com o esquadro e travar o ajuste com o torque especificado (9 N·m).',
+          'Conectar o scanner, executar o procedimento de calibração estática e aguardar a validação.',
+          'Limpar os DTCs e realizar o escaneamento pós-reparo para confirmar o sistema em prontidão.',
+          'Executar teste em estrada (trecho reto, 25–50 km/h) para validar a leitura do AEB/FCW.',
+        ],
+        passCriteria: [
+          'Calibração concluída sem DTCs ativos',
+          'Eixo óptico da câmera dentro de ±0,3° (pitch/yaw)',
+          'Alvo reconhecido e processado pelo scanner sem erro de posicionamento',
+          'Escaneamento pós-reparo sem falhas de comunicação',
+        ],
+        failureActions: [
+          'Verificar a planicidade e o nivelamento do piso (tolerância ≤ 2 mm)',
+          'Conferir o alinhamento do alvo e repetir a marcação da linha central',
+          'Confirmar que não há obstruções/reflexos entre o alvo e a câmera',
+          'Atualizar o software do scanner para a versão mínima exigida pelo modelo',
+        ],
+        referenceDocs: [
+          'ESM: DRIVER INFORMATION & MULTIMEDIA > CALIBRATING CAMERA IMAGE',
+          'Manual de Serviço — seção SUSPENSION & ALIGNMENT (procedimento de alinhamento)',
+          'TSB de referência: Nissan NTB25-002 / Ford 21-2389',
+          'ASE L4 — Advanced Driver Assistance Systems (calibração estática/dinâmica)',
+        ],
+        content: '<h2>Quando a calibração é obrigatória</h2><ul><li>Substituição do para-brisa;</li><li>Substituição da câmera ou do módulo ADAS;</li><li>Reparo de colisão na frente do veículo;</li><li>Alinhamento de suspensão ou elevação de altura da carroceria;</li><li>Desconexão da bateria por período prolongado.</li></ul><h2>Risco técnico</h2><p>1° de desalinhamento desloca o campo de visão em dezenas de metros. O sistema pode apresentar falso negativo no AEB, comprometendo a segurança do condutor.</p>'
+      });
+      AUTH.addBulletin({
+        title: 'Atualização: Compatibilidade do Scanner com Nissan 2025',
+        type: 'atualizacao', status: 'published',
+        brands: ['nissan'],
+        tags: ['atualização', 'nissan', 'firmware', 'scanner'],
+        classification: 'SW24-077', reference: 'FIRMWARE-8.4.2', severity: 'info',
+        summary: 'A partir da versão 8.4.2 do firmware, o scanner passa a suportar calibração dos modelos Nissan 2025 (Sentra, Kicks e Frontier), incluindo o radar milimétrico dianteiro. Atualização obrigatória antes de atender unidades 2025.',
+        appliedVehicles: ['2025 Sentra (B18)', '2025 Kicks (P15)', '2025 Frontier (D23)'],
+        appliedSystems: ['Intelligent Forward Collision Warning', 'Intelligent Emergency Braking', 'Radar milimétrico dianteiro (77 GHz)'],
+        component: 'FORWARD COLLISION AVOIDANCE / RADAR',
+        dtcs: ['C1A00-00', 'C1A01-49'],
+        calibrationType: 'Estática',
+        preconditions: ['Scanner conectado a fonte de alimentação', 'Firmware ≥ 8.4.2 instalado'],
+        requiredTools: ['Scanner atualizado', 'Alvo de calibração de radar (workspace 5 m × 3 m)'],
+        steps: [
+          'Verificar a versão do firmware do scanner (menu Sistema > Sobre).',
+          'Baixar e instalar o firmware 8.4.2 pelo gerenciador do fabricante.',
+          'Selecionar o modelo Nissan 2025 e o sistema a calibrar.',
+          'Executar o procedimento conforme o manual do scanner.',
+        ],
+        passCriteria: ['Calibração aceita sem DTCs', 'Sistemas IEB/FCW em prontidão'],
+        referenceDocs: ['Guia de calibração de radar — Nissan/Launch x431', 'NTB25-002 (AVM camera calibration)'],
+        content: '<p>Baixe o firmware atualizado antes de iniciar o atendimento em unidades 2025.</p><p><b>Nota:</b> o radar dianteiro exige área plana de <b>5 m à frente × 3 m de largura</b> livre de obstruções metálicas.</p>'
+      });
+      AUTH.addBulletin({
+        title: 'Alerta: Falso positivo no BSM após troca de para-brisa',
+        type: 'alerta', status: 'draft',
+        brands: ['honda', 'toyota'],
+        tags: ['bsm', 'alerta', 'para-brisa', 'ponto cego'],
+        classification: 'AL24-031', reference: 'ADAS-ALERT-2026-03', severity: 'critical',
+        summary: 'Registramos casos de falso positivo no sensor de ponto cego (BSM) em veículos que passaram por troca de para-brisa sem recalibração da câmera. O alerta intermitente sem veículo no ponto cego indica descalibração. Recomenda-se recalibrar câmera e radares após qualquer substituição de vidro.',
+        appliedVehicles: ['2022+ Civic (FE)', '2021+ Corolla', '2022+ RAV4'],
+        appliedSystems: ['Blind Spot Monitoring (BSM)', 'Rear Cross Traffic Alert (RCTA)'],
+        component: 'LANE DEPARTURE: WARNING / BSM',
+        dtcs: ['C2A02-96', 'C2A03-46'],
+        reportedSymptoms: [
+          'Alerta BSM acende sem veículo presente (intermitente)',
+          'Não alerta com veículo no ponto cego (perda de sensibilidade)',
+          'Luz de falha no painel após troca de vidro',
+        ],
+        rootCause: 'Sensores laterais BSM permanecem com calibração de fábrica, mas a câmera frontal desalinhada altera a fusão de dados, gerando plausibilidade incorreta e falso positivo.',
+        calibrationType: 'Estática',
+        preconditions: ['Veículo sem carga', 'Área livre de pelo menos 2 m ao redor do veículo'],
+        requiredTools: ['Scanner de diagnóstico', 'Alvo de calibração frontal'],
+        steps: [
+          'Confirmar o histórico: substituição de para-brisa ou reparo recente.',
+          'Executar a calibração estática da câmera frontal.',
+          'Reiniciar os sensores BSM/RCTA via scanner.',
+          'Validar com teste em estrada (via de duas pistas).',
+        ],
+        passCriteria: ['Sem DTCs ativos', 'Alerta BSM somente com veículo real no ponto cego'],
+        failureActions: ['Verificar os módulos BSM quanto a danos físicos', 'Consultar o TSB da montadora para o modelo'],
+        referenceDocs: ['TSB Mitsubishi TSB-26-54-002 (referência de categoria)', 'Manual de serviço do modelo'],
+        content: '<p><b>Recomendação:</b> sempre recalibrar câmera e radares após qualquer substituição de vidro ou reparo na frente do veículo.</p>'
+      });
+    }
+
+    if (AUTH.addArticle) {
+      AUTH.addArticle({
+        title: 'Entendendo o ACC — Controle de Cruzeiro Adaptativo',
+        status: 'published',
+        brands: ['toyota', 'honda'],
+        tags: ['acc', 'radar', 'técnico'],
+        content: '<h2>O que é o ACC</h2><p>O Controle de Cruzeiro Adaptativo mantém a velocidade e a distância do veículo à frente usando radar (77 GHz) e/ou câmera frontal.</p><h2>Quando recalibrar</h2><ul><li>Após batida frontal ou desalinhamento da barra do radar;</li><li>Troca de para-brisa (modelos com câmera integrada);</li><li>Alinhamento de suspensão.</li></ul><p>O ACC é um dos sistemas mais sensíveis a ângulo: 1° de desalinhamento compromete o frenagem automática em alta velocidade.</p>'
+      });
+      AUTH.addArticle({
+        title: 'BSM: Sensor de Ponto Cego — Quando Recalibrar',
+        status: 'published',
+        brands: ['nissan', 'ford'],
+        tags: ['bsm', 'recalibração'],
+        content: '<h2>Funcionamento</h2><p>O BSM usa radares de curto alcance nas laterais traseiras para detectar veículos no ponto cego.</p><h2>Sintomas de descalibração</h2><ol><li>Alerta acende sem veículo presente;</li><li>Não alerta com veículo no ponto cego;</li><li>Luz de falha no painel.</li></ol><p>A calibração do BSM geralmente dispensa alvo, mas exige área livre ao redor do veículo.</p>'
+      });
+      AUTH.addArticle({
+        title: 'Câmera mono × estéreo: como identificar e calibrar',
+        status: 'draft',
+        brands: [],
+        tags: ['câmera', 'calibração'],
+        content: '<p>Entenda a diferença entre câmeras mono (1 lente) e estéreo (2 lentes) e os procedimentos específicos de calibração de cada uma.</p><p><i>Conteúdo em elaboração — complete este artigo antes de publicar.</i></p>'
+      });
+    }
+
+    loadEditorialStats();
+    renderEditorialTable();
+    showToast('Conteúdo de exemplo carregado!', 'success');
+  } catch(e) {
+    showToast('Erro ao carregar exemplo: ' + (e.message || e), 'error');
+  }
 }
 
 /* ────────────────────────────────────────────
@@ -3360,7 +3820,7 @@ function renderEditorialTable() {
   const search = (document.getElementById('edSearch')?.value || '').toLowerCase().trim();
   const filtered = items.filter(item => {
     const matchStatus = _edCurrentStatus === 'all' || item.status === _edCurrentStatus;
-    const matchSearch = !search || (item.title||'').toLowerCase().includes(search) || (item.id||'').toLowerCase().includes(search);
+    const matchSearch = !search || (item.title||'').toLowerCase().includes(search) || (item.id||'').toLowerCase().includes(search) || (item.reference||'').toLowerCase().includes(search) || (item.classification||'').toLowerCase().includes(search);
     return matchStatus && matchSearch;
   });
 
@@ -3386,7 +3846,7 @@ function renderEditorialTable() {
     return `<tr>
       <td style="max-width:220px">
         <div style="font-weight:600;font-size:.84rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(item.title||'Sem título')}</div>
-        <div style="font-size:.65rem;font-family:'Courier New',monospace;color:rgba(0,180,216,.5);margin-top:1px">${esc(item.id||'—')}</div>
+        <div style="font-size:.65rem;font-family:'Courier New',monospace;color:rgba(0,180,216,.5);margin-top:1px">${esc(item.reference || item.id || '—')}</div>
       </td>
       <td><span class="ed-type-badge ${typeCls}">${typeLabel}</span></td>
       <td><span class="ed-status-badge ${stCls}">${stLabel}</span></td>
@@ -3460,6 +3920,11 @@ function openEditor(id=null, type='boletim') {
   let selBrands = [];
   let content = '';
 
+  // Helper para popular/preencher campos meta
+  const _edField = (id) => document.getElementById(id);
+  const _edSetArr = (id, arr) => { const el = _edField(id); if (el) el.value = (arr||[]).join('\n'); };
+  const _edSet = (id, v) => { const el = _edField(id); if (el) el.value = (v == null ? '' : v); };
+
   if (id) {
     const item = type==='boletim'
       ? (AUTH.getBulletinById ? AUTH.getBulletinById(id) : null)
@@ -3473,6 +3938,28 @@ function openEditor(id=null, type='boletim') {
       document.getElementById('edMetaStatus').value = item.status || 'draft';
       selBrands = item.brands || [];
       content = item.content || item.body || '';
+      // Ficha técnica
+      _edSet('edMetaClassification', item.classification);
+      _edSet('edMetaReference',      item.reference);
+      _edSet('edMetaSeverity',       item.severity || 'info');
+      _edSet('edMetaSummary',        item.summary);
+      _edSetArr('edMetaVehicles', item.appliedVehicles);
+      _edSetArr('edMetaSystems',  item.appliedSystems);
+      _edSet('edMetaComponent',   item.component);
+      _edSet('edMetaDtcs',        (item.dtcs||[]).join(', '));
+      // Diagnóstico
+      _edSetArr('edMetaSymptoms',  item.reportedSymptoms);
+      _edSet('edMetaRootCause',    item.rootCause);
+      // Procedimento
+      _edSet('edMetaCalibType',    item.calibrationType || '');
+      _edSetArr('edMetaPreconditions', item.preconditions);
+      _edSetArr('edMetaTools',     item.requiredTools);
+      _edSet('edMetaSpecs', (item.specsTable||[]).map(s=>[s.param,s.value,s.note||''].filter(Boolean).join(' | ')).join('\n'));
+      _edSetArr('edMetaSteps',     item.steps);
+      // Verificação e referências
+      _edSetArr('edMetaPass',      item.passCriteria);
+      _edSetArr('edMetaFailure',   item.failureActions);
+      _edSetArr('edMetaRefs',      item.referenceDocs);
     }
   } else {
     document.getElementById('edMetaTitle').value = '';
@@ -3481,6 +3968,15 @@ function openEditor(id=null, type='boletim') {
     document.getElementById('edMetaBulletinType').value = 'novidade';
     document.getElementById('edMetaTags').value = '';
     document.getElementById('edMetaStatus').value = 'draft';
+    _edSet('edMetaClassification',''); _edSet('edMetaReference','');
+    _edSet('edMetaSeverity','info');   _edSet('edMetaSummary','');
+    _edSetArr('edMetaVehicles',[]);    _edSetArr('edMetaSystems',[]);
+    _edSet('edMetaComponent','');      _edSet('edMetaDtcs','');
+    _edSetArr('edMetaSymptoms',[]);    _edSet('edMetaRootCause','');
+    _edSet('edMetaCalibType','');      _edSetArr('edMetaPreconditions',[]);
+    _edSetArr('edMetaTools',[]);       _edSet('edMetaSpecs','');
+    _edSetArr('edMetaSteps',[]);       _edSetArr('edMetaPass',[]);
+    _edSetArr('edMetaFailure',[]);     _edSetArr('edMetaRefs',[]);
   }
 
   _buildBrandsGrid(selBrands);
@@ -3575,10 +4071,36 @@ function saveEditorDraft() {
   const status  = document.getElementById('edMetaStatus').value;
   const subtype = document.getElementById('edMetaBulletinType')?.value || 'novidade';
 
+  // Parsing dos campos estruturados
+  const _lines = (id) => (document.getElementById(id)?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const _csv   = (id) => (document.getElementById(id)?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const _specs = (id) => (document.getElementById(id)?.value||'').split('\n').map(l=>l.trim()).filter(Boolean)
+    .map(line => { const [param='', value='', note=''] = line.split('|').map(s=>s.trim()); return { param, value, note }; });
+
   if (!title) { showToast('Adicione um título antes de salvar.', 'error'); return; }
 
   try {
-    const payload = { title, content, brands, tags, status, type: subtype };
+    const payload = {
+      title, content, brands, tags, status, type: subtype,
+      classification: document.getElementById('edMetaClassification')?.value.trim() || '',
+      reference:      document.getElementById('edMetaReference')?.value.trim() || '',
+      severity:       document.getElementById('edMetaSeverity')?.value || 'info',
+      summary:        document.getElementById('edMetaSummary')?.value.trim() || '',
+      appliedVehicles: _lines('edMetaVehicles'),
+      appliedSystems:  _lines('edMetaSystems'),
+      component:       document.getElementById('edMetaComponent')?.value.trim() || '',
+      dtcs:            _csv('edMetaDtcs'),
+      reportedSymptoms:_lines('edMetaSymptoms'),
+      rootCause:       document.getElementById('edMetaRootCause')?.value.trim() || '',
+      calibrationType: document.getElementById('edMetaCalibType')?.value || '',
+      preconditions:   _lines('edMetaPreconditions'),
+      requiredTools:   _lines('edMetaTools'),
+      specsTable:      _specs('edMetaSpecs'),
+      steps:           _lines('edMetaSteps'),
+      passCriteria:    _lines('edMetaPass'),
+      failureActions:  _lines('edMetaFailure'),
+      referenceDocs:   _lines('edMetaRefs'),
+    };
     if (type === 'boletim') {
       if (_edEditingId) AUTH.editBulletin(_edEditingId, payload);
       else { const b = AUTH.addBulletin(payload); _edEditingId = b?.id; }

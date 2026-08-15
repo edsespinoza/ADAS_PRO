@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-15 (Auditoria de segurança + fixes #77–#79)  
+**Última atualização:** 2026-08-15 (Módulo Ajuda reformulado + fix cache #84)  
 **Responsável:** AutoTech Service
 
 ---
@@ -897,3 +897,18 @@
   - **Novas APIs em auth.js:** `AUTH.replaceBulletins(items)` / `AUTH.replaceArticles(items)` (substituem o array no localStorage).
   - **Migração:** seeds legados v1 identificados por título (`_LEGACY_SEED_TITLES`) → substituídos na primeira abertura do superadmin.
   - **Deploy:** Vercel prod ✅ — assets versionados 200, rotina presente em prod, header `no-cache, no-store` ativo.
+
+## ✨ FEATURE — Módulo Ajuda reformulado com guia passo a passo e prints dos painéis 2026-08-15
+
+> **Solicitação:** "no modulo ajuda melhore com mais detalhe, imagens de telas, caminho passo a passo mais rico em detalhes, refatore".
+
+- [x] **#85 — Guia de Uso com walkthroughs + screenshots + lightbox** ✅ 2026-08-15
+  - **Refatoração do `#ajuda-guia` (superadmin.html):** 8 cards de walkthrough (Dashboard, Admins, Segurança, Planos, Sistema, Auditoria, Biblioteca, Editorial), cada um com passos numerados detalhados, badge de seção, screenshot ampliável e callout de dica/boas práticas.
+  - **Prints reais dos painéis:** `.tab_*.png`/`.screenshot_user.png` do projeto copiados para `assets/img/ajuda/` com nomes limpos (dashboard, admins, security, plans, system, audit, biblioteca, editorial, referencia, area-do-membro). Thumbnails `loading="lazy"` (PNGs originais ~2351×1351; sem imagemagick/pngquant no ambiente → mantidos originais).
+  - **Lightbox `#shotLightbox`:** overlay fullscreen com zoom da imagem + legenda; abre por clique na thumbnail (`openShot(src, cap)`), fecha por ✕, clique no fundo ou **ESC** (`closeShot`); trava o scroll do body enquanto aberto.
+  - **CSS novo `.help-*`:** hero com TOC (âncoras `#ajuda-passo-*`), steps numerados com bolinhas, `code` inline, chips, callouts `.help-dica` e `.help-extra`. Responsivo (grid 2 col → 1 col em ≤900px).
+  - **Conteúdo detalhado por seção:** hierarquia/paridade de roles, cadeia de acesso (plano → moduleAccess → access/downloadLevel → visibilidade), sincronização CONTENT_MAP ↔ DEFAULT_CONTENT, reseed automático, MFA/rate-limit/sessão 4h, modo manutenção + mensagem global, webhook X-Secret, e o fluxo completo do editor editorial (boletins BT-AAAA-NNN, ficha técnica, autosave 30s).
+  - **Aba Versões & Changelog:** linha nova `v3.1.0 — build 20260815` (boletins v2 + fix de cache + reseed + guia).
+  - **Aba Orientações & FAQ:** 2 perguntas novas — "Meus boletins voltaram ao padrão?" (explica reseed/`adaspro_seed_version`/marcador `_seed`) e "Atualizei e nada mudou?" (cache `no-cache` + `Ctrl+Shift+R`).
+  - **Validação:** bloco inline de script passou em `new Function` (syntax check); deploy Vercel prod ✅ verificado — `superadmin`: markers `openShot`/`shotLightbox`/`ajuda-passo-*`, 8 PNGs de `assets/img/ajuda/` 200, linhas `v3.1.0`/`reseed automático`/`Ctrl+Shift+R` presentes.
+  - **Nota:** `area-do-membro.png` e `referencia.png` foram copiados para `assets/img/ajuda/` como referência futura (ainda não usados no guia).

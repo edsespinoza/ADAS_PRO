@@ -591,6 +591,153 @@
     .data-table tr:hover td { background: var(--surface-hover); }
 
     /* ─────────────────────────────────────────────────────
+       AJUDA — guia passo a passo com prints
+    ───────────────────────────────────────────────────── */
+    .help-hero {
+      background: linear-gradient(135deg, var(--accent-bg), var(--gold-bg));
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .help-hero-title { font-family: var(--font-h); font-size: 1.05rem; font-weight: 800; color: var(--text-primary); }
+    .help-hero-sub  { font-size: .8rem; color: var(--text-secondary); margin-top: 4px; max-width: 560px; line-height: 1.6; }
+    .help-toc { display: flex; flex-wrap: wrap; gap: 7px; max-width: 480px; justify-content: flex-end; }
+    .help-toc a {
+      text-decoration: none;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--surface);
+      border: 1px solid var(--accent-border);
+      border-radius: 50px;
+      padding: 5px 12px;
+      transition: all .15s ease;
+    }
+    .help-toc a:hover { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+    .help-card { margin-bottom: 4px; }
+    .help-chip {
+      font-size: .66rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: var(--gold-bg);
+      border: 1px solid var(--gold-border);
+      border-radius: 50px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+    .help-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+      gap: 18px;
+      padding: 16px 20px 18px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .help-grid { grid-template-columns: 1fr; } }
+    .help-steps { list-style: none; margin: 0; padding: 0; counter-reset: hstep; }
+    .help-step {
+      position: relative;
+      counter-increment: hstep;
+      padding: 8px 0 8px 42px;
+      font-size: .82rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+    }
+    .help-step + .help-step { border-top: 1px dashed var(--border); }
+    .help-step::before {
+      content: counter(hstep);
+      position: absolute;
+      left: 0; top: 9px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .76rem; font-weight: 800;
+      color: var(--accent);
+      background: linear-gradient(135deg, var(--accent-bg), var(--gold-bg));
+      border: 1px solid var(--accent-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .help-step b { color: var(--text-primary); }
+    .help-step code {
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: .74rem;
+      color: var(--gold);
+    }
+    .help-shot { margin: 0; position: relative; }
+    .help-shot img {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: zoom-in;
+      display: block;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .15s ease, transform .15s ease;
+    }
+    .help-shot img:hover { border-color: var(--accent); transform: scale(1.01); }
+    .help-shot figcaption { font-size: .72rem; color: var(--text-muted); margin-top: 7px; text-align: center; }
+    .help-dica {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--gold-bg);
+      border: 1px solid var(--gold-border);
+      font-size: .78rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .help-extra {
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      background: var(--surface-muted);
+      border: 1px dashed var(--border);
+      font-size: .8rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Lightbox de screenshots */
+    #shotLightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(6, 9, 15, .93);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 48px;
+    }
+    #shotLightbox.open { display: flex; }
+    #shotLightbox img {
+      max-width: min(96vw, 1400px);
+      max-height: 82vh;
+      border-radius: 12px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .65);
+    }
+    #shotLightboxCap { color: var(--text-muted); margin-top: 14px; font-size: .85rem; text-align: center; }
+    .shot-close {
+      position: absolute;
+      top: 20px; right: 26px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.22);
+      color: #fff;
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s ease;
+    }
+    .shot-close:hover { background: rgba(255,255,255,.2); }
+
+    /* ─────────────────────────────────────────────────────
        ROLE BADGES
     ───────────────────────────────────────────────────── */
     .role-badge {
@@ -1986,84 +2133,224 @@
         </div>
 
         <!-- ── SUBPASTA 1: GUIA DE USO ── -->
+        <!-- ── SUBPASTA 1: GUIA DE USO ── -->
         <div id="ajuda-guia">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px">
 
-            <div class="table-card" style="padding:0;overflow:hidden">
+          <div class="help-hero">
+            <div>
+              <div class="help-hero-title">📖 Guia passo a passo do painel ADAS PRO</div>
+              <div class="help-hero-sub">Navegue por cada seção do painel com instruções detalhadas, prints de referência e boas práticas. Clique em qualquer imagem para ampliá-la.</div>
+            </div>
+            <div class="help-toc" id="helpToc">
+              <a href="#ajuda-passo-dashboard">📊 Dashboard</a>
+              <a href="#ajuda-passo-admins">👑 Admins</a>
+              <a href="#ajuda-passo-security">🛡️ Segurança</a>
+              <a href="#ajuda-passo-plans">📦 Planos</a>
+              <a href="#ajuda-passo-system">⚙️ Sistema</a>
+              <a href="#ajuda-passo-audit">🧾 Auditoria</a>
+              <a href="#ajuda-passo-biblioteca">📚 Biblioteca</a>
+              <a href="#ajuda-passo-editorial">✏️ Editorial</a>
+            </div>
+          </div>
+
+          <div style="display:grid;gap:18px;margin-top:18px">
+
+            <!-- ══ WALKTHROUGH: DASHBOARD ══ -->
+            <div class="table-card help-card" id="ajuda-passo-dashboard">
               <div class="table-card-header">
-                <div><div class="table-card-title">👑 Roles &amp; Hierarquia</div><div class="table-card-sub">Quem acessa o quê</div></div>
+                <div>
+                  <div class="table-card-title">📊 Dashboard — Visão geral</div>
+                  <div class="table-card-sub">Primeira tela ao entrar no painel</div>
+                </div>
+                <span class="help-chip">Seção 1</span>
               </div>
-              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
-                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px">👑</span><div><b style="color:var(--gold)">Superadmin</b> — controle total da plataforma: cria/remove admins, configuração global, billing, auditoria, editorial e biblioteca.</div></div>
-                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px">🛡️</span><div><b style="color:var(--accent)">Admin</b> — gerencia membros (aprovação/bloqueio), tickets, conteúdo e boletins.</div></div>
-                <div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px">⚙️</span><div><b>Gestor</b> — opera o painel admin (membros + tickets), não cria contas.</div></div>
-                <div style="display:flex;gap:8px;padding:8px 0"><span style="min-width:22px">👤</span><div><b>Membro</b> — área de membros: biblioteca conforme o plano, tickets e boletins.</div></div>
-                <div style="margin-top:8px;font-size:.75rem;color:var(--text-muted)">Hierarquia numérica: superadmin (4) → admin (3) → gestor (2) → membro (1). Ninguém promove/rebaixa role igual ou superior à sua.</div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Leia os indicadores (KPIs):</b> usuários ativos, admins &amp; gestores da equipe e as métricas de uso do topo. Eles atualizam a cada carga do painel.</li>
+                    <li class="help-step"><b>Confira as aprovações pendentes:</b> se houver novos cadastros aguardando, um contador aparece destacado. Clique para ir direto à aba Aprovações.</li>
+                    <li class="help-step"><b>Acompanhe tickets abertos:</b> o resumo de suporte mostra quantos atendimentos precisam de resposta hoje.</li>
+                    <li class="help-step"><b>Use os atalhos rápidos:</b> os cards de ação levam às seções mais usadas (Admins, Biblioteca, Editorial) sem navegar pela sidebar.</li>
+                    <li class="help-step"><b>Verifique a sessão:</b> o relógio e o avatar no topo confirmam quem está logado e o nível de acesso (superadmin).</li>
+                  </ol>
+                  <div class="help-dica">💡 <b>Dica:</b> o menu lateral esquerdo é o mapa completo do painel — cada item abre uma seção própria. Se você não encontrar algo, use a busca de cada tela (por exemplo, nome/e-mail na lista de usuários).</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/dashboard.png" alt="Tela inicial do painel superadmin" onclick="openShot(this,'Dashboard — visão geral com KPIs, atalhos e sidebar')"><figcaption>Dashboard — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
-            <div class="table-card" style="padding:0;overflow:hidden">
+            <!-- ══ WALKTHROUGH: ADMINS ══ -->
+            <div class="table-card help-card" id="ajuda-passo-admins">
               <div class="table-card-header">
-                <div><div class="table-card-title">📦 Planos &amp; Módulos</div><div class="table-card-sub">Liberação de conteúdo por plano</div></div>
+                <div>
+                  <div class="table-card-title">👑 Gerenciar Admins &amp; Gestores</div>
+                  <div class="table-card-sub">Criar, promover, rebaixar e remover a equipe de controle</div>
+                </div>
+                <span class="help-chip">Seção 2</span>
               </div>
-              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
-                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Free (R$ 0)</b> — materiais demo.</div>
-                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Módulo (R$ 47)</b> — 1 categoria à escolha.</div>
-                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Pro (R$ 97)</b> — Honda, Toyota e Nissan + suporte prioritário.</div>
-                <div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>Premium (R$ 197)</b> — todas as 12 categorias + consultoria.</div>
-                <div style="padding:7px 0 0">Em <b>Planos &amp; Módulos</b> você edita preço, categorias liberadas e nível mínimo de acesso por categoria.</div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Veja a hierarquia:</b> os 4 cards do topo mostram a quantidade de superadmins, admins, gestores e membros. É o "raio-x" da equipe.</li>
+                    <li class="help-step"><b>Crie um usuário:</b> clique em <b>+ Novo Usuário</b>. No painel deslizante, preencha nome, e-mail e escolha a role (superadmin, admin, gestor ou membro).</li>
+                    <li class="help-step"><b>Confirme por e-mail:</b> para criar uma conta privilegiada, digite o e-mail do destinatário novamente no campo de confirmação — evita erros de digitação em contas sensíveis.</li>
+                    <li class="help-step"><b>Busque e filtre:</b> use a busca por nome/e-mail e o seletor de função para localizar uma conta rapidamente.</li>
+                    <li class="help-step"><b>Promova ou rebaixe:</b> use as ações da linha. ⚠️ Você não pode promover ninguém a uma role igual ou superior à sua — isso é bloqueado no banco (RLS) e na Edge Function.</li>
+                    <li class="help-step"><b>Remova com cuidado:</b> a exclusão remove a conta também do Supabase Auth. Para suspender temporariamente, use o bloqueio em vez de excluir.</li>
+                  </ol>
+                  <div class="help-dica">💡 <b>Boas práticas:</b> cada admin deve ter conta própria (auditável). Evite compartilhar credenciais — a auditoria registra quem fez cada ação.</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/admins.png" alt="Tela de gerenciamento de admins com hierarquia e filtros" onclick="openShot(this,'Gerenciar Admins — hierarquia, busca e ações por usuário')"><figcaption>Gerenciar Admins — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
-            <div class="table-card" style="padding:0;overflow:hidden">
+            <!-- ══ WALKTHROUGH: SEGURANÇA ══ -->
+            <div class="table-card help-card" id="ajuda-passo-security">
               <div class="table-card-header">
-                <div><div class="table-card-title">✅ Fluxo de Aprovação</div><div class="table-card-sub">Novo usuário cadastrado</div></div>
+                <div>
+                  <div class="table-card-title">🛡️ Segurança</div>
+                  <div class="table-card-sub">Sessões ativas, tentativas de login e políticas globais</div>
+                </div>
+                <span class="help-chip">Seção 3</span>
               </div>
-              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
-                <ol style="margin:6px 0 0 18px;padding-left:4px">
-                  <li style="padding:3px 0">Usuário se cadastra em <b>login.html</b> → status <b>pending</b>.</li>
-                  <li style="padding:3px 0">Admin vê a aba <b>Aprovações</b> (com contador) em Gerenciar Membros.</li>
-                  <li style="padding:3px 0">Aprovar define o plano/role; <b>bloquear</b> recusa o acesso.</li>
-                  <li style="padding:3px 0">Edge Function <b>approve-user</b> valida tudo server-side e registra em auditoria.</li>
-                </ol>
-                <div style="margin-top:8px;font-size:.75rem;color:var(--text-muted)">O e-mail transacional de aprovação depende da <code>RESEND_API_KEY</code> (ver pendências em bug.md).</div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Monitore tentativas falhas:</b> o card <b>Tentativas de login falhadas</b> lista as últimas 10 ocorrências ao vivo. Picos aqui podem indicar força bruta.</li>
+                    <li class="help-step"><b>Revise sessões ativas:</b> o card <b>Sessões ativas</b> mostra os dispositivos conectados agora. Use <b>Encerrar todas</b> para expulsar tudo de uma vez (ex.: em caso de conta comprometida).</li>
+                    <li class="help-step"><b>2FA obrigatória:</b> ative <b>Autenticação 2FA Obrigatória</b> para exigir segundo fator de todos os admins e gestores. Não desative a TOTP da sua própria conta.</li>
+                    <li class="help-step"><b>Rate-limit:</b> <b>Bloquear após 5 tentativas falhas</b> bloqueia o IP por 15 minutos automaticamente.</li>
+                    <li class="help-step"><b>Auditoria detalhada:</b> mantenha <b>Log de auditoria detalhado</b> ligado para registrar todas as ações com IP e timestamp.</li>
+                    <li class="help-step"><b>Expiração de sessão:</b> <b>Sessão expira em 4h</b> encerra sessões inativas automaticamente — reduz a janela de abuso de credenciais roubadas.</li>
+                  </ol>
+                  <div class="help-dica">🔒 <b>Importante:</b> MFA é obrigatório para roles privilegiadas. Se um admin desativar a TOTP e esquecer, a recuperação precisa ser feita no Supabase Dashboard.</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/security.png" alt="Tela de segurança com tentativas falhas, sessões ativas e políticas" onclick="openShot(this,'Segurança — sessões, tentativas falhas e políticas de acesso')"><figcaption>Segurança — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
-            <div class="table-card" style="padding:0;overflow:hidden">
+            <!-- ══ WALKTHROUGH: PLANOS ══ -->
+            <div class="table-card help-card" id="ajuda-passo-plans">
               <div class="table-card-header">
-                <div><div class="table-card-title">📚 Biblioteca &amp; Downloads</div><div class="table-card-sub">Materiais técnicos (PDF)</div></div>
+                <div>
+                  <div class="table-card-title">📦 Planos &amp; Módulos</div>
+                  <div class="table-card-sub">Preços, categorias liberadas e módulos avulsos</div>
+                </div>
+                <span class="help-chip">Seção 4</span>
               </div>
-              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Cada material tem <b>categoria</b>, <b>accessLevel</b> (visualização) e <b>downloadLevel</b> (baixar PDF).</div>
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Upload: dropzone gera slug do título e salva em Storage como <code>categoria/slug.pdf</code>.</div>
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Visibilidade <b>🙈/👁</b> oculta ou exibe o material sem deletá-lo.</div>
-                <div style="padding:6px 0 0">O download gera <b>URL assinada (1h)</b> via Edge Function <b>get-download-url</b>, com validação de MFA + permissões + registro em auditoria.</div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Escolha o plano:</b> os cards do grid (Free R$0 / Módulo R$47 / Pro R$97 / Premium R$197) mostram o preço e as categorias liberadas.</li>
+                    <li class="help-step"><b>Edite o plano:</b> altere preço, nome e o conjunto de categorias. A mudança vale imediatamente para o acesso dos membros.</li>
+                    <li class="help-step"><b>Defina o nível mínimo por categoria:</b> o <code>moduleAccess</code> controla <b>acesso</b> (visualizar) e <b>downloadLevel</b> (baixar PDF) por categoria — mais fino que o plano inteiro.</li>
+                    <li class="help-step"><b>Gerencie módulos avulsos:</b> em <b>📦 Módulos Avulsos</b> você ativa/desativa pacotes por marca (Honda, Toyota, Nissan, VAG, Chineses...).</li>
+                    <li class="help-step"><b>Crie um módulo novo:</b> <b>+ Novo Módulo</b> adiciona um pacote personalizado de materiais.</li>
+                  </ol>
+                  <div class="help-dica">💡 <b>Regra de ouro:</b> se um membro "não vê um material", cheque a cadeia: plano do membro → categoria no moduleAccess → accessLevel/downloadLevel do item → visibilidade (🙈/👁).</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/plans.png" alt="Tela de planos e módulos com grid de preços" onclick="openShot(this,'Planos & Módulos — preços, categorias e módulos avulsos')"><figcaption>Planos &amp; Módulos — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
-            <div class="table-card" style="padding:0;overflow:hidden">
+            <!-- ══ WALKTHROUGH: SISTEMA ══ -->
+            <div class="table-card help-card" id="ajuda-passo-system">
               <div class="table-card-header">
-                <div><div class="table-card-title">✏️ Conteúdo Editorial</div><div class="table-card-sub">Boletins e artigos</div></div>
+                <div>
+                  <div class="table-card-title">⚙️ Sistema</div>
+                  <div class="table-card-sub">Manutenção, cadastros, mensagem global e webhook</div>
+                </div>
+                <span class="help-chip">Seção 5</span>
               </div>
-              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)"><b>Boletins Técnicos</b> — tipos Novidade, Atualização, Alerta e Procedimento; ganham numeração automática (BT-AAAA-NNN).</div>
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)"><b>Artigos</b> — conteúdo educacional mais longo.</div>
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Status: <b>rascunho</b> → <b>publicado</b> → <b>arquivado</b>. O editor tem WYSIWYG, preview e autosave a cada 30s.</div>
-                <div style="padding:6px 0 0;font-size:.75rem;color:var(--text-muted)">Conteúdo publicado aparece na aba Boletins da área do membro.</div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Modo Manutenção:</b> ative para <b>bloquear o acesso de todos os membros</b> (mostra página de manutenção). Um banner de aviso aparece no topo da tela enquanto estiver ativo.</li>
+                    <li class="help-step"><b>Novos cadastros:</b> <b>Novos cadastros abertos</b> permite ou bloqueia o registro de novos usuários no login.</li>
+                    <li class="help-step"><b>Aprovação manual:</b> com <b>Aprovação manual obrigatória</b> ligada, todo novo cadastro fica <b>pending</b> até um admin aprovar.</li>
+                    <li class="help-step"><b>Mensagem global:</b> digite o aviso em <b>📢 Mensagem Global</b> e clique em <b>Publicar mensagem</b> — ela aparece no topo do painel de todos os membros. Deixe em branco para desativar.</li>
+                    <li class="help-step"><b>Webhook de notificação:</b> configure a URL e o segredo (<code>X-Secret</code>) para receber eventos da plataforma via POST.</li>
+                  </ol>
+                  <div class="help-dica">⚠️ <b>Pense antes de ativar o modo manutenção:</b> ele derruba o acesso de TODOS os membros na hora. Prefira avisar antes com a mensagem global.</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/system.png" alt="Tela de sistema com modo manutenção, mensagem global e webhook" onclick="openShot(this,'Sistema — manutenção, mensagem global e webhook')"><figcaption>Sistema — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
-            <div class="table-card" style="padding:0;overflow:hidden">
+            <!-- ══ WALKTHROUGH: AUDITORIA ══ -->
+            <div class="table-card help-card" id="ajuda-passo-audit">
               <div class="table-card-header">
-                <div><div class="table-card-title">🎫 Tickets &amp; Suporte</div><div class="table-card-sub">Atendimento aos membros</div></div>
+                <div>
+                  <div class="table-card-title">🧾 Auditoria</div>
+                  <div class="table-card-sub">Log completo de todas as ações administrativas</div>
+                </div>
+                <span class="help-chip">Seção 6</span>
               </div>
-              <div style="padding:6px 18px 16px;font-size:.82rem;line-height:1.7;color:var(--text-secondary)">
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Membro abre ticket com prioridade baixa/média/alta.</div>
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Admin/gestor responde no painel; a primeira resposta move o ticket para <b>in-progress</b>.</div>
-                <div style="padding:6px 0;border-bottom:1px solid var(--border)">Fechar resolve e sinaliza na auditoria.</div>
-                <div style="padding:6px 0 0">🔒 <b>MFA:</b> contas com role privilegiada passam por verificação em 2 etapas no login — não desative a TOTP da sua conta.</div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Filtre por tipo:</b> use os chips (<b>Todos os tipos</b>, Alteração de role, Exclusão, Acesso negado, Configuração...) para focar o que importa.</li>
+                    <li class="help-step"><b>Identifique quem fez o quê:</b> cada linha traz o autor, a ação, o alvo e a data/hora. Tudo vindo da tabela <code>audit_logs</code> do banco.</li>
+                    <li class="help-step"><b>Investigue acesso negado:</b> o tipo <b>Acesso negado</b> registra tentativas bloqueadas — útil para detectar comportamentos suspeitos.</li>
+                    <li class="help-step"><b>Exporte ou consulte:</b> se precisar de um recorte maior, consulte a tabela diretamente no Supabase (SQL) — o painel mostra o resumo.</li>
+                  </ol>
+                  <div class="help-dica">🧾 <b>Dica:</b> a auditoria é a sua rede de segurança. Antes de investigar "quem mexeu em X", comece por aqui.</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/audit.png" alt="Tela de auditoria com log de ações e filtros por tipo" onclick="openShot(this,'Auditoria — log de ações, filtros e autor/alvo/data')"><figcaption>Auditoria — clique para ampliar</figcaption></figure>
               </div>
+            </div>
+
+            <!-- ══ WALKTHROUGH: BIBLIOTECA ══ -->
+            <div class="table-card help-card" id="ajuda-passo-biblioteca">
+              <div class="table-card-header">
+                <div>
+                  <div class="table-card-title">📚 Biblioteca de Materiais</div>
+                  <div class="table-card-sub">Adicionar, ocultar e controlar os PDFs técnicos</div>
+                </div>
+                <span class="help-chip">Seção 7</span>
+              </div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Adicione um material:</b> <b>＋ Adicionar material</b> abre o formulário com os metadados (título, categoria, nível de acesso).</li>
+                    <li class="help-step"><b>Faça o upload:</b> arraste o PDF no dropzone. O sistema gera o <b>slug do título</b> e salva no Storage como <code>categoria/slug.pdf</code>.</li>
+                    <li class="help-step"><b>Defina visibilidade:</b> o botão <b>🙈/👁</b> oculta ou exibe o material sem deletá-lo — útil para "ensaiar" antes de liberar.</li>
+                    <li class="help-step"><b>Controle download:</b> o <b>downloadLevel</b> separa quem pode <b>ver</b> do quem pode <b>baixar</b>. O download gera URL assinada (1h) via Edge Function <b>get-download-url</b>, com validação de MFA + permissões + registro em auditoria.</li>
+                    <li class="help-step"><b>Mantenha CONTENT_MAP em sincronia:</b> ao adicionar um PDF novo, atualize <b>os dois</b>: <code>DEFAULT_CONTENT</code> (js/auth.js) e <code>CONTENT_MAP</code> (Edge Function get-download-url) — senão o download falha com 404.</li>
+                  </ol>
+                  <div class="help-dica">⚠️ <b>Não renomeie/deletar arquivos</b> em <code>assets/downloads/</code> sem atualizar os <code>filePath</code> correspondentes — quebra os downloads existentes.</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/biblioteca.png" alt="Tela da biblioteca de materiais com lista de PDFs" onclick="openShot(this,'Biblioteca — materiais, upload, visibilidade e níveis de download')"><figcaption>Biblioteca — clique para ampliar</figcaption></figure>
+              </div>
+            </div>
+
+            <!-- ══ WALKTHROUGH: EDITORIAL ══ -->
+            <div class="table-card help-card" id="ajuda-passo-editorial">
+              <div class="table-card-header">
+                <div>
+                  <div class="table-card-title">✏️ Conteúdo Editorial</div>
+                  <div class="table-card-sub">Boletins técnicos, artigos e o editor estruturado</div>
+                </div>
+                <span class="help-chip">Seção 8</span>
+              </div>
+              <div class="help-grid">
+                <div>
+                  <ol class="help-steps">
+                    <li class="help-step"><b>Escolha o tipo:</b> em Editorial, alterne entre <b>Boletins</b> e <b>Artigos</b>, e filtre por status (rascunho/publicado/arquivado).</li>
+                    <li class="help-step"><b>Crie um boletim:</b> <b>Novo Boletim</b> abre o editor. Tipos: Novidade, Atualização, Alerta e Procedimento — a numeração <b>BT-AAAA-NNN</b> é gerada automaticamente.</li>
+                    <li class="help-step"><b>Preencha a ficha técnica:</b> revisão, veículos aplicados (tabela Modelo|Ano|Motor|Chassi), sistemas afetados, DTCs, critérios de aplicação e níveis de severidade.</li>
+                    <li class="help-step"><b>Escreva o procedimento:</b> use a toolbar WYSIWYG (H2/H3, negrito, listas, link). O editor tem <b>preview</b> e <b>autosave a cada 30s</b>.</li>
+                    <li class="help-step"><b>Publicar:</b> <b>Publicar</b> muda o status e o boletim aparece na aba Boletins da área do membro. O conteúdo publicado pode ser arquivado depois.</li>
+                    <li class="help-step"><b>Carregue exemplos:</b> o botão <b>🧪 Exemplo</b> popula boletins e artigos de demonstração completos — o conteúdo de exemplo é recarregado automaticamente quando há versão nova do seed.</li>
+                  </ol>
+                  <div class="help-dica">📌 <b>Dica:</b> a apresentação no membro tem até 17 seções com sumário navegável (TOC). Se você não preencher um campo opcional, a seção correspondente é omitida automaticamente.</div>
+                </div>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/editorial.png" alt="Tela do editor editorial com lista de boletins e artigos" onclick="openShot(this,'Conteúdo Editorial — boletins, artigos e editor estruturado')"><figcaption>Editorial — clique para ampliar</figcaption></figure>
+              </div>
+            </div>
+
+            <div class="help-extra">
+              🚀 <b>Próximo passo:</b> na aba <b>Orientações &amp; FAQ</b> você encontra as regras de segurança e as respostas rápidas. Em <b>Versões &amp; Changelog</b>, o histórico de entregas da plataforma.
             </div>
 
           </div>
@@ -2079,6 +2366,7 @@
               <table class="data-table">
                 <thead><tr><th>Versão / Data</th><th>Destaques</th></tr></thead>
                 <tbody>
+                  <tr><td style="white-space:nowrap"><b>v3.1.0</b><br/><span style="color:var(--text-muted);font-size:.72rem">build 20260815</span></td><td>Boletins técnicos v2 (ficha técnica completa, 4 tipos, chip de severidade, sumário no membro), fix de cache (Cache-Control no-cache + cache-bust de assets), reseed automático de conteúdo de exemplo e novo Guia de Uso com prints das telas.</td></tr>
                   <tr><td style="white-space:nowrap"><b>v3.0.0</b><br/><span style="color:var(--text-muted);font-size:.72rem">build 20260813</span></td><td>Reforma visual dos painéis (superadmin branco/gold), páginas sem extensão .html, MFA, upload de PDFs e módulo de planos.</td></tr>
                   <tr><td style="white-space:nowrap"><b>2026-08-15</b><br/><span style="color:var(--text-muted);font-size:.72rem">segurança</span></td><td>Endurecimento das Edge Functions <code>approve-user</code> (paridade de roles, whitelist de campos, delete real do Auth) e <code>notify</code> (cap diário + validação de destinatário). Auditoria completa + fixes #77–#79 (XSS, search_path, duplo-escape).</td></tr>
                   <tr><td style="white-space:nowrap"><b>2026-06-09</b><br/><span style="color:var(--text-muted);font-size:.72rem">manutenção</span></td><td>Manutenção geral de fluxos de login/recuperação e correções de cache.</td></tr>
@@ -2130,6 +2418,8 @@
                 <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">O e-mail de aprovação não chega.</summary><div style="padding:8px 0;color:var(--text-muted)">Função notify sem RESEND_API_KEY no Supabase (pendência #24 em bug.md).</div></details>
                 <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Preciso de um 2º superadmin.</summary><div style="padding:8px 0;color:var(--text-muted)">Por segurança não é possível via painel (nem RLS nem Edge Function permitem). Ação manual no banco.</div></details>
                 <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Como auditar o que admin fez?</summary><div style="padding:8px 0;color:var(--text-muted)">Menu Auditoria registra todas as ações administrativas com data/hora e alvo.</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Meus boletins/artigos voltaram ao padrão. Por quê?</summary><div style="padding:8px 0;color:var(--text-muted)">O <b>reseed automático</b> recarrega o conteúdo de exemplo apenas quando há versão nova do seed (<code>adaspro_seed_version</code>). Conteúdo que você editou/foi alterado manualmente (sem o marcador <code>_seed</code>) não é substituído — se os seus voltaram, eram do seed antigo.</div></details>
+                <details><summary style="cursor:pointer;font-weight:600;color:var(--accent);padding:7px 0;border-bottom:1px solid var(--border)">Atualizei a página e nada mudou. O que faço?</summary><div style="padding:8px 0;color:var(--text-muted)">O HTML agora é servido com <code>Cache-Control: no-cache</code> e os assets usam cache-bust (<code>?v=</code>). Se ainda assim vir versão antiga, force um reload: <b>Ctrl+Shift+R</b> (ou limpe o cache do navegador).</div></details>
               </div>
             </div>
           </div>
@@ -2140,6 +2430,13 @@
     </div><!-- /pages-wrap -->
   </main>
 </div><!-- /dashboard -->
+
+<!-- Lightbox — visualização ampliada de screenshots da Ajuda -->
+<div id="shotLightbox" role="dialog" aria-modal="true" aria-label="Pré-visualização da tela" onclick="if(event.target===this)closeShot()">
+  <button class="shot-close" onclick="closeShot()" aria-label="Fechar">✕</button>
+  <img id="shotLightboxImg" src="" alt="Screenshot ampliado"/>
+  <div id="shotLightboxCap"></div>
+</div>
 
 <!-- Modal — Editor de Conteúdo (90% viewport) -->
 <div id="modalEditor" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()">
@@ -3603,6 +3900,27 @@ function ajudaTab(tab, el) {
   document.getElementById('ajuda-versoes').style.display     = tab === 'versoes' ? '' : 'none';
   document.getElementById('ajuda-orientacoes').style.display = tab === 'orientacoes' ? '' : 'none';
 }
+
+/* ────────────────────────────────────────────
+   AJUDA — lightbox de screenshots
+──────────────────────────────────────────── */
+function openShot(src, cap) {
+  const lb = document.getElementById('shotLightbox');
+  if (!lb) return;
+  document.getElementById('shotLightboxImg').src  = src;
+  document.getElementById('shotLightboxCap').textContent = cap || '';
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeShot() {
+  const lb = document.getElementById('shotLightbox');
+  if (!lb) return;
+  lb.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeShot();
+});
 
 /* ────────────────────────────────────────────
    EDITORIAL — carregar conteúdo de exemplo

@@ -871,3 +871,29 @@
   - **Seed (`seedEditorialDemo`):** 3 boletins realistas com todos os campos novos (procedimento completo, atualização de scanner, alerta BSM crítico).
   - **Deploy:** Vercel prod ✅ verificado (membros: `data-blt-id`, `blt-info-chip`, `_renderBulletin`; superadmin: `ed-meta-details`, `edMetaSummary`, `NTP-ADAS-011`, `seedEditorialDemo`).
   - **Pendências de sincronização:** `DEFAULT_CONTENT` (auth.js) não precisa mudar (boletins são só localStorage); se boletins migrarem para Supabase, `CONTENT_MAP`/`get-download-url` não é afetado (são PDFs).
+
+## 🟢 FEATURE — Boletins v2: mais conteúdo + estrutura reorganizada 2026-08-15
+
+> **Objetivo:** refatorar e reorganizar a apresentação dos boletins técnicos com mais conteúdo (formato de TSB de montadoras) e estrutura navegável.
+
+- [x] **#83 — Reorganização do render + novos campos estruturados** ✅ 2026-08-15
+  - **Render membro (`membros.html`):** `_renderBulletin` reescrito com builder de seções — até 17 seções numeradas com **TOC navegável** (`.blt-toc-chip` + `scrollToBltSec`): Identificação técnica, Resumo, Veículos aplicados (tabela Modelo|Ano|Motor|Chassi se `vehicleTable`, senão chips), Sistemas afetados, Sintomas & DTCs, Causa raiz, Critérios de aplicação, Pré-requisitos & segurança, Ferramentas & materiais (tabela de peças), Especificações, Procedimento (checklist), Verificação, **Solução de problemas** (matriz Sintoma|Causa|Ação), Serviço & garantia, Referências, Anexos, Informações adicionais.
+  - **Novos campos** (opcionais): `revision`, `supersedes`, `vehicleTable[]` ({model,year,engine,chassis}), `applicability[]`, `safetyNotes[]`, `parts[]` ({part,pn,qty}), `symptomAction[]` ({symptom,cause,action}), `labor` {code,time,note}, `warranty`, `attachments[]`.
+  - **Severidade** ganhou badge colorido (info/moderado/crítico) no cabeçalho e chip nos cards dinâmicos.
+  - **Editor (`superadmin.html`):** campos novos nos 4 grupos `<details>` + novo grupo **🕐 Serviço & garantia**; parse com helper `_rows(id, n)` (formato colunas separadas por `|`); prefill em `openEditor`; CSS `.ed-meta-hint` etc.
+  - **Seed:** 3 boletins enriquecidos com todos os campos v2 (procedimento completo com peças PN reais, matriz de diagnóstico no alerta crítico, aplicabilidade no scanner).
+  - **Impressão:** CSS de print atualizado para cobrir `.blt-table`, `.blt-dtc-chip`, `.blt-sym`, `.blt-sev-badge`, callouts warn/comp; TOC oculto.
+  - **Backward-compat:** boletins antigos renderizam sem os campos novos (seções vazias são omitidas).
+  - **Deploy:** Vercel prod ✅ verificado (membros: `blt-toc-chip`, `scrollToBltSec`, `blt-sev-badge`, `blt-table`, `blt-dtc-chip`; superadmin: `edMetaVehicleTable`, `edMetaSymptomAction`, `edMetaLaborCode`, `edMetaSafetyNotes`).
+
+## 🔧 FIX — Cache travado / atualizações não chegavam + rotina automática de reseed 2026-08-15
+
+> **Sintoma:** usuário não via as atualizações dos boletins mesmo após deploy (cache do navegador/edge e seeds antigos no localStorage).
+
+- [x] **#84 — Limpeza de cache + automação de reseed** ✅ 2026-08-15
+  - **Cache-Control HTML:** regra em `vercel.json` para `/:page(...)` + `/` com `no-cache, no-store, must-revalidate` (o `{...}`/regex livre do path-to-regexp não casavam; resolvido com param nomeado `:page(admin|membros|...)`). Verificado via curl em todas as páginas. CSP/HSTS mantidos.
+  - **Cache-busting de assets:** `?v=20260815` em todos os `js/*` e `css/*` locais (exceto `supabase.min.js`, que tem SRI). Garante que o navegador baixe os arquivos novos.
+  - **Rotina `_autoReseedDemo()` (superadmin.html):** na inicialização do painel, compara `localStorage['adaspro_seed_version']` com `_SEED_VERSION`; se desatualizado e o conteúdo armazenado for **todo de origem seed** (itens com `_seed` ou títulos legacy), limpa `adaspro_bulletins`/`adaspro_articles` e re-executa o seed automaticamente (sem confirmar). Se houver conteúdo criado pelo usuário, **preserva** e só marca a versão. Para bump de versão do seed: mudar `_SEED_VERSION` e adicionar os novos itens com `_seed: _SEED_VERSION`.
+  - **Novas APIs em auth.js:** `AUTH.replaceBulletins(items)` / `AUTH.replaceArticles(items)` (substituem o array no localStorage).
+  - **Migração:** seeds legados v1 identificados por título (`_LEGACY_SEED_TITLES`) → substituídos na primeira abertura do superadmin.
+  - **Deploy:** Vercel prod ✅ — assets versionados 200, rotina presente em prod, header `no-cache, no-store` ativo.

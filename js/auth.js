@@ -1125,6 +1125,8 @@ const AUTH = (function () {
     if (item && item.status !== 'archived') return false;
     _saveItems(BULLETINS_KEY, _getItems(BULLETINS_KEY).filter(b => b.id !== id)); return true;
   }
+  function replaceArticles(items)  { _saveItems(ARTICLES_KEY,   items || []); return true; }
+  function replaceBulletins(items) { _saveItems(BULLETINS_KEY, items || []); return true; }
 
   /* ─── Tickets ─── */
   function createTicket(userId, data) {
@@ -1517,8 +1519,8 @@ const AUTH = (function () {
     getAllUsers, getUserById, getUserByEmail, approveUser, blockUser, unblockUser,
     updateUserPermissions, updateUserRole, deleteUser, createUserDirect, applyPlanToUser, getPendingCount,
     getContent, addContent, editContent, deleteContent, getContentForUser,
-    getArticles, getArticleById, addArticle, editArticle, deleteArticle, publishArticle, archiveArticle,
-    getBulletins, getBulletinById, addBulletin, editBulletin, deleteBulletin, publishBulletin, archiveBulletin,
+    getArticles, getArticleById, addArticle, editArticle, deleteArticle, publishArticle, archiveArticle, replaceArticles,
+    getBulletins, getBulletinById, addBulletin, editBulletin, deleteBulletin, publishBulletin, archiveBulletin, replaceBulletins,
     createTicket, getAllTickets, getUserTickets, getTicketById,
     replyTicket, updateTicketStatus, deleteTicket, getOpenTicketsCount,
     getSettings, saveSettings,

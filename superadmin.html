@@ -2267,6 +2267,19 @@
             <input class="ed-meta-input" type="text" id="edMetaDtcs" placeholder="C1B00, C1B03"/>
             <div class="ed-meta-hint">Separados por vírgula.</div>
           </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Revisão</label>
+            <input class="ed-meta-input" type="text" id="edMetaRevision" placeholder="Ex: B"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Substitui (boletim anterior)</label>
+            <input class="ed-meta-input" type="text" id="edMetaSupersedes" placeholder="Ex: BT-2024-031"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Tabela de veículos (aplicação detalhada)</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaVehicleTable" rows="3" placeholder="2025 Civic Touring | 2025 | 1.5L turbo | FE3"></textarea>
+            <div class="ed-meta-hint">Formato por linha: Modelo | Ano | Motor | Chassi/Plataforma</div>
+          </div>
         </details>
 
         <details class="ed-meta-details">
@@ -2279,6 +2292,16 @@
           <div class="ed-meta-group">
             <label class="ed-meta-label">Causa raiz</label>
             <textarea class="ed-meta-input ed-meta-area" id="edMetaRootCause" rows="2" placeholder="Desalinhamento de 1° no pitch da câmera..."></textarea>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Critérios de aplicação</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaApplicability" rows="2" placeholder="Aplica-se quando o para-brisa foi substituído"></textarea>
+            <div class="ed-meta-hint">Quando o boletim se aplica. Um por linha.</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Matriz de solução de problemas</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSymptomAction" rows="3" placeholder="Luz acesa | Desalinhamento do alvo | Reposicionar o alvo e repetir"></textarea>
+            <div class="ed-meta-hint">Formato por linha: Sintoma | Causa provável | Ação corretiva</div>
           </div>
         </details>
 
@@ -2313,6 +2336,36 @@
             <textarea class="ed-meta-input ed-meta-area" id="edMetaSteps" rows="4" placeholder="1. Centralizar o volante e travar..."></textarea>
             <div class="ed-meta-hint">Um passo por linha (vira checklist interativo).</div>
           </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Advertências de segurança</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaSafetyNotes" rows="2" placeholder="Usar EPI e travar o veículo"></textarea>
+            <div class="ed-meta-hint">Uma por linha (mostradas em destaque âmbar).</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Peças & materiais</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaParts" rows="3" placeholder="Suporte de câmera | 71100-TEA-A00 | 1"></textarea>
+            <div class="ed-meta-hint">Formato por linha: Peça | Nº de peça (PN) | Qtd</div>
+          </div>
+        </details>
+
+        <details class="ed-meta-details">
+          <summary>🕐 Serviço &amp; garantia</summary>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Código de serviço (CP/OP)</label>
+            <input class="ed-meta-input" type="text" id="edMetaLaborCode" placeholder="Ex: 18-01-10"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Tempo de mão de obra</label>
+            <input class="ed-meta-input" type="text" id="edMetaLaborTime" placeholder="Ex: 1,0 h"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Observação de serviço</label>
+            <input class="ed-meta-input" type="text" id="edMetaLaborNote" placeholder="Inclui calibração e teste em estrada"/>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Garantia</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaWarranty" rows="2" placeholder="Coberto pela garantia de fábrica se causado por colisão coberta"></textarea>
+          </div>
         </details>
 
         <details class="ed-meta-details">
@@ -2331,6 +2384,11 @@
             <label class="ed-meta-label">Referências técnicas</label>
             <textarea class="ed-meta-input ed-meta-area" id="edMetaRefs" rows="2" placeholder="ESM: DRIVER INFORMATION & MULTIMEDIA > CALIBRATING CAMERA IMAGE"></textarea>
             <div class="ed-meta-hint">Uma por linha (manuais, ESM, artigos).</div>
+          </div>
+          <div class="ed-meta-group">
+            <label class="ed-meta-label">Anexos</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaAttachments" rows="2" placeholder="Diagrama de posicionamento do alvo (PDF)"></textarea>
+            <div class="ed-meta-hint">Uma por linha (nomes/links de anexos).</div>
           </div>
         </details>
 
@@ -2697,9 +2755,9 @@
 </style>
 
 <script src="js/supabase.min.js" integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"></script>
-<script src="js/supabase-config.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/purify.min.js"></script>
+<script src="js/supabase-config.js?v=20260815"></script>
+<script src="js/auth.js?v=20260815"></script>
+<script src="js/purify.min.js?v=20260815"></script>
 <script>
 /* ======================================================
    ADAS PRO — superadmin.js (inline)
@@ -2858,6 +2916,9 @@ async function initSuperAdmin(session) {
   renderSecurity();
   renderPlans();
   renderAudit();
+
+  /* Atualiza conteúdo editorial de exemplo automaticamente se desatualizado */
+  _autoReseedDemo();
 
   /* Relógio */
   startClock();
@@ -3546,6 +3607,17 @@ function ajudaTab(tab, el) {
 /* ────────────────────────────────────────────
    EDITORIAL — carregar conteúdo de exemplo
 ──────────────────────────────────────────── */
+const _SEED_VERSION = 'v2-2026-08-15';
+const _SEED_KEY = 'adaspro_seed_version';
+const _LEGACY_SEED_TITLES = [
+  'Calibração de Câmera Frontal ADAS — Procedimento Estático Completo',
+  'Atualização: Compatibilidade do Scanner com Nissan 2025',
+  'Alerta: Falso positivo no BSM após troca de para-brisa',
+  'Entendendo o ACC — Controle de Cruzeiro Adaptativo',
+  'BSM: Sensor de Ponto Cego — Quando Recalibrar',
+  'Câmera mono × estéreo: como identificar e calibrar',
+];
+
 function seedEditorialDemo() {
   try {
     const existing = (AUTH.getBulletins ? AUTH.getBulletins().length : 0) + (AUTH.getArticles ? AUTH.getArticles().length : 0);
@@ -3553,13 +3625,20 @@ function seedEditorialDemo() {
 
     if (AUTH.addBulletin) {
       AUTH.addBulletin({
-        title: 'Calibração de Câmera Frontal ADAS — Procedimento Estático Completo',
+        _seed: _SEED_VERSION, title: 'Calibração de Câmera Frontal ADAS — Procedimento Estático Completo',
         type: 'procedimento', status: 'published',
         brands: ['honda', 'toyota', 'nissan', 'ford'],
         tags: ['calibração estática', 'câmera frontal', 'para-brisa', 'alvo de calibração'],
         classification: 'CA24-112', reference: 'NTP-ADAS-011', severity: 'moderate',
+        revision: 'B', supersedes: 'BT-2024-031',
         summary: 'Procedimento padrão para calibração estática da câmera frontal ADAS após substituição de para-brisa, reparo de colisão ou desconexão do módulo. Utiliza alvo de calibração, nível a laser e scanner com suporte a calibração. Estima-se 45–60 min de mão de obra. A câmera não deve ser substituída sem recalibração, sob risco de falso negativo do AEB/FCW.',
         appliedVehicles: ['2023-2025 Civic (FE)', '2023-2025 CR-V (RS)', '2022+ HR-V', '2024+ Accord (LX)'],
+        vehicleTable: [
+          { model: 'Civic Touring / EXL', year: '2023-2025', engine: '1.5L turbo L15B7', chassis: 'FE1/FE3' },
+          { model: 'CR-V Touring', year: '2023-2025', engine: '1.5L turbo L15BE', chassis: 'RS3/RS4' },
+          { model: 'HR-V Advance', year: '2022+', engine: '1.5L aspirado L15B7', chassis: 'RZ1' },
+          { model: 'Accord Touring', year: '2024+', engine: '2.0L híbrido LFB11', chassis: 'LX2' },
+        ],
         appliedSystems: ['Honda Sensing', 'Câmera frontal integrada ao espelho', 'AEB / FCW / LKAS'],
         component: 'LANE DEPARTURE: WARNING / ELECTRICAL SYSTEM',
         dtcs: ['C1B00', 'C1B03', 'C2A00'],
@@ -3569,6 +3648,13 @@ function seedEditorialDemo() {
           'Mensagem "Sistema de câmera indisponível" no painel',
         ],
         rootCause: 'Desalinhamento de 1° no pitch da câmera desloca o campo de visão em ~30 m a 100 m de distância, excedendo a tolerância angular do sistema (especificação de fábrica: ±0,3°).',
+        applicability: [
+          'Substituição de para-brisa (original ou após colisão)',
+          'Substituição da câmera ou do suporte de fixação',
+          'Reparo estrutural na frente do veículo',
+          'Alinhamento de suspensão dianteira com correção de cáster/camber',
+          'Desconexão da bateria por mais de 24 h (conforme modelo)',
+        ],
         calibrationType: 'Estática',
         preconditions: [
           'Pneus na pressão da etiqueta da porta',
@@ -3578,7 +3664,18 @@ function seedEditorialDemo() {
           'Piso nivelado (tolerância ≤ 2 mm no vão de calibração)',
           'Iluminação difusa, sem sol direto ou reflexos no alvo',
         ],
+        safetyNotes: [
+          'Usar EPI (óculos e calçado de segurança) durante a movimentação do alvo',
+          'Travar o veículo com calços nas rodas antes de posicionar o alvo',
+          'Nunca mover o veículo com o alvo montado à frente',
+          'Desligar o motor durante a calibração (ignição apenas em ACC)',
+        ],
         requiredTools: ['Nível a laser', 'Régua dobrável métrica', 'Esquadro de carpinteiro', '7 alvos de calibração', 'Fita adesiva (≥ 48 mm)', 'Marcador permanente', 'Scanner de diagnóstico', 'Trena métrica'],
+        parts: [
+          { part: 'Suporte de fixação da câmera', pn: '71100-TEA-A00', qty: '1' },
+          { part: 'Para-brisa original (se substituído)', pn: '73111-TEA-003', qty: '1' },
+          { part: 'Adesivo/cola para fixação do alvo', pn: '08798-9002', qty: '1' },
+        ],
         specsTable: [
           { param: 'Distância do alvo à frente do veículo', value: '2.500 mm', note: 'Linha central do veículo' },
           { param: 'Posição do nível a laser', value: '800 mm (31,5 in)', note: '45° em relação ao veículo' },
@@ -3610,22 +3707,32 @@ function seedEditorialDemo() {
           'Confirmar que não há obstruções/reflexos entre o alvo e a câmera',
           'Atualizar o software do scanner para a versão mínima exigida pelo modelo',
         ],
+        symptomAction: [
+          { symptom: 'Luz ADAS acesa após calibração', cause: 'Alvo desalinhado ou piso irregular', action: 'Reposicionar alvo e repetir' },
+          { symptom: 'Calibração recusa a iniciar', cause: 'Firmware do scanner desatualizado', action: 'Atualizar para versão ≥ 8.4.2' },
+          { symptom: 'DTC C1B00 retorna após limpeza', cause: 'Câmera danificada ou suporte trincado', action: 'Inspecionar e substituir a câmera' },
+        ],
+        labor: { code: '18-01-10', time: '1,0 h', note: 'Inclui calibração e teste em estrada' },
+        warranty: 'Coberto pela garantia de fábrica quando o reparo da colisão é coberto; cobrar como serviço particular fora disso.',
         referenceDocs: [
           'ESM: DRIVER INFORMATION & MULTIMEDIA > CALIBRATING CAMERA IMAGE',
           'Manual de Serviço — seção SUSPENSION & ALIGNMENT (procedimento de alinhamento)',
           'TSB de referência: Nissan NTB25-002 / Ford 21-2389',
           'ASE L4 — Advanced Driver Assistance Systems (calibração estática/dinâmica)',
         ],
+        attachments: ['Diagrama de posicionamento do alvo (PDF)', 'Checklist de calibração (DOCX)'],
         content: '<h2>Quando a calibração é obrigatória</h2><ul><li>Substituição do para-brisa;</li><li>Substituição da câmera ou do módulo ADAS;</li><li>Reparo de colisão na frente do veículo;</li><li>Alinhamento de suspensão ou elevação de altura da carroceria;</li><li>Desconexão da bateria por período prolongado.</li></ul><h2>Risco técnico</h2><p>1° de desalinhamento desloca o campo de visão em dezenas de metros. O sistema pode apresentar falso negativo no AEB, comprometendo a segurança do condutor.</p>'
       });
       AUTH.addBulletin({
-        title: 'Atualização: Compatibilidade do Scanner com Nissan 2025',
+        _seed: _SEED_VERSION, title: 'Atualização: Compatibilidade do Scanner com Nissan 2025',
         type: 'atualizacao', status: 'published',
         brands: ['nissan'],
         tags: ['atualização', 'nissan', 'firmware', 'scanner'],
         classification: 'SW24-077', reference: 'FIRMWARE-8.4.2', severity: 'info',
+        revision: 'C', supersedes: 'FIRMWARE-8.3.0',
         summary: 'A partir da versão 8.4.2 do firmware, o scanner passa a suportar calibração dos modelos Nissan 2025 (Sentra, Kicks e Frontier), incluindo o radar milimétrico dianteiro. Atualização obrigatória antes de atender unidades 2025.',
         appliedVehicles: ['2025 Sentra (B18)', '2025 Kicks (P15)', '2025 Frontier (D23)'],
+        applicability: ['Atendimentos de unidades Nissan 2025', 'Calibração de radar dianteiro 77 GHz'],
         appliedSystems: ['Intelligent Forward Collision Warning', 'Intelligent Emergency Braking', 'Radar milimétrico dianteiro (77 GHz)'],
         component: 'FORWARD COLLISION AVOIDANCE / RADAR',
         dtcs: ['C1A00-00', 'C1A01-49'],
@@ -3643,7 +3750,7 @@ function seedEditorialDemo() {
         content: '<p>Baixe o firmware atualizado antes de iniciar o atendimento em unidades 2025.</p><p><b>Nota:</b> o radar dianteiro exige área plana de <b>5 m à frente × 3 m de largura</b> livre de obstruções metálicas.</p>'
       });
       AUTH.addBulletin({
-        title: 'Alerta: Falso positivo no BSM após troca de para-brisa',
+        _seed: _SEED_VERSION, title: 'Alerta: Falso positivo no BSM após troca de para-brisa',
         type: 'alerta', status: 'draft',
         brands: ['honda', 'toyota'],
         tags: ['bsm', 'alerta', 'para-brisa', 'ponto cego'],
@@ -3670,6 +3777,13 @@ function seedEditorialDemo() {
         ],
         passCriteria: ['Sem DTCs ativos', 'Alerta BSM somente com veículo real no ponto cego'],
         failureActions: ['Verificar os módulos BSM quanto a danos físicos', 'Consultar o TSB da montadora para o modelo'],
+        symptomAction: [
+          { symptom: 'Alerta intermitente sem veículo', cause: 'Câmera frontal desalinhada após troca de vidro', action: 'Recalibrar câmera e reiniciar módulos BSM' },
+          { symptom: 'Perda de sensibilidade BSM', cause: 'Fusão de dados com leitura de câmera errada', action: 'Executar calibração estática completa' },
+          { symptom: 'Luz de falha persistente', cause: 'Módulo BSM danificado', action: 'Substituir módulo e recalibrar' },
+        ],
+        safetyNotes: ['Não desligar o veículo durante a reinicialização dos módulos', 'Validar sempre com teste em estrada de via dupla'],
+        attachments: ['Guia de reinicialização dos sensores BSM (PDF)'],
         referenceDocs: ['TSB Mitsubishi TSB-26-54-002 (referência de categoria)', 'Manual de serviço do modelo'],
         content: '<p><b>Recomendação:</b> sempre recalibrar câmera e radares após qualquer substituição de vidro ou reparo na frente do veículo.</p>'
       });
@@ -3677,21 +3791,21 @@ function seedEditorialDemo() {
 
     if (AUTH.addArticle) {
       AUTH.addArticle({
-        title: 'Entendendo o ACC — Controle de Cruzeiro Adaptativo',
+        _seed: _SEED_VERSION, title: 'Entendendo o ACC — Controle de Cruzeiro Adaptativo',
         status: 'published',
         brands: ['toyota', 'honda'],
         tags: ['acc', 'radar', 'técnico'],
         content: '<h2>O que é o ACC</h2><p>O Controle de Cruzeiro Adaptativo mantém a velocidade e a distância do veículo à frente usando radar (77 GHz) e/ou câmera frontal.</p><h2>Quando recalibrar</h2><ul><li>Após batida frontal ou desalinhamento da barra do radar;</li><li>Troca de para-brisa (modelos com câmera integrada);</li><li>Alinhamento de suspensão.</li></ul><p>O ACC é um dos sistemas mais sensíveis a ângulo: 1° de desalinhamento compromete o frenagem automática em alta velocidade.</p>'
       });
       AUTH.addArticle({
-        title: 'BSM: Sensor de Ponto Cego — Quando Recalibrar',
+        _seed: _SEED_VERSION, title: 'BSM: Sensor de Ponto Cego — Quando Recalibrar',
         status: 'published',
         brands: ['nissan', 'ford'],
         tags: ['bsm', 'recalibração'],
         content: '<h2>Funcionamento</h2><p>O BSM usa radares de curto alcance nas laterais traseiras para detectar veículos no ponto cego.</p><h2>Sintomas de descalibração</h2><ol><li>Alerta acende sem veículo presente;</li><li>Não alerta com veículo no ponto cego;</li><li>Luz de falha no painel.</li></ol><p>A calibração do BSM geralmente dispensa alvo, mas exige área livre ao redor do veículo.</p>'
       });
       AUTH.addArticle({
-        title: 'Câmera mono × estéreo: como identificar e calibrar',
+        _seed: _SEED_VERSION, title: 'Câmera mono × estéreo: como identificar e calibrar',
         status: 'draft',
         brands: [],
         tags: ['câmera', 'calibração'],
@@ -3701,9 +3815,39 @@ function seedEditorialDemo() {
 
     loadEditorialStats();
     renderEditorialTable();
+    localStorage.setItem(_SEED_KEY, _SEED_VERSION);
     showToast('Conteúdo de exemplo carregado!', 'success');
   } catch(e) {
     showToast('Erro ao carregar exemplo: ' + (e.message || e), 'error');
+  }
+}
+
+/* Atualiza automaticamente o conteúdo de exemplo quando o seed muda de versão.
+   Só substitui se o conteúdo armazenado for todo de origem seed; se houver
+   conteúdo criado pelo usuário, preserva e apenas marca a versão. */
+function _isSeedOwned(items) {
+  return items.every(it => it._seed || _LEGACY_SEED_TITLES.includes(it.title));
+}
+function _autoReseedDemo() {
+  try {
+    if (localStorage.getItem(_SEED_KEY) === _SEED_VERSION) return;
+    const bullets = (AUTH.getBulletins ? AUTH.getBulletins() : []);
+    const arts    = (AUTH.getArticles  ? AUTH.getArticles()  : []);
+    const owned   = _isSeedOwned(bullets) && _isSeedOwned(arts);
+    const total   = bullets.length + arts.length;
+    if (!owned) {
+      localStorage.setItem(_SEED_KEY, _SEED_VERSION);
+      return;
+    }
+    if (total > 0) {
+      localStorage.removeItem('adaspro_bulletins');
+      localStorage.removeItem('adaspro_articles');
+      seedEditorialDemo();
+    } else {
+      localStorage.setItem(_SEED_KEY, _SEED_VERSION);
+    }
+  } catch(e) {
+    console.warn('[EDITORIAL] auto-reseed ignorado:', e);
   }
 }
 
@@ -3956,10 +4100,27 @@ function openEditor(id=null, type='boletim') {
       _edSetArr('edMetaTools',     item.requiredTools);
       _edSet('edMetaSpecs', (item.specsTable||[]).map(s=>[s.param,s.value,s.note||''].filter(Boolean).join(' | ')).join('\n'));
       _edSetArr('edMetaSteps',     item.steps);
+      // Procedimento (v2)
+      _edSetArr('edMetaSafetyNotes', item.safetyNotes);
+      _edSet('edMetaParts', (item.parts||[]).map(p=>[p.part,p.pn||'',p.qty||''].filter(Boolean).join(' | ')).join('\n'));
+      // Serviço e garantia
+      _edSet('edMetaLaborCode',  item.labor && item.labor.code);
+      _edSet('edMetaLaborTime',  item.labor && item.labor.time);
+      _edSet('edMetaLaborNote',  item.labor && item.labor.note);
+      _edSet('edMetaWarranty',   item.warranty);
       // Verificação e referências
       _edSetArr('edMetaPass',      item.passCriteria);
       _edSetArr('edMetaFailure',   item.failureActions);
       _edSetArr('edMetaRefs',      item.referenceDocs);
+      // Ficha técnica (v2)
+      _edSet('edMetaRevision',    item.revision);
+      _edSet('edMetaSupersedes',  item.supersedes);
+      _edSet('edMetaVehicleTable', (item.vehicleTable||[]).map(v=>[v.model||'',v.year||'',v.engine||'',v.chassis||''].filter(Boolean).join(' | ')).join('\n'));
+      // Diagnóstico (v2)
+      _edSetArr('edMetaApplicability',  item.applicability);
+      _edSet('edMetaSymptomAction', (item.symptomAction||[]).map(r=>[r.symptom,r.cause,r.action].filter(Boolean).join(' | ')).join('\n'));
+      // Anexos
+      _edSetArr('edMetaAttachments', item.attachments);
     }
   } else {
     document.getElementById('edMetaTitle').value = '';
@@ -3977,6 +4138,12 @@ function openEditor(id=null, type='boletim') {
     _edSetArr('edMetaTools',[]);       _edSet('edMetaSpecs','');
     _edSetArr('edMetaSteps',[]);       _edSetArr('edMetaPass',[]);
     _edSetArr('edMetaFailure',[]);     _edSetArr('edMetaRefs',[]);
+    _edSet('edMetaRevision','');       _edSet('edMetaSupersedes','');
+    _edSet('edMetaVehicleTable','');   _edSetArr('edMetaSafetyNotes',[]);
+    _edSet('edMetaParts','');          _edSet('edMetaLaborCode','');
+    _edSet('edMetaLaborTime','');      _edSet('edMetaLaborNote','');
+    _edSet('edMetaWarranty','');       _edSetArr('edMetaApplicability',[]);
+    _edSet('edMetaSymptomAction','');  _edSetArr('edMetaAttachments',[]);
   }
 
   _buildBrandsGrid(selBrands);
@@ -4076,6 +4243,8 @@ function saveEditorDraft() {
   const _csv   = (id) => (document.getElementById(id)?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
   const _specs = (id) => (document.getElementById(id)?.value||'').split('\n').map(l=>l.trim()).filter(Boolean)
     .map(line => { const [param='', value='', note=''] = line.split('|').map(s=>s.trim()); return { param, value, note }; });
+  const _rows = (id, n) => (document.getElementById(id)?.value||'').split('\n').map(l=>l.trim()).filter(Boolean)
+    .map(line => { const cols = line.split('|').map(s=>s.trim()); while (cols.length < n) cols.push(''); return cols.slice(0,n); });
 
   if (!title) { showToast('Adicione um título antes de salvar.', 'error'); return; }
 
@@ -4100,6 +4269,21 @@ function saveEditorDraft() {
       passCriteria:    _lines('edMetaPass'),
       failureActions:  _lines('edMetaFailure'),
       referenceDocs:   _lines('edMetaRefs'),
+      // v2
+      revision:        document.getElementById('edMetaRevision')?.value.trim() || '',
+      supersedes:      document.getElementById('edMetaSupersedes')?.value.trim() || '',
+      vehicleTable:    _rows('edMetaVehicleTable', 4).map(([model,year,engine,chassis])=>({ model, year, engine, chassis })),
+      applicability:   _lines('edMetaApplicability'),
+      safetyNotes:     _lines('edMetaSafetyNotes'),
+      parts:           _rows('edMetaParts', 3).map(([part,pn,qty])=>({ part, pn, qty })),
+      symptomAction:   _rows('edMetaSymptomAction', 3).map(([symptom,cause,action])=>({ symptom, cause, action })),
+      labor: {
+        code: document.getElementById('edMetaLaborCode')?.value.trim() || '',
+        time: document.getElementById('edMetaLaborTime')?.value.trim() || '',
+        note: document.getElementById('edMetaLaborNote')?.value.trim() || '',
+      },
+      warranty:        document.getElementById('edMetaWarranty')?.value.trim() || '',
+      attachments:     _lines('edMetaAttachments'),
     };
     if (type === 'boletim') {
       if (_edEditingId) AUTH.editBulletin(_edEditingId, payload);

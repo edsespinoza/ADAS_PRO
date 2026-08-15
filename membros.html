@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://zqydyyticvtmirjzskly.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="stylesheet" href="css/auth.css"/>
+  <link rel="stylesheet" href="css/style.css?v=20260815"/>
+  <link rel="stylesheet" href="css/auth.css?v=20260815"/>
   <style>
     body{background:#0f1923;color:rgba(255,255,255,.85);font-family:var(--font-b);margin:0;}
 
@@ -431,6 +431,32 @@
   .blt-actions { display:flex;gap:8px;margin-top:18px;flex-wrap:wrap; }
   .blt-act-btn { display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-family:var(--font-h);font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);transition:all .2s; }
   .blt-act-btn:hover { border-color:rgba(0,180,216,.35);color:var(--tech);background:rgba(0,180,216,.06); }
+
+  /* ─── Reorganização v2 — TOC, severidade, tabelas genéricas ─── */
+  .blt-toc { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px; }
+  .blt-toc-chip { font-family:'Courier New',monospace;font-size:.62rem;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s; }
+  .blt-toc-chip:hover { border-color:rgba(0,180,216,.35);color:var(--tech);background:rgba(0,180,216,.05); }
+  .blt-sec { scroll-margin-top:14px; }
+  .blt-sev-badge { display:inline-flex;align-items:center;gap:6px;font-family:'Courier New',monospace;font-size:.62rem;font-weight:700;padding:2px 9px;border-radius:4px; }
+  .blt-sev-badge.sev-info { background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.25);color:var(--tech); }
+  .blt-sev-badge.sev-moderate { background:rgba(255,170,0,.1);border:1px solid rgba(255,170,0,.3);color:#FFAA00; }
+  .blt-sev-badge.sev-critical { background:rgba(255,59,59,.12);border:1px solid rgba(255,59,59,.35);color:#FF3B3B; }
+  .blt-id-chip { color:rgba(0,180,216,.75);border-color:rgba(0,180,216,.22);background:rgba(0,180,216,.05); }
+  .blt-table { width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:.74rem; }
+  .blt-table th { text-align:left;font-family:'Courier New',monospace;font-size:.58rem;letter-spacing:.06em;color:rgba(0,180,216,.7);text-transform:uppercase;padding:8px 10px;border-bottom:1px solid rgba(0,180,216,.2);background:rgba(0,180,216,.05); }
+  .blt-table td { padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(255,255,255,.68);vertical-align:top; }
+  .blt-table tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+  .blt-table td:first-child { font-family:'Courier New',monospace;color:rgba(255,255,255,.9);font-weight:600; }
+  .blt-sym { display:flex;align-items:flex-start;gap:9px;padding:5px 0;font-size:.8rem;color:rgba(255,255,255,.65);line-height:1.6;border-bottom:1px dashed rgba(255,255,255,.04); }
+  .blt-sym.blt-ok::before { content:'✔';color:rgba(6,167,125,.8);flex-shrink:0;font-size:.72rem;margin-top:2px; }
+  .blt-sym::before { content:'▸';color:rgba(255,107,53,.55);flex-shrink:0;font-size:.68rem;margin-top:3px; }
+  .blt-dtc-row { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px; }
+  .blt-dtc-chip { font-family:'Courier New',monospace;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:4px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);color:#8B5CF6; }
+  .blt-callout.comp { border-color:rgba(0,180,216,.22);background:rgba(0,180,216,.05); }
+  .blt-callout.comp b { color:var(--tech); }
+  .blt-callout.warn { border-color:rgba(255,170,0,.3);background:rgba(255,170,0,.06); }
+  .blt-callout.warn b { color:#FFAA00; }
+  .blt-body-p { font-size:.8rem;color:rgba(255,255,255,.66);line-height:1.8;margin:0; }
 
   @media(max-width:640px) {
     .blt-grid { grid-template-columns:1fr; }
@@ -1024,8 +1050,8 @@
 <!-- ─── Supabase SDK ─── -->
 <script src="js/supabase.min.js" integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"></script>
 <!-- ─── ADAS PRO Scripts ─── -->
-<script src="js/supabase-config.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/supabase-config.js?v=20260815"></script>
+<script src="js/auth.js?v=20260815"></script>
 
 <!-- Overlay de carregamento -->
 <div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
@@ -1873,6 +1899,23 @@ function _bltSpecTable(specs) {
   return `<table class="blt-spec-table"><thead><tr><th>Parâmetro</th><th>Valor</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+/* ─── Helpers da apresentação v2 ─── */
+function _bltSevMeta(s) {
+  return { info:{label:'Informativo', cls:'sev-info'},
+           moderate:{label:'Severidade moderada', cls:'sev-moderate'},
+           critical:{label:'SEVERIDADE CRÍTICA', cls:'sev-critical'} }[s] || null;
+}
+function _bltTable(headers, rows) {
+  return `<table class="blt-table"><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function _bltVehicles(b) {
+  if (b.vehicleTable && b.vehicleTable.length)
+    return _bltTable(['Modelo','Ano','Motor','Chassi / Plataforma'],
+      b.vehicleTable.map(v=>[esc(v.model||''), esc(v.year||''), esc(v.engine||''), esc(v.chassis||'')]));
+  if (b.appliedVehicles && b.appliedVehicles.length) return _bltChips(b.appliedVehicles);
+  return '';
+}
+
 function _renderBulletin(b) {
   const type = b.type || 'novidade';
   document.getElementById('bltModalHeader').className = `blt-modal-header type-${type}`;
@@ -1880,70 +1923,117 @@ function _renderBulletin(b) {
   document.getElementById('bltModalTitle').textContent = b.title || 'Boletim técnico';
   document.getElementById('bltModalNew').style.display = b.createdAt && (Date.now() - b.createdAt) < 7*24*3600*1000 ? '' : 'none';
 
-  const h = [];
+  const sev = _bltSevMeta(b.severity);
+  const S = [];
 
-  // Identificação técnica
-  const refChips = [];
-  if (b.bulletinNumber) refChips.push(`<span class="blt-chip" style="border-color:rgba(0,180,216,.3);color:var(--tech)">BT: ${esc(b.bulletinNumber)}</span>`);
-  if (b.classification)  refChips.push(`<span class="blt-chip">CLS: ${esc(b.classification)}</span>`);
-  if (b.reference)       refChips.push(`<span class="blt-chip">REF: ${esc(b.reference)}</span>`);
-  if (b.severity && b.severity !== 'info') refChips.push(`<span class="blt-sev">⚠ SEVERIDADE ${esc(b.severity).toUpperCase()}</span>`);
-  if (refChips.length) h.push(`<div style="margin-bottom:14px">${refChips.join('')}</div>`);
+  // 1. Identificação técnica
+  const refRow = [];
+  if (b.bulletinNumber) refRow.push(`<span class="blt-chip blt-id-chip">BT ${esc(b.bulletinNumber)}</span>`);
+  if (b.classification)  refRow.push(`<span class="blt-chip blt-id-chip">CLS ${esc(b.classification)}</span>`);
+  if (b.reference)       refRow.push(`<span class="blt-chip blt-id-chip">REF ${esc(b.reference)}</span>`);
+  if (b.revision)        refRow.push(`<span class="blt-chip blt-id-chip">REV ${esc(b.revision)}</span>`);
+  if (b.supersedes)      refRow.push(`<span class="blt-chip blt-id-chip">Substitui: ${esc(b.supersedes)}</span>`);
+  const idItems = [];
+  if (b.publishedAt || b.createdAt) idItems.push(_bltMeta('Publicado', fmtDate(b.publishedAt || b.createdAt)));
+  if (b.calibrationType) idItems.push(_bltMeta('Tipo de calibração', `<span class="blt-chip" style="border-color:rgba(6,167,125,.3);color:#06A77D">${esc(b.calibrationType)}</span>`));
+  if (sev) idItems.push(_bltMeta('Severidade', `<span class="blt-sev-badge ${sev.cls}">${esc(sev.label)}</span>`));
+  if (refRow.length || idItems.length)
+    S.push({t:'Identificação técnica', h:`${refRow.length?`<div style="margin-bottom:10px">${refRow.join('')}</div>`:''}<div class="blt-meta-grid">${idItems.join('')}</div>`});
 
-  // Resumo técnico + palavras-chave
+  // 2. Resumo técnico
   const summary = b.summary || _stripHtml(b.content).slice(0, 240);
-  h.push(`<div class="blt-abstract"><div class="blt-abstract-label">Resumo técnico</div><p>${esc(summary)}</p>${b.tags && b.tags.length ? `<div class="blt-kw-row">${(b.tags||[]).map(t=>`<span class="blt-kw">${esc(t)}</span>`).join('')}</div>` : ''}</div>`);
+  S.push({t:'Resumo técnico', h:`<div class="blt-abstract"><div class="blt-abstract-label">Resumo técnico</div><p>${esc(summary)}</p>${b.tags && b.tags.length ? `<div class="blt-kw-row">${(b.tags||[]).map(t=>`<span class="blt-kw">${esc(t)}</span>`).join('')}</div>` : ''}</div>`});
 
-  // Ficha técnica (grid)
-  let meta = '';
-  if (b.calibrationType) meta += _bltMeta('Tipo de calibração', `<span class="blt-chip" style="border-color:rgba(6,167,125,.3);color:#06A77D">${esc(b.calibrationType)}</span>`);
-  if (b.appliedVehicles && b.appliedVehicles.length) meta += _bltMeta('Veículos aplicados', b.appliedVehicles.map(v=>`<span class="blt-chip">${esc(v)}</span>`).join(''));
-  if (b.appliedSystems  && b.appliedSystems.length)  meta += _bltMeta('Sistemas aplicados', _bltChips(b.appliedSystems));
-  if (b.component) meta += _bltMeta('Componente', esc(b.component));
-  if (b.dtcs && b.dtcs.length) meta += _bltMeta('DTCs relacionados', b.dtcs.map(d=>`<span class="blt-chip" style="border-color:rgba(139,92,246,.3);color:#8B5CF6">${esc(d)}</span>`).join(''));
-  if (meta) h.push(`<div class="blt-meta-grid">${meta}</div>`);
+  // 3. Veículos aplicados
+  const veh = _bltVehicles(b);
+  if (veh) S.push({t:'Veículos aplicados', h:veh});
 
-  // Diagnóstico
+  // 4. Sistemas afetados
+  const sys = [];
+  if (b.appliedSystems && b.appliedSystems.length) sys.push(_bltChips(b.appliedSystems));
+  if (b.component) sys.push(`<div class="blt-callout comp">Componente: <b>${esc(b.component)}</b></div>`);
+  if (sys.length) S.push({t:'Sistemas afetados', h:sys.join('')});
+
+  // 5. Sintomas relatados & DTCs
+  const sym = [];
   if (b.reportedSymptoms && b.reportedSymptoms.length)
-    h.push(_bltSection('1','Sintomas relatados', b.reportedSymptoms.map(s=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:.8rem;color:rgba(255,255,255,.65)"><span style="color:rgba(255,59,59,.7);flex-shrink:0">▸</span><span>${esc(s)}</span></div>`).join('')));
-  if (b.rootCause)
-    h.push(_bltSection('2','Causa raiz', `<p style="font-size:.8rem;color:rgba(255,255,255,.66);line-height:1.8;margin:0">${esc(b.rootCause)}</p>`));
+    sym.push(b.reportedSymptoms.map(s=>`<div class="blt-sym">${esc(s)}</div>`).join(''));
+  if (b.dtcs && b.dtcs.length)
+    sym.push(`<div class="blt-dtc-row">${b.dtcs.map(d=>`<span class="blt-dtc-chip">${esc(d)}</span>`).join('')}</div>`);
+  if (sym.length) S.push({t:'Sintomas relatados & DTCs', h:sym.join('')});
 
-  // Procedimento
+  // 6. Causa raiz
+  if (b.rootCause) S.push({t:'Análise da causa raiz', h:`<p class="blt-body-p">${esc(b.rootCause)}</p>`});
+
+  // 7. Critérios de aplicação
+  if (b.applicability && b.applicability.length)
+    S.push({t:'Critérios de aplicação', h:b.applicability.map(a=>`<div class="blt-sym blt-ok">${esc(a)}</div>`).join('')});
+
+  // 8. Pré-requisitos & segurança
+  const pre = [];
   if (b.preconditions && b.preconditions.length)
-    h.push(_bltSection('3','Pré-requisitos', b.preconditions.map(p=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:.8rem;color:rgba(255,255,255,.65)"><span style="color:rgba(6,167,125,.7);flex-shrink:0">✔</span><span>${esc(p)}</span></div>`).join('')));
-  if (b.requiredTools && b.requiredTools.length)
-    h.push(_bltSection('4','Ferramentas necessárias', `<div style="display:flex;flex-wrap:wrap;gap:6px">${_bltChips(b.requiredTools)}</div>`));
+    pre.push(b.preconditions.map(p=>`<div class="blt-sym blt-ok">${esc(p)}</div>`).join(''));
+  if (b.safetyNotes && b.safetyNotes.length)
+    pre.push(`<div class="blt-callout warn"><b>⚠ Advertências de segurança</b><ul>${b.safetyNotes.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`);
+  if (pre.length) S.push({t:'Pré-requisitos & segurança', h:pre.join('')});
+
+  // 9. Ferramentas & materiais
+  const tool = [];
+  if (b.requiredTools && b.requiredTools.length) tool.push(`<div style="display:flex;flex-wrap:wrap;gap:6px">${_bltChips(b.requiredTools)}</div>`);
+  if (b.parts && b.parts.length) tool.push(_bltTable(['Peça / Material','Nº de peça (PN)','Qtd'], b.parts.map(p=>[esc(p.part||''), esc(p.pn||''), esc(p.qty||'')])));
+  if (tool.length) S.push({t:'Ferramentas & materiais', h:tool.join('')});
+
+  // 10. Especificações de calibração
   if (b.specsTable && b.specsTable.length)
-    h.push(_bltSection('5','Especificações de calibração', _bltSpecTable(b.specsTable)));
+    S.push({t:'Especificações de calibração', h:_bltSpecTable(b.specsTable)});
+
+  // 11. Procedimento
   if (b.steps && b.steps.length) {
     const steps = b.steps.map((s,i)=>`<label class="blt-step" data-idx="${i}"><input type="checkbox" onchange="updateBltStepProgress(this)"/><span class="blt-step-n">${String(i+1).padStart(2,'0')}</span><span class="blt-step-txt">${esc(typeof s==='string' ? s : (s.desc||''))}</span></label>`).join('');
-    h.push(_bltSection('6','Procedimento de calibração',
-      `<div class="blt-progress"><div class="blt-progress-bar"><div class="blt-progress-fill" id="bltStepFill"></div></div><span class="blt-progress-txt" id="bltStepCount">0/${b.steps.length}</span></div><div id="bltStepList">${steps}</div>`));
+    S.push({t:'Procedimento de calibração', h:`<div class="blt-progress"><div class="blt-progress-bar"><div class="blt-progress-fill" id="bltStepFill"></div></div><span class="blt-progress-txt" id="bltStepCount">0/${b.steps.length}</span></div><div id="bltStepList">${steps}</div>`});
   }
 
-  // Verificação
+  // 12. Verificação
   if (b.passCriteria && b.passCriteria.length)
-    h.push(_bltSection('7','Critérios de aprovação', b.passCriteria.map(p=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:.8rem;color:rgba(255,255,255,.65)"><span style="color:rgba(6,167,125,.7);flex-shrink:0">✓</span><span>${esc(p)}</span></div>`).join('')));
-  if (b.failureActions && b.failureActions.length)
-    h.push(`<div class="blt-callout"><b>Se a calibração falhar:</b><ul>${b.failureActions.map(f=>`<li>${esc(f)}</li>`).join('')}</ul></div>`);
+    S.push({t:'Verificação — critérios de aprovação', h:b.passCriteria.map(p=>`<div class="blt-sym blt-ok">${esc(p)}</div>`).join('')});
 
-  // Referências
+  // 13. Solução de problemas
+  if (b.symptomAction && b.symptomAction.length)
+    S.push({t:'Solução de problemas', h:_bltTable(['Sintoma','Causa provável','Ação corretiva'], b.symptomAction.map(r=>[esc(r.symptom||''), esc(r.cause||''), esc(r.action||'')]))});
+  else if (b.failureActions && b.failureActions.length)
+    S.push({t:'Se a calibração falhar', h:`<div class="blt-callout"><ul>${b.failureActions.map(f=>`<li>${esc(f)}</li>`).join('')}</ul></div>`});
+
+  // 14. Serviço & garantia
+  const svc = [];
+  if (b.labor && (b.labor.code || b.labor.time))
+    svc.push(_bltTable(['Código de serviço','Tempo estimado','Observação'], [[esc(b.labor.code||'—'), esc(b.labor.time||'—'), esc(b.labor.note||'')]]));
+  if (b.warranty) svc.push(`<p class="blt-body-p">🔧 Garantia: ${esc(b.warranty)}</p>`);
+  if (svc.length) S.push({t:'Serviço & garantia', h:svc.join('')});
+
+  // 15. Referências técnicas
   if (b.referenceDocs && b.referenceDocs.length)
-    h.push(_bltSection('8','Referências técnicas', b.referenceDocs.map(r=>`<div class="blt-ref">${esc(r)}</div>`).join('')));
+    S.push({t:'Referências técnicas', h:b.referenceDocs.map(r=>`<div class="blt-ref">${esc(r)}</div>`).join('')});
 
-  // Corpo livre do WYSIWYG (se houver algo além do resumo)
+  // 16. Anexos
+  if (b.attachments && b.attachments.length)
+    S.push({t:'Anexos', h:b.attachments.map(a=>`<div class="blt-ref">${esc(a)}</div>`).join('')});
+
+  // 17. Informações adicionais (corpo livre do WYSIWYG)
   const body = (b.content || '').trim();
   if (body && _stripHtml(body) !== summary && _stripHtml(body) !== _stripHtml(b.summary || ''))
-    h.push(_bltSection('9','Informações adicionais', DOMPurify ? DOMPurify.sanitize(body) : body));
+    S.push({t:'Informações adicionais', h:DOMPurify ? DOMPurify.sanitize(body) : body});
+
+  // Montagem final: TOC + seções numeradas
+  const toc = S.map((s,i)=>`<button class="blt-toc-chip" onclick="scrollToBltSec(${i})">${i+1}. ${esc(s.t)}</button>`).join('');
+  const html = `<div class="blt-toc">${toc}</div>${S.map((s,i)=>`<div class="blt-sec" id="blt-sec-${i}">${i+1}. ${esc(s.t)}</div>${s.h}`).join('')}`;
 
   // Ações
-  h.push(`<div class="blt-actions">
+  const htmlX = html + `<div class="blt-actions">
     <button class="blt-act-btn" onclick="copyBulletinSummary(this)">📋 Copiar resumo</button>
     <button class="blt-act-btn" onclick="printBulletin()">🖨️ Imprimir</button>
-  </div>`);
+  </div>`;
 
-  document.getElementById('bltModalContent').innerHTML = h.join('');
+  document.getElementById('bltModalContent').innerHTML = htmlX;
   document.getElementById('bltModalAffected').style.display = 'none';
   document.getElementById('bltModalDate').textContent = 'Publicado em ' + (b.publishedAt || b.createdAt ? fmtDate(b.publishedAt || b.createdAt) : '—');
   const markBtn = document.getElementById('bltMarkReadBtn');
@@ -1953,6 +2043,11 @@ function _renderBulletin(b) {
   const modal = document.getElementById('bltModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+}
+
+function scrollToBltSec(i) {
+  const el = document.getElementById('blt-sec-'+i);
+  if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function updateBltStepProgress(cb) {
@@ -2001,19 +2096,26 @@ h1{font-size:20px;border-bottom:2px solid #0b7;padding-bottom:10px}
 .blt-kw{display:inline-block;background:#eef6f5;border:1px solid #bcd;padding:2px 8px;border-radius:3px;font-size:11px;margin:2px 4px 2px 0}
 .blt-sec{font-weight:800;text-transform:uppercase;font-size:12px;margin:22px 0 8px;letter-spacing:.04em}
 .blt-chip{display:inline-block;background:#f0f0f0;border:1px solid #ddd;padding:2px 8px;border-radius:3px;font-size:11px;margin:2px 4px 2px 0}
-.blt-sev{display:inline-block;background:#fdecec;border:1px solid #f5b;padding:2px 8px;border-radius:3px;font-size:11px;color:#c00;margin:2px 4px 2px 0}
+.blt-sev-badge{display:inline-block;background:#fdecec;border:1px solid #f5b;padding:2px 8px;border-radius:3px;font-size:11px;color:#c00;margin:2px 4px 2px 0}
 .blt-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:8px 0}
 .blt-meta-item{border:1px solid #eee;border-radius:6px;padding:8px 10px}
 .blt-meta-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#888}
 .blt-meta-value{font-weight:600;font-size:12px}
-.blt-spec-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
-.blt-spec-table th{text-align:left;background:#f0f7f7;border-bottom:2px solid #0b7;padding:7px 9px;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
-.blt-spec-table td{border-bottom:1px solid #eee;padding:7px 9px}
+.blt-table,.blt-spec-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+.blt-table th,.blt-spec-table th{text-align:left;background:#f0f7f7;border-bottom:2px solid #0b7;padding:7px 9px;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.blt-table td,.blt-spec-table td{border-bottom:1px solid #eee;padding:7px 9px}
+.blt-sym{display:flex;gap:8px;padding:5px 0;border-bottom:1px dotted #eee}
+.blt-sym.blt-ok::before{content:'✔ ';color:#0b7}
+.blt-sym::before{content:'▸ ';color:#c00}
+.blt-dtc-chip{display:inline-block;background:#f3ecff;border:1px solid #cbb8f5;padding:2px 8px;border-radius:3px;font-size:11px;margin:2px 4px 2px 0;font-family:monospace}
 .blt-step{display:flex;gap:8px;padding:7px 0;border-bottom:1px dotted #ddd}
 .blt-step-n{font-family:monospace;color:#0b7;font-weight:700}
 .blt-callout{border:1px solid #f5b;background:#fdf6f3;padding:10px 14px;border-radius:6px;margin:10px 0}
+.blt-callout.warn{border-color:#f5a623;background:#fdf7ec}
+.blt-callout.comp{border-color:#0b7;background:#f0faf6}
 .blt-ref{font-size:12px;padding:3px 0}
 .blt-ref::before{content:'📎 '}
+.blt-toc{display:none}
 .blt-actions{display:none}
 </style></head><body>
 <h1>${esc(title)}</h1>
@@ -2064,6 +2166,10 @@ function renderBulletinsDynamic() {
     const isNew = b.createdAt && (NOW - b.createdAt) < 7*24*3600*1000;
     const brands = (b.brands || []).map(x=>`<span class="blt-brand-chip">${esc(x)}</span>`).join('');
     const infoChips = [];
+    if (b.severity && b.severity !== 'info') {
+      const sev = { moderate:['Severidade moderada','#FFAA00'], critical:['CRÍTICO','#FF3B3B'] }[b.severity];
+      if (sev) infoChips.push(`<span class="blt-info-chip" style="color:${sev[1]};border-color:${sev[1]}55;background:${sev[1]}11">${sev[0]}</span>`);
+    }
     if (b.calibrationType) infoChips.push(`<span class="blt-info-chip" style="color:#06A77D;border-color:rgba(6,167,125,.3)">${esc(b.calibrationType)}</span>`);
     if (b.dtcs && b.dtcs.length) infoChips.push(`<span class="blt-info-chip">DTC ${esc(b.dtcs[0])}${b.dtcs.length>1?' +'+ (b.dtcs.length-1):''}</span>`);
     if (b.steps && b.steps.length) infoChips.push(`<span class="blt-info-chip">${b.steps.length} passos</span>`);

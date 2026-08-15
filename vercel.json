@@ -66,6 +66,33 @@
   ],
   "headers": [
     {
+      "source": "/:page(admin|membros|superadmin|login|index|mfa-verify|reset-password|email-config)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/:page(admin|membros|superadmin|login|index|mfa-verify|reset-password|email-config).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/(js|css|assets|img)/(.*)",
       "headers": [
         {

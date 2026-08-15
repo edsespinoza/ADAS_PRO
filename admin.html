@@ -1099,7 +1099,7 @@ function filterContent() {
       <td><span style="color:var(--success);font-weight:600">${cnt}</span><span style="font-size:.75rem;color:rgba(255,255,255,.35)"> usuário(s)</span></td>
       <td><div class="action-btns">
         <button class="action-btn action-btn-edit" onclick="openEditContentModal('${c.id}')" title="Editar">✏️</button>
-        <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir material?','${esc(c.title)} será removido.',()=>{AUTH.deleteContent('${c.id}');refresh();showToast('Material excluído.')})" title="Excluir">🗑</button>
+        <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir material?','${jsStr(c.title)} será removido.',()=>{AUTH.deleteContent('${c.id}');refresh();showToast('Material excluído.')})" title="Excluir">🗑</button>
       </div></td></tr>`;
   }).join('');
 }

@@ -1623,7 +1623,7 @@ function sendReply() {
   const raw = document.getElementById('tvReply').value.trim();
   if (!raw) return;
   if (raw.length > 2000) { showToast('⚠️ Mensagem muito longa (máx 2000 chars).'); return; }
-  const msg = esc(raw); // sanitiza antes de salvar
+  const msg = raw;
   AUTH.replyTicket(viewingTicketId, session.userId, msg);
   openTicketViewer(viewingTicketId);
   loadMeusTickets();

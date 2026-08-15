@@ -10,12 +10,15 @@
 -- 1. FUNÇÕES AUXILIARES (SECURITY DEFINER)
 --    Executam como owner (postgres), ignoram RLS
 --    → evitam recursão infinita nas políticas
+--    PADRÃO: SEMPRE declarar `SET search_path = ''`
+--    em toda função SECURITY DEFINER e qualificar
+--    toda referência com `public.` (anti pg_temp).
 -- ────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION public.get_my_role()
 RETURNS text
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY DEFINER SET search_path = ''
 STABLE
 AS $$
   SELECT role FROM public.users WHERE id = auth.uid();
@@ -24,7 +27,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY DEFINER SET search_path = ''
 STABLE
 AS $$
   SELECT public.get_my_role() IN ('admin', 'gestor', 'superadmin');
@@ -33,7 +36,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.is_superadmin()
 RETURNS boolean
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY DEFINER SET search_path = ''
 STABLE
 AS $$
   SELECT public.get_my_role() = 'superadmin';
@@ -58,7 +61,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.can_manage_role(target_role text)
 RETURNS boolean
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY DEFINER SET search_path = ''
 STABLE
 AS $$
   SELECT public.role_level(target_role) < public.role_level(public.get_my_role());
@@ -68,7 +71,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.is_admin_staff()
 RETURNS boolean
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY DEFINER SET search_path = ''
 STABLE
 AS $$
   SELECT public.get_my_role() IN ('admin', 'superadmin');

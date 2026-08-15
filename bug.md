@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-15 (Endurecimento de segurança — approve-user e notify)  
+**Última atualização:** 2026-08-15 (Auditoria de segurança + fixes #77–#79)  
 **Responsável:** AutoTech Service
 
 ---
@@ -143,6 +143,7 @@
 | D | 🟡 Médio | Ativar TOTP obrigatório para admin/superadmin no Supabase Dashboard — código pronto, só falta ativar | Supabase Dashboard → Auth → MFA Policy → Enforce for roles |
 | F | 🟠 Alta | Trocar senhas de produção no Supabase Auth (AutoTech@ADAS2026! e Admin@ADAS2026! foram expostas no histórico do código) | Supabase Dashboard → Authentication → Users |
 | E | 🟡 Médio | Implementar UI de upload de PDFs no `admin.html` | Código — próxima sessão |
+| G | 🟠 Alta | Definir `DEMO_ENABLED=false` para desligar o modo demo no login de produção (verificado ativo em 2026-08-15) | Vercel Dashboard → Project → Settings → Environment Variables |
 
 ---
 
@@ -818,4 +819,31 @@
 - [x] **Verificação** ✅ 2026-08-15
   - `npx deno check` limpo nas 2 funções. Deploy: `supabase functions deploy approve-user` e `... notify`.
   - Testes ao vivo (não destrutivos) com `testesa@adaspro.com.br`: create com senha fraca → 400; create role=superadmin → 403; update sobre role igual/superior → 403; update com `passwordHash` no payload → campo strippado (name aplicado e restaurado); delete target inexistente → 404; notify sem `RESEND_API_KEY` → 500 (env não configurado).
+
+## 🟠 ALTA — Auditoria de segurança 2026-08-15 (agente + MCP + verificação ao vivo)
+
+> **Objetivo:** auditoria completa após o endurecimento das Edge Functions. Relatório: `security-audit-report.md`. Teste via agente especialista + grafos do MCP (codebase-memory) + requests ao ambiente real.
+
+- [x] **#77 — XSS stored em `admin.html` (título de material dentro de `onclick`)** ✅ 2026-08-15
+  - `esc(c.title)` em string JS de `onclick` (`admin.html:1102`): o decode do parser HTML devolve `'` e quebra a string → payload `x','alert(1)//` executa no browser de qualquer admin/superadmin. Trocar para `jsStr(c.title)` (padrão já usado em `superadmin.html:2713`).
+  - **Nota:** o achado correlato `admin.html:1096` (`title="${esc(c.filePath)}"`) foi **refutado** — atributos HTML não quebram via entidades (tokenizer HTML5 decodifica entidades só após definir a fronteira do valor).
+  - **Arquivo:** `admin.html` (deploy Vercel pendente).
+
+- [x] **#78 — SECURITY DEFINER sem `SET search_path`** ✅ 2026-08-15
+  - As 5 funções auxiliares (`get_my_role`, `is_admin`, `is_superadmin`, `can_manage_role`, `is_admin_staff`) ganharam `SECURITY DEFINER SET search_path = ''` — proteção anti `pg_temp` para o caso de refatoração futura (refs hoje 100% `public.`-qualificadas).
+  - **Aplicado no banco:** `supabase db query --linked -f` (bloco das funções); verificado via `pg_proc.proconfig` = `[search_path=""]`.
+  - **Padrão novo:** toda nova função SECURITY DEFINER em `rls_policies.sql` deve declarar `SET search_path` + qualificar com `public.`.
+  - **Arquivo:** `sql/rls_policies.sql`.
+
+- [x] **#79 — Duplo-escape no chat do membro (bug de exibição)** ✅ 2026-08-15
+  - `membros.html:1626` aplicava `esc(raw)` antes de salvar e o render (`:1604`) escapava de novo → entidades HTML exibidas literalmente (`&lt;script&gt;`). Removido o pré-escape; a sanitização passa a acontecer apenas na renderização.
+  - **Arquivo:** `membros.html` (deploy Vercel pendente).
+
+- [x] **Não corrigido (decisão do usuário) — demo ativo em produção** 🟡 2026-08-15
+  - Verificado ao vivo: `https://adaspro.com.br/js/supabase-config.js` → `demoEnabled: true`. Bloco "Entrar como Admin — DEMO" exposto no login de produção. Dados reais protegidos (JWT/RLS). Correção requerida: `DEMO_ENABLED=false` no dashboard do Vercel (ver pendências manuais).
+
+- [x] **Verificação** ✅ 2026-08-15
+  - MCP (`codebase-memory`): mapeou usos de `esc()`/`jsStr()` e `onclick` em todos os painéis; ids não-escapeados (`${c.id}`, `${u.id}`, `${t.id}`) são gerados pela app (não-exploráveis).
+  - Banco: `search_path=""` confirmado nas 5 funções via `pg_proc`.
+  - HTML: fixes em `admin.html` e `membros.html` — **deploy Vercel pendente** (`vercel deploy --prod`).
 

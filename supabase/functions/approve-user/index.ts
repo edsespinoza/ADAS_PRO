@@ -11,6 +11,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, content-type',
 };
 
+// Paridade com public.role_level / public.can_manage_role do RLS:
+// ninguém age sobre role igual ou superior à sua (service_role ignora RLS,
+// então a checagem precisa ser reimplementada aqui).
+const ROLE_LEVEL: Record<string, number> = { 'membro': 1, 'gestor': 2, 'admin': 3, 'superadmin': 4 };
+const VALID_ROLES  = Object.keys(ROLE_LEVEL);
+const VALID_STATUS = ['active', 'pending', 'blocked'];
+const VALID_PLANS  = ['free', 'modulo', 'pro', 'premium'];
+
+// Campos editáveis via action=update — whitelist server-side.
+// id, email, passwordHash, createdAt etc. nunca são aceitos.
+const UPDATE_ALLOWED_FIELDS = ['name', 'role', 'status', 'plan', 'level', 'permissions', 'accessType', 'accessExpires', 'approvedBy'];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -80,12 +92,14 @@ serve(async (req) => {
     if (action === 'create') {
       const { email, password, name, role: newRole, status: newStatus, permissions, plan, level } = body;
       if (!email || !password || !name) return json({ error: 'email, password e name são obrigatórios.' }, 400);
+      if (password.length < 8) return json({ error: 'A senha deve ter no mínimo 8 caracteres.' }, 400);
 
-      const VALID_ROLES = ['superadmin', 'admin', 'gestor', 'membro'];
       const safeRole = VALID_ROLES.includes(newRole) ? newRole : 'membro';
+      const safeStatus = VALID_STATUS.includes(newStatus) ? newStatus : 'active';
 
-      if (['admin', 'superadmin'].includes(safeRole) && callerRole !== 'superadmin') {
-        return json({ error: 'Apenas superadmin pode criar contas admin.' }, 403);
+      // Paridade com can_manage_role (RLS): role deve ser estritamente inferior à do chamador
+      if (ROLE_LEVEL[safeRole] >= ROLE_LEVEL[callerRole]) {
+        return json({ error: 'Não é permitido criar conta com role igual ou superior à sua.' }, 403);
       }
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -101,7 +115,7 @@ serve(async (req) => {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         role: safeRole,
-        status: newStatus || 'active',
+        status: safeStatus,
         permissions: permissions || [],
         plan: plan || 'free',
         level: level || 'tecnico',
@@ -128,12 +142,15 @@ serve(async (req) => {
 
     if (!targetId) return json({ error: 'targetId obrigatório.' }, 400);
 
-    // Impede que admin exclua ou rebaixe outro admin/superadmin
+    // Paridade com can_manage_role (RLS): só age sobre roles estritamente inferiores à do chamador
     const { data: targetData } = await supabaseAdmin
       .from('users').select('role').eq('id', targetId).single();
     const targetRole = targetData?.role || '';
-    if (['admin','superadmin'].includes(targetRole) && callerRole !== 'superadmin') {
-      return json({ error: 'Apenas superadmin pode agir sobre contas admin.' }, 403);
+    if (!VALID_ROLES.includes(targetRole)) {
+      return json({ error: 'Usuário não encontrado.' }, 404);
+    }
+    if (ROLE_LEVEL[targetRole] >= ROLE_LEVEL[callerRole]) {
+      return json({ error: 'Não é permitido agir sobre contas com role igual ou superior à sua.' }, 403);
     }
 
     let result;
@@ -148,18 +165,34 @@ serve(async (req) => {
     } else if (action === 'unblock') {
       result = await supabaseAdmin.from('users').update({ status: 'active' }).eq('id', targetId);
     } else if (action === 'delete') {
-      // Proteção extra: nunca deletar superadmin
-      if (targetRole === 'superadmin') {
-        return json({ error: 'Conta superadmin não pode ser excluída.' }, 403);
+      // Remove também do Supabase Auth — senão a credencial continua válida
+      // e o e-mail fica "preso" (impede recadastro com o mesmo e-mail).
+      // "User not found" é tratado como sucesso (idempotente).
+      const { error: authDelErr } = await supabaseAdmin.auth.admin.deleteUser(targetId);
+      if (authDelErr && !/not found/i.test(authDelErr.message)) {
+        return json({ error: `Falha ao excluir credenciais: ${authDelErr.message}` }, 500);
       }
       result = await supabaseAdmin.from('users').delete().eq('id', targetId);
     } else if (action === 'update' && updates) {
-      // Protege campos críticos
-      const safe = { ...updates };
-      delete safe.id; delete safe.email; delete safe.passwordHash;
-      // Apenas superadmin pode promover para admin
-      if (safe.role && ['admin','superadmin'].includes(safe.role) && callerRole !== 'superadmin') {
-        return json({ error: 'Apenas superadmin pode promover para admin.' }, 403);
+      // Whitelist de campos — impede escrita de campos críticos (id, email, passwordHash, createdAt...)
+      const safe: Record<string, unknown> = {};
+      for (const k of Object.keys(updates)) {
+        if (UPDATE_ALLOWED_FIELDS.includes(k)) safe[k] = updates[k];
+      }
+      if (safe.role !== undefined) {
+        const r = safe.role as string;
+        if (!VALID_ROLES.includes(r)) return json({ error: 'Role inválida.' }, 400);
+        // Paridade com can_manage_role: não promove para role igual ou superior à do chamador
+        if (ROLE_LEVEL[r] >= ROLE_LEVEL[callerRole]) {
+          return json({ error: 'Não é permitido atribuir role igual ou superior à sua.' }, 403);
+        }
+      }
+      if (safe.status !== undefined && !VALID_STATUS.includes(safe.status as string)) return json({ error: 'Status inválido.' }, 400);
+      if (safe.plan !== undefined && !VALID_PLANS.includes(safe.plan as string)) return json({ error: 'Plano inválido.' }, 400);
+      if (safe.permissions !== undefined) {
+        if (!Array.isArray(safe.permissions) || safe.permissions.some((p: unknown) => typeof p !== 'string')) {
+          return json({ error: 'permissions deve ser uma lista de strings.' }, 400);
+        }
       }
       result = await supabaseAdmin.from('users').update(safe).eq('id', targetId);
     } else {
@@ -178,7 +211,8 @@ serve(async (req) => {
     return json({ ok: true });
 
   } catch (e) {
-    return json({ error: e.message }, 500);
+    const msg = e instanceof Error ? e.message : String(e);
+    return json({ error: msg }, 500);
   }
 });
 

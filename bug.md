@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-14 (Fix get-download-url — coluna accessLevel inexistente)  
+**Última atualização:** 2026-08-15 (Endurecimento de segurança — approve-user e notify)  
 **Responsável:** AutoTech Service
 
 ---
@@ -793,3 +793,29 @@
   - **Timeout do init de 5s → 15s:** rede lenta não derruba sessão já validada; o fallback offline continua ativo para Supabase inacessível.
   - **`logout()` limpa ambas as chaves** (`adaspro_session` + chave do SDK).
   - **Arquivo:** `js/auth.js`. A guarda `_sbConfigured` (nunca aceitar sessão localStorage quando Supabase está online) foi **preservada** — a sessão cacheada só é aceita via `_currentSession` no fallback offline.
+
+## 🟠 ALTA — Endurecimento de segurança das Edge Functions 2026-08-15
+
+> **Objetivo:** revisão de segurança das 3 Edge Functions após o bug do CSP em produção. Encontradas e corrigidas falhas de autorização/consistência.
+
+- [x] **#73 — `approve-user` delete era soft delete (não removia do Auth)** ✅ 2026-08-15
+  - `action:'delete'` removia só a linha de `public.users`; a credencial do Supabase Auth (`auth.users`) continuava válida e o e-mail ficava "preso" (impedia recadastro). Agora executa `auth.admin.deleteUser(targetId)` antes do delete na tabela (tratando "User not found" como idempotente).
+  - **Arquivo:** `supabase/functions/approve-user/index.ts`
+
+- [x] **#74 — Autorização da Edge Function mais fraca que a RLS (`can_manage_role`)** ✅ 2026-08-15
+  - A Edge Function usa service_role (ignora RLS) e só bloqueava admin/superadmin como alvo — um gestor podia excluir/bloquear/promover outro gestor. Agora há paridade com `can_manage_role`: `ROLE_LEVEL[targetRole] >= ROLE_LEVEL[callerRole]` → 403, para todas as ações (approve/block/unblock/update/delete) e para a role nova no create/update.
+  - **Efeito colateral:** superadmin não pode mais criar/promover outro superadmin (paridade estrita com o RLS, que também não permite `can_manage_role('superadmin')`). Criar um segundo superadmin passa a ser operação de banco.
+
+- [x] **#75 — Whitelist de campos no `update` + validação server-side** ✅ 2026-08-15
+  - `UPDATE_ALLOWED_FIELDS` (`name, role, status, plan, level, permissions, accessType, accessExpires, approvedBy`); id/email/passwordHash/createdAt nunca são aceitos. Validação de valores: role/status/plan dentro de whitelist, permissions = array de strings. Senha no `create` agora exige mín. 8 chars no servidor (paridade com o cliente).
+  - **Arquivo:** `supabase/functions/approve-user/index.ts`
+
+- [x] **#76 — `notify`: cap diário + validação de destinatário** ✅ 2026-08-15
+  - Rate limit de 20/min mantido; adicionado cap de 100 emails/dia por usuário (anti-spam via conta comprometida). Eventos `user_approved`/`ticket_reply` agora exigem destinatário existente e `status='active'` em `public.users` — impede envio arbitrário no domínio.
+  - **⚠️ Pendência manual (#24):** a função `notify` está sem `RESEND_API_KEY` no ambiente — configurar no Dashboard → Edge Functions → notify (env vars: `RESEND_API_KEY`, `ADMIN_EMAIL`, `SITE_URL`).
+  - **Arquivo:** `supabase/functions/notify/index.ts`
+
+- [x] **Verificação** ✅ 2026-08-15
+  - `npx deno check` limpo nas 2 funções. Deploy: `supabase functions deploy approve-user` e `... notify`.
+  - Testes ao vivo (não destrutivos) com `testesa@adaspro.com.br`: create com senha fraca → 400; create role=superadmin → 403; update sobre role igual/superior → 403; update com `passwordHash` no payload → campo strippado (name aplicado e restaurado); delete target inexistente → 404; notify sem `RESEND_API_KEY` → 500 (env não configurado).
+

@@ -68,6 +68,18 @@ serve(async (req) => {
     if (!countErr && recentCount && recentCount >= 20) {
       return json({ error: 'Muitas requisições. Aguarde 1 minuto.' }, 429);
     }
+
+    // Rate limiting — máximo 100 emails/dia por usuário (limita abuso via conta comprometida)
+    const { count: dayCount, error: dayErr } = await supabaseAdmin
+      .from('audit_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('actor_id', user.id)
+      .eq('action', 'notify')
+      .gte('created_at', new Date(Date.now() - 86_400_000).toISOString());
+
+    if (!dayErr && dayCount && dayCount >= 100) {
+      return json({ error: 'Limite diário de envios atingido.' }, 429);
+    }
   } catch (_) {
     return json({ error: 'Falha na validação de autenticação.' }, 401);
   }
@@ -98,6 +110,20 @@ serve(async (req) => {
       return json({ error: 'Evento inválido.' }, 400);
     }
 
+    // Segurança: em eventos para um membro, o destinatário deve existir e estar ativo.
+    // Impede que uma conta admin comprometida use o domínio para envios arbitrários.
+    if (event === 'user_approved' || event === 'ticket_reply') {
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      const { data: recipient } = await supabaseAdmin
+        .from('users').select('status').eq('email', to.toLowerCase()).maybeSingle();
+      if (!recipient || recipient.status !== 'active') {
+        return json({ error: 'Destinatário não encontrado ou inativo.' }, 400);
+      }
+    }
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
@@ -125,7 +151,8 @@ serve(async (req) => {
 
     return json({ ok: true });
   } catch(e) {
-    return json({ error: e.message }, 500);
+    const msg = e instanceof Error ? e.message : String(e);
+    return json({ error: msg }, 500);
   }
 });
 

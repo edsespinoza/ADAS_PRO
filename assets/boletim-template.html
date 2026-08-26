@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Boletim Técnico ADAS PRO — Modelo Newsletter</title>
+<style>
+  :root {
+    --primary: #0d6efd;
+    --primary-dark: #0a58ca;
+    --accent: #198754;
+    --warn: #dc3545;
+    --bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --text: #212529;
+    --text-muted: #6c757d;
+    --border: #dee2e6;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .blt-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #fff;
+    padding: 32px 24px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .blt-header::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .blt-header-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .blt-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .blt-number {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #90e0ef;
+    background: rgba(144,224,239,.12);
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(144,224,239,.25);
+  }
+  .blt-date {
+    font-size: 13px;
+    color: rgba(255,255,255,.7);
+  }
+  .blt-brand {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #90e0ef;
+    margin-bottom: 4px;
+  }
+  .blt-title {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .blt-subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,.75);
+    max-width: 600px;
+  }
+  .blt-type-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .blt-type-badge.novidade { background: #198754; color: #fff; }
+  .blt-type-badge.atualizacao { background: #0d6efd; color: #fff; }
+  .blt-type-badge.alerta { background: #dc3545; color: #fff; }
+  .blt-type-badge.procedimento { background: #6f42c1; color: #fff; }
+
+  /* ── MAIN CONTENT ── */
+  .blt-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+  }
+
+  /* ── HERO ARTICLE ── */
+  .blt-hero {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    margin-bottom: 24px;
+  }
+  .blt-hero-img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  }
+  .blt-hero-img-placeholder {
+    width: 100%;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    color: rgba(255,255,255,.15);
+  }
+  .blt-hero-body {
+    padding: 24px;
+  }
+  .blt-hero-body h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .blt-hero-body p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .blt-hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .blt-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #e9ecef;
+    color: var(--text-muted);
+  }
+  .blt-tag.brand { background: #cfe2ff; color: #084298; }
+  .blt-tag.system { background: #d1e7dd; color: #0f5132; }
+
+  /* ── FEATURE BOXES (grid) ── */
+  .blt-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .blt-feature-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    border-left: 4px solid var(--primary);
+    transition: transform .15s;
+  }
+  .blt-feature-card:hover { transform: translateY(-2px); }
+  .blt-feature-card .icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .blt-feature-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .blt-feature-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── STATS ROW ── */
+  .blt-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .blt-stat-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .blt-stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .blt-stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .blt-stat-note {
+    font-size: 10px;
+    color: #adb5bd;
+    margin-top: 4px;
+  }
+
+  /* ── SECTION HEADING ── */
+  .blt-section-heading {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin: 28px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  /* ── SECONDARY ARTICLES ── */
+  .blt-articles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 600px) { .blt-articles { grid-template-columns: 1fr; } }
+  .blt-article-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .blt-article-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .blt-article-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .blt-article-card .blt-article-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  /* ── TABLE ── */
+  .blt-table-wrap {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    margin-bottom: 24px;
+  }
+  .blt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .blt-table th {
+    background: #f1f3f5;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--text-muted);
+  }
+  .blt-table td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .blt-table tr:hover td { background: #f8f9fa; }
+
+  /* ── UPCOMING / EVENTS ── */
+  .blt-event {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .blt-event-date-box {
+    flex-shrink: 0;
+    width: 56px;
+    text-align: center;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 4px;
+  }
+  .blt-event-date-box .day { font-size: 22px; font-weight: 800; line-height: 1; }
+  .blt-event-date-box .month { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+  .blt-event-body h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .blt-event-body p { font-size: 13px; color: var(--text-muted); }
+
+  /* ── FOOTER ── */
+  .blt-footer {
+    background: #1a1a2e;
+    color: rgba(255,255,255,.6);
+    padding: 24px;
+    margin-top: 32px;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .blt-footer-inner {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .blt-footer strong { color: rgba(255,255,255,.85); }
+  .blt-footer a { color: #90e0ef; text-decoration: none; }
+  .blt-footer a:hover { text-decoration: underline; }
+
+  /* ── CALLOUT ── */
+  .blt-callout {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .blt-callout strong { color: #664d03; }
+  .blt-callout.info { background: #cfe2ff; border-color: #9ec5fe; }
+  .blt-callout.info strong { color: #084298; }
+  .blt-callout.danger { background: #f8d7da; border-color: #f5c2c7; }
+  .blt-callout.danger strong { color: #842029; }
+
+  /* ── PRINT ── */
+  @media print {
+    .blt-header { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .blt-feature-card, .blt-stat-card, .blt-article-card, .blt-event, .blt-table-wrap { box-shadow: none; border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="blt-header">
+  <div class="blt-header-inner">
+    <div class="blt-header-top">
+      <span class="blt-number">BT-2026-018</span>
+      <span class="blt-date">26.08.2026</span>
+    </div>
+    <div class="blt-brand">ADAS PRO — Boletim Técnico</div>
+    <div class="blt-type-badge novidade">Novidade</div>
+    <h1 class="blt-title">Honda lança nova geração do Honda Sensing com câmera 8 MP e radar 4D</h1>
+    <p class="blt-subtitle">Atualização do sistema ADAS impacta calibração, diagnóstico e procedimentos de reparo em todos os modelos 2026+</p>
+  </div>
+</header>
+
+<div class="blt-container">
+
+  <!-- ═══════════════════ HERO ARTICLE ═══════════════════ -->
+  <article class="blt-hero">
+    <div class="blt-hero-img-placeholder">🚗</div>
+    <div class="blt-hero-body">
+      <h2>Honda Sensing 3.0 — O que muda para oficinas e técnicos</h2>
+      <p>
+        A Honda anunciou a terceira geração do Honda Sensing para os modelos 2026, com 
+        upgrade significativo nos sensores: câmera frontal de 8 megapíxeis (antes 1,3 MP) 
+        e radar milimétrico 4D com alcance de 200 m. O sistema passa a detectar 
+        ciclistas à noite e 🛵 motocicletas em ctradas urbanas, além de ampliar a 
+        cobertura do LKA para faixas não padronizadas.
+      </p>
+      <p>
+        Para oficinas, a mudança exige recalibração completa dos veículos que passarem 
+        por substituição de para-brisa, reparo de colisão frontal ou atualização de 
+        firmware. O procedimento estático agora requer <strong>3 novos alvos de referência</strong> 
+        e scanner com suporte à versão 9.0+ do Honda HDS.
+      </p>
+      <div class="blt-hero-tags">
+        <span class="blt-tag brand">Honda</span>
+        <span class="blt-tag brand">Honda Sensing 3.0</span>
+        <span class="blt-tag system">Câmera frontal 8MP</span>
+        <span class="blt-tag system">Radar 4D 77GHz</span>
+        <span class="blt-tag">Calibração estática</span>
+        <span class="blt-tag">FW 9.0+</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ═══════════════════ FEATURE BOXES ═══════════════════ -->
+  <div class="blt-section-heading">Funcionalidades novas</div>
+  <div class="blt-features">
+    <div class="blt-feature-card">
+      <div class="icon">📷</div>
+      <h3>Câmera 8 MP</h3>
+      <p>Resolução 6× maior permite detecção de obstáculos a 250 m, incluindo pedestres e ciclistas em baixa luminosidade.</p>
+    </div>
+    <div class="blt-feature-card" style="border-color:#198754">
+      <div class="icon">📡</div>
+      <h3>Radar 4D</h3>
+      <p>Novo radar milimétrico 77 GHz mapeia altitude dos objetos, diferenciando veículos de carga e adequately identificando vedações.</p>
+    </div>
+    <div class="blt-feature-card" style="border-color:#dc3545">
+      <div class="icon">🛡️</div>
+      <h3>AEB expandido</h3>
+      <p>Frenagem autônoma agora cobre interseções e conversões à esquerda, com atuação até 60 km/h (antes 30 km/h).</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ STATS ═══════════════════ -->
+  <div class="blt-section-heading">Números que importam</div>
+  <div class="blt-stats">
+    <div class="blt-stat-card">
+      <div class="blt-stat-number">8 MP</div>
+      <div class="blt-stat-label">Resolução da câmera</div>
+      <div class="blt-stat-note">vs 1,3 MP (gen. anterior)</div>
+    </div>
+    <div class="blt-stat-card">
+      <div class="blt-stat-number">200 m</div>
+      <div class="blt-stat-label">Alcance do radar 4D</div>
+      <div class="blt-stat-note">+60% vs radar 3D</div>
+    </div>
+    <div class="blt-stat-card">
+      <div class="blt-stat-number">3</div>
+      <div class="blt-stat-label">Novos alvos de calibração</div>
+      <div class="blt-stat-note">Necessários para todos os atendimentos</div>
+    </div>
+    <div class="blt-stat-card">
+      <div class="blt-stat-number">v9.0</div>
+      <div class="blt-stat-label">Versão mín. do scanner</div>
+      <div class="blt-stat-note">Honda HDS obligatório</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CALLOUT ═══════════════════ -->
+  <div class="blt-callout danger">
+    <strong>⚠ Atenção:</strong> Todos os veículos Honda 2026+ que passarem por substituição de para-brisa 
+    ou reparo na zona frontal <strong>devem</strong> passar pelo novo procedimento de calibração com os 3 alvos 
+    adicionais. O procedimento antigo (gen. 2) não é compatível e resultará em falha de calibração.
+  </div>
+
+  <!-- ═══════════════════ SECONDARY ARTICLES ═══════════════════ -->
+  <div class="blt-section-heading">Outras atualizações</div>
+  <div class="blt-articles">
+    <div class="blt-article-card">
+      <div class="blt-article-icon">🔧</div>
+      <h3>Toyota atualiza TSB para BSM em Corolla Cross 2024–2025</h3>
+      <p>
+        Nova versão do boletim técnico corrige falso positivo do Blind Spot Monitor 
+        em condições de chuva intensa. Procedimento: recalibração do radar traseiro 
+        com firmware ≥ 7.2.1. Tempo estimado: 30 min.
+      </p>
+    </div>
+    <div class="blt-article-card">
+      <div class="blt-article-icon">⚡</div>
+      <h3>Ford emite alerta para BMS do Ranger 2025</h3>
+      <p>
+        Módulo de freio eletrônico pode apresentar atraso de 200 ms no ABS em 
+        frenagens de emergência. Atualização OTA disponível; oficinas devem verificar 
+        a versão do firmware durante a revisão de 10.000 km.
+      </p>
+    </div>
+    <div class="blt-article-card">
+      <div class="blt-article-icon">📊</div>
+      <h3>Nissan expande cobertura do scanner para chineses 2025</h3>
+      <p>
+        A partir da versão 8.4.2, o scanner passa a suportar calibração ADAS dos 
+        modelos Changan, BYD e GWM importados. Atualização gratuita via portal 
+        do distribuidor.
+      </p>
+    </div>
+    <div class="blt-article-card">
+      <div class="blt-article-icon">🎓</div>
+      <h3>Novo curso: Calibração Dinâmica Avançada</h3>
+      <p>
+        Curso de 16h cobre calibração dinâmica de radar e câmera em veículos com 
+        ADAS de nível 2+. Inclui prático em pista fechada. Certificação ASE L4 
+        equivalente. Vagas limitadas.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ TABLE ═══════════════════ -->
+  <div class="blt-section-heading">Compatibilidade do scanner</div>
+  <div class="blt-table-wrap">
+    <table class="blt-table">
+      <thead>
+        <tr>
+          <th>Fabricante</th>
+          <th>Modelo</th>
+          <th>Ano</th>
+          <th>Versão mín. scanner</th>
+          <th>Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Honda</strong></td>
+          <td>Civic / CR-V / HR-V</td>
+          <td>2026+</td>
+          <td>HDS v9.0</td>
+          <td>3 novos alvos obrigatórios</td>
+        </tr>
+        <tr>
+          <td><strong>Toyota</strong></td>
+          <td>Corolla Cross / RAV4</td>
+          <td>2024–2025</td>
+          <td>TIS v7.2</td>
+          <td>TSB BSM disponível</td>
+        </tr>
+        <tr>
+          <td><strong>Nissan</strong></td>
+          <td>Sentra / Kicks / Frontier</td>
+          <td>2025+</td>
+          <td>Consult III+ v8.4.2</td>
+          <td>Inclui chineses (BYD, Changan)</td>
+        </tr>
+        <tr>
+          <td><strong>Ford</strong></td>
+          <td>Ranger / Bronco</td>
+          <td>2025</td>
+          <td>FDRS v42.0</td>
+          <td>Alerta BMS — verificar firmware</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════ EVENTS ═══════════════════ -->
+  <div class="blt-section-heading">Próximos eventos</div>
+  <div class="blt-event">
+    <div class="blt-event-date-box">
+      <div class="day">12</div>
+      <div class="month">Set</div>
+    </div>
+    <div class="blt-event-body">
+      <h4>Seminário Nacional de ADAS — São Paulo, SP</h4>
+      <p>Workshops práticos de calibração estática e dinâmica. Certificação para participantes. Inscrições abertas.</p>
+    </div>
+  </div>
+  <div class="blt-event">
+    <div class="blt-event-date-box" style="background:#198754">
+      <div class="day">28</div>
+      <div class="month">Set</div>
+    </div>
+    <div class="blt-event-body">
+      <h4>Treinamento Honda Sensing 3.0 — Centros autorizados</h4>
+      <p>Treinamento obrigatório para todos os técnicos que atenderão modelos Honda 2026+. 8h presenciais.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ FOOTER ═══════════════════ -->
+  <footer class="blt-footer">
+    <div class="blt-footer-inner">
+      <strong>ADAS PRO</strong> — Boletim Técnico # BT-2026-018<br/>
+      Publicado em 26.08.2026 | Classificação: Uso interno — técnicos certificados<br/>
+      <br/>
+      <strong>Equipe editorial:</strong> Departamento Técnico ADAS PRO<br/>
+      <strong>Revisão:</strong> Equipe de Calibração e Diagnóstico<br/>
+      <strong>Contato:</strong> <a href="mailto:suporte@adaspro.com.br">suporte@adaspro.com.br</a><br/>
+      <br/>
+      Este boletim é destinado a profissionais certificados em calibração ADAS. 
+      Não reproduzir sem autorização. As informações são baseadas em bulletinns dos fabricantes 
+      e podem ser atualizadas sem aviso prévio.
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

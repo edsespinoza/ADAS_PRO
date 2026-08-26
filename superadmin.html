@@ -1348,6 +1348,12 @@
       .table-card > div { overflow-x: auto; }
     }
   </style>
+  <link rel="stylesheet" href="css/marketplace.css" integrity="sha384-7hUfuvGXAjtLT4VHb/WlM1ElwpD7HmtO1TGY3R53K1nxZ+WJMtcALM7NHhcgr0WH" />
+  <link rel="stylesheet" href="css/whatsapp.css" integrity="sha384-R5JE6Ik1NR+WOPYFgqrYH2UIv+CpaOBtM4Oi8w4bmTt/RgokVOu9qBCZTHe9Kv0Z" />
+  <link rel="manifest" href="/manifest.json" integrity="sha384-13ljjGgvMl87cgEDu5SKXxARQDMu1+6e58mTYeRlx6pdngKw63Tj25Ty5G5I9/jG" />
+  <meta name="theme-color" content="#FF6B35" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
 
@@ -3051,11 +3057,28 @@
 .sa-level-premium  { color:var(--gold); }
 </style>
 
-<script src="js/supabase.min.js" integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"></script>
-<script src="js/supabase-config.js?v=20260815"></script>
-<script src="js/auth.js?v=20260815"></script>
-<script src="js/purify.min.js?v=20260815"></script>
+<script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
+<script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-Rt6XccNd67acjrNfOpiaa1voyJ93W0YwLku8+ipPcTNM+Veg8oF3dz/aWrI9q1Ob"></script>
+<script src="js/purify.min.js?v=20260815" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"></script>
 <script>
+/* ─── Delegation CSP — handlers dinâmicos (data-act) + listeners propriedade ─── */
+window.__acts = {
+  editSaContent:     el => openEditSaContent(el.dataset.id),
+  toggleSaVisibility:el => toggleSaContentVisibility(el.dataset.id),
+  deleteSaContent:   el => deleteSaContent(el.dataset.id),
+  openEditor:        el => openEditor(el.dataset.id, el.dataset.type),
+  publishItem:       el => publishItem(el.dataset.id, el.dataset.type),
+  deleteItem:        el => deleteItem(el.dataset.id, el.dataset.type),
+  saPromote:         el => promoteUser(el.dataset.id, el.dataset.role),
+  saDeleteUser:      el => openDeleteUserConfirm(el.dataset.id, el.dataset.name, el.dataset.email),
+  saRemoveAccess:    el => removeAccess(el.dataset.id),
+  saEditPlan:        el => openEditPlan(Number(el.dataset.idx)),
+};
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
 /* ======================================================
    ADAS PRO — superadmin.js (inline)
    Segurança: esc() em todos os innerHTML com dados externos
@@ -3350,17 +3373,17 @@ function renderAdmins(filter_text, filter_role) {
     } else if (u.role === 'superadmin') {
       actions = '<span style="font-size:.72rem;color:var(--text-subtle)">protegido</span>';
     } else if (u.role === 'membro') {
-      actions += '<button class="action-btn btn-promote" title="Promover a Gestor" onclick="promoteUser(\'' + esc(u.id) + '\',\'gestor\')">↑ Gestor</button> ';
-      actions += '<button class="action-btn btn-promote" title="Promover a Admin"  onclick="promoteUser(\'' + esc(u.id) + '\',\'admin\')" style="background:rgba(255,107,53,.12);color:var(--accent)">↑↑ Admin</button> ';
-      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + jsStr(u.name||'') + '\',\'' + jsStr(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+      actions += '<button class="action-btn btn-promote" title="Promover a Gestor" data-act="saPromote" data-id="' + esc(u.id) + '" data-role="gestor">↑ Gestor</button> ';
+      actions += '<button class="action-btn btn-promote" title="Promover a Admin"  data-act="saPromote" data-id="' + esc(u.id) + '" data-role="admin" style="background:rgba(255,107,53,.12);color:var(--accent)">↑↑ Admin</button> ';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" data-act="saDeleteUser" data-id="' + esc(u.id) + '" data-name="' + esc(u.name||'') + '" data-email="' + esc(u.email||'') + '" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
     } else if (u.role === 'gestor') {
-      actions += '<button class="action-btn btn-promote" title="Promover a Admin" onclick="promoteUser(\'' + esc(u.id) + '\',\'admin\')">↑ Admin</button> ';
-      actions += '<button class="action-btn btn-demote"  title="Rebaixar a Membro" onclick="promoteUser(\'' + esc(u.id) + '\',\'membro\')">↓ Membro</button> ';
-      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + jsStr(u.name||'') + '\',\'' + jsStr(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+      actions += '<button class="action-btn btn-promote" title="Promover a Admin" data-act="saPromote" data-id="' + esc(u.id) + '" data-role="admin">↑ Admin</button> ';
+      actions += '<button class="action-btn btn-demote"  title="Rebaixar a Membro" data-act="saPromote" data-id="' + esc(u.id) + '" data-role="membro">↓ Membro</button> ';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" data-act="saDeleteUser" data-id="' + esc(u.id) + '" data-name="' + esc(u.name||'') + '" data-email="' + esc(u.email||'') + '" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
     } else if (u.role === 'admin') {
-      actions += '<button class="action-btn btn-demote"  title="Rebaixar a Gestor" onclick="promoteUser(\'' + esc(u.id) + '\',\'gestor\')">↓ Gestor</button> ';
-      actions += '<button class="action-btn btn-remove"  title="Remover acesso admin" onclick="removeAccess(\'' + esc(u.id) + '\')">✕ Remover</button> ';
-      actions += '<button class="action-btn btn-remove" title="Excluir conta" onclick="openDeleteUserConfirm(\'' + esc(u.id) + '\',\'' + jsStr(u.name||'') + '\',\'' + jsStr(u.email||'') + '\')" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
+      actions += '<button class="action-btn btn-demote"  title="Rebaixar a Gestor" data-act="saPromote" data-id="' + esc(u.id) + '" data-role="gestor">↓ Gestor</button> ';
+      actions += '<button class="action-btn btn-remove"  title="Remover acesso admin" data-act="saRemoveAccess" data-id="' + esc(u.id) + '">✕ Remover</button> ';
+      actions += '<button class="action-btn btn-remove" title="Excluir conta" data-act="saDeleteUser" data-id="' + esc(u.id) + '" data-name="' + esc(u.name||'') + '" data-email="' + esc(u.email||'') + '" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#EF4444">🗑</button>';
     }
 
     const statusColor = u.status === 'active' ? 'var(--success)' :
@@ -3522,7 +3545,7 @@ function renderPlans() {
         '<div class="plan-name">' + esc(p.name) + '</div>' +
         '<div class="plan-price">' + esc(priceText) + periodText + '</div>' +
         '<div style="font-size:.78rem;color:var(--text-muted);line-height:1.5">' + esc(p.desc) + '</div>' +
-        '<button class="plan-edit-btn" onclick="openEditPlan(' + i + ')">✏️ Editar plano</button>' +
+        '<button class="plan-edit-btn" data-act="saEditPlan" data-idx="' + i + '">✏️ Editar plano</button>' +
       '</div>'
     );
   }).join('');
@@ -3718,9 +3741,9 @@ function filterSaContent() {
       <td>${visiBadge}</td>
       <td>
         <div class="action-btns">
-          <button class="action-btn action-btn-edit" onclick="openEditSaContent('${c.id}')" title="Editar">✏️</button>
-          <button class="action-btn" onclick="toggleSaContentVisibility('${c.id}')" title="${c.hidden?'Tornar visível':'Ocultar'}" style="font-size:.85rem">${c.hidden?'👁\uFE0F':'🙈'}</button>
-          <button class="action-btn action-btn-delete" onclick="deleteSaContent('${c.id}')" title="Excluir">🗑</button>
+          <button class="action-btn action-btn-edit" data-act="editSaContent" data-id="${c.id}" title="Editar">✏️</button>
+          <button class="action-btn" data-act="toggleSaVisibility" data-id="${c.id}" title="${c.hidden?'Tornar visível':'Ocultar'}" style="font-size:.85rem">${c.hidden?'👁\uFE0F':'🙈'}</button>
+          <button class="action-btn action-btn-delete" data-act="deleteSaContent" data-id="${c.id}" title="Excluir">🗑</button>
         </div>
       </td>
     </tr>`;
@@ -4316,9 +4339,9 @@ function renderEditorialTable() {
       <td style="font-size:.76rem;color:var(--text-muted);white-space:nowrap">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '—'}</td>
       <td>
         <div style="display:flex;gap:5px">
-          <button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);cursor:pointer;transition:all .2s" onclick="openEditor('${esc(item.id)}','${_edCurrentType}')">Editar</button>
-          ${item.status==='draft' ? `<button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);cursor:pointer;transition:all .2s" onclick="publishItem('${esc(item.id)}','${_edCurrentType}')">Publicar</button>` : ''}
-          <button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger);cursor:pointer;transition:all .2s" onclick="deleteItem('${esc(item.id)}','${_edCurrentType}')">Excluir</button>
+          <button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);cursor:pointer;transition:all .2s" data-act="openEditor" data-id="${esc(item.id)}" data-type="${_edCurrentType}">Editar</button>
+          ${item.status==='draft' ? `<button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);cursor:pointer;transition:all .2s" data-act="publishItem" data-id="${esc(item.id)}" data-type="${_edCurrentType}">Publicar</button>` : ''}
+          <button style="padding:4px 9px;font-size:.7rem;font-weight:600;border-radius:5px;background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger);cursor:pointer;transition:all .2s" data-act="deleteItem" data-id="${esc(item.id)}" data-type="${_edCurrentType}">Excluir</button>
         </div>
       </td>
     </tr>`;
@@ -4766,6 +4789,25 @@ document.addEventListener('click', e => {
     document.querySelectorAll('.csel.open').forEach(c => c.classList.remove('open'));
   }
 });
+</script>
+<script src="js/marketplace.js" integrity="sha384-OX2ADP7wfWFv9jMh/SCU68ThwHzR7RSq4IBtPqV6oKu6MSjJDkJfwqgi1okkKqfp"></script>
+<script src="js/enterprise.js" integrity="sha384-V3hEnj3OwekGp5Lpc2CVWYJH0g3IsppU3VrvnghcoVjHvmEnfRpHucn/NBoGJrjc"></script>
+<script src="js/adaptive-quiz.js" integrity="sha384-S0Rr5QNPU/hL5bVmDCGwaQmVT+UXXZbg8e3JTZwzrvQdzaY1oIU+GVxgRnN4UEaY"></script>
+<script src="js/certification-program.js" integrity="sha384-l3s/ehvTeL5NmPgrbYBxe8axQ3ZARjkwob5C5UXjLExLZ9g4qrMzmiPXexCC4qi0"></script>
+<script src="js/i18n.js" integrity="sha384-EBnyoV+87VUONoVtxonAUNP85hnYmeN+ABYa4ZnVmmEjCzLHqUlH3MA4WLrncWBn"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'activated') {
+          if (typeof showToast === 'function') showToast('🔄 Plataforma atualizada! Recarregue para ver as novidades.');
+        }
+      });
+    });
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>

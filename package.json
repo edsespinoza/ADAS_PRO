@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node scripts/build-config.js",
-    "dev": "node scripts/build-config.js --dev && npx serve ."
+    "build": "node scripts/build-config.js && node scripts/sri-inject.js",
+    "dev": "node scripts/build-config.js --dev && node scripts/sri-inject.js && npx serve .",
+    "security": "node scripts/security-audit.js",
+    "security:db": "bash scripts/security-audit-db.sh"
   },
   "devDependencies": {
     "dotenv": "^16.4.5"

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar Certificado — ADAS PRO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root { --primary:#1B2B4D; --accent:#FF6B35; --tech:#00B4D8; --gold:#FFD700; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#0f1923; color:#E8E8E8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+
+    .verify-container { max-width:720px; width:100%; }
+    .verify-card { background:rgba(27,43,77,0.4); border:1px solid rgba(255,107,53,0.15); border-radius:16px; padding:40px 32px; text-align:center; backdrop-filter:blur(10px); }
+    .verify-card h1 { font-family:'Poppins',sans-serif; font-size:24px; color:#fff; margin-bottom:8px; }
+    .verify-card p { color:#AAB8C2; font-size:14px; margin-bottom:28px; }
+    .verify-card .brand { font-size:12px; color:#FF6B35; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px; font-weight:600; }
+
+    .input-group { display:flex; gap:12px; margin-bottom:24px; }
+    .input-group input {
+      flex:1; padding:14px 18px; border-radius:10px; border:1px solid rgba(255,107,53,0.3);
+      background:rgba(15,25,35,0.8); color:#fff; font-size:16px; font-family:'Inter',sans-serif;
+      outline:none; transition:border-color .2s;
+    }
+    .input-group input:focus { border-color:#FF6B35; }
+    .input-group input::placeholder { color:#556677; }
+
+    .btn-verify {
+      padding:14px 32px; border:none; border-radius:10px; background:linear-gradient(135deg,#FF6B35,#FF8F5E);
+      color:#fff; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600; cursor:pointer;
+      transition:all .25s; white-space:nowrap;
+    }
+    .btn-verify:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,107,53,0.35); }
+    .btn-verify:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    /* Resultados */
+    .result { margin-top:28px; text-align:left; }
+    .result.hidden { display:none; }
+
+    .result-valid { background:rgba(0,180,216,0.08); border:1px solid rgba(0,180,216,0.25); border-radius:12px; padding:24px; }
+    .result-invalid { background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.25); border-radius:12px; padding:24px; }
+
+    .result-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+    .result-icon { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+    .result-icon.valid { background:rgba(0,180,216,0.15); }
+    .result-icon.invalid { background:rgba(231,76,60,0.15); }
+    .result-title { font-family:'Poppins',sans-serif; font-size:18px; font-weight:600; color:#fff; }
+    .result-subtitle { font-size:13px; color:#AAB8C2; }
+
+    .cert-details { display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; margin-top:16px; }
+    .cert-detail { }
+    .cert-detail .label { font-size:11px; color:#556677; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+    .cert-detail .value { font-size:14px; color:#E8E8E8; font-weight:500; }
+    .cert-detail.full { grid-column:1/-1; }
+
+    .cert-svg-wrapper { margin-top:20px; border-radius:8px; overflow:hidden; border:1px solid rgba(255,215,0,0.15); }
+    .cert-svg-wrapper svg { width:100%; height:auto; display:block; }
+
+    .error-text { color:#E74C3C; font-size:14px; margin-top:12px; }
+
+    .back-link { display:inline-block; margin-top:24px; color:#AAB8C2; font-size:13px; text-decoration:none; transition:color .2s; }
+    .back-link:hover { color:#FF6B35; }
+
+    @media(max-width:600px) {
+      .input-group { flex-direction:column; }
+      .cert-details { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="verify-container">
+    <div class="verify-card">
+      <div class="brand">ADAS PRO</div>
+      <h1>Verificar Certificado</h1>
+      <p>Insira o ID do certificado para validar sua credencial SENAI/CNA.</p>
+
+      <div class="input-group">
+        <input type="text" id="certIdInput" placeholder="Ex: ADAS-1-O5A3K7X2" autocomplete="off" spellcheck="false">
+        <button class="btn-verify" id="btnVerify" onclick="doVerify()">Verificar</button>
+      </div>
+
+      <div class="result hidden" id="resultArea">
+        <div id="resultValid" class="result-valid hidden">
+          <div class="result-header">
+            <div class="result-icon valid">✓</div>
+            <div>
+              <div class="result-title">Certificado Válido</div>
+              <div class="result-subtitle">Credencial verificada com sucesso</div>
+            </div>
+          </div>
+          <div class="cert-details" id="certDetails"></div>
+          <div class="cert-svg-wrapper" id="certSvgWrapper"></div>
+        </div>
+        <div id="resultInvalid" class="result-invalid hidden">
+          <div class="result-header">
+            <div class="result-icon invalid">✕</div>
+            <div>
+              <div class="result-title">Certificado Não Encontrado</div>
+              <div class="result-subtitle" id="invalidReason"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="/" class="back-link">← Voltar para o site</a>
+    </div>
+  </div>
+
+  <script src="js/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/certification-program.js"></script>
+  <script>
+    CERT_PROGRAM.init();
+
+    const certIdInput = document.getElementById('certIdInput');
+    const btnVerify = document.getElementById('btnVerify');
+    const resultArea = document.getElementById('resultArea');
+    const resultValid = document.getElementById('resultValid');
+    const resultInvalid = document.getElementById('resultInvalid');
+    const certDetails = document.getElementById('certDetails');
+    const certSvgWrapper = document.getElementById('certSvgWrapper');
+    const invalidReason = document.getElementById('invalidReason');
+
+    const params = new URLSearchParams(window.location.search);
+    const prefill = params.get('id');
+    if (prefill) {
+      certIdInput.value = prefill;
+      doVerify();
+    }
+
+    certIdInput.addEventListener('keydown', e => { if (e.key === 'Enter') doVerify(); });
+
+    function doVerify() {
+      const id = certIdInput.value.trim();
+      if (!id) { certIdInput.focus(); return; }
+
+      btnVerify.disabled = true;
+      resultArea.classList.remove('hidden');
+      resultValid.classList.add('hidden');
+      resultInvalid.classList.add('hidden');
+
+      setTimeout(() => {
+        const result = CERT_PROGRAM.verifyCertificate(id);
+
+        if (result.valid) {
+          const c = result.cert;
+          const issued = new Date(c.issuedOn).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+          const expires = new Date(c.expiresAt).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+
+          certDetails.innerHTML = `
+            <div class="cert-detail"><div class="label">Nome</div><div class="value">${escHtml(c.holderName)}</div></div>
+            <div class="cert-detail"><div class="label">Nível</div><div class="value">${escHtml(c.levelLabel)}</div></div>
+            <div class="cert-detail"><div class="label">Emitido em</div><div class="value">${issued}</div></div>
+            <div class="cert-detail"><div class="label">Válido até</div><div class="value">${expires}</div></div>
+            <div class="cert-detail full"><div class="label">ID</div><div class="value">${escHtml(c.id)}</div></div>
+          `;
+          certSvgWrapper.innerHTML = CERT_PROGRAM.generateCertificateSVG(c);
+          resultValid.classList.remove('hidden');
+        } else {
+          if (result.error === 'Certificate expired') {
+            invalidReason.textContent = 'Este certificado expirou.';
+          } else {
+            invalidReason.textContent = 'Nenhum certificado encontrado com este ID. Verifique o código e tente novamente.';
+          }
+          resultInvalid.classList.remove('hidden');
+        }
+
+        btnVerify.disabled = false;
+      }, 600);
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

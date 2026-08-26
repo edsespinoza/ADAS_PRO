@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-15 (Módulo Ajuda reformulado + fix cache #84)  
+**Última atualização:** 2026-08-15 (Pacote de Segurança #86–90)  
 **Responsável:** AutoTech Service
 
 ---
@@ -912,3 +912,32 @@
   - **Aba Orientações & FAQ:** 2 perguntas novas — "Meus boletins voltaram ao padrão?" (explica reseed/`adaspro_seed_version`/marcador `_seed`) e "Atualizei e nada mudou?" (cache `no-cache` + `Ctrl+Shift+R`).
   - **Validação:** bloco inline de script passou em `new Function` (syntax check); deploy Vercel prod ✅ verificado — `superadmin`: markers `openShot`/`shotLightbox`/`ajuda-passo-*`, 8 PNGs de `assets/img/ajuda/` 200, linhas `v3.1.0`/`reseed automático`/`Ctrl+Shift+R` presentes.
   - **Nota:** `area-do-membro.png` e `referencia.png` foram copiados para `assets/img/ajuda/` como referência futura (ainda não usados no guia).
+
+## 🔐 SEGURANÇA — Blindagem de páginas, headers, CSP sem unsafe-inline, SRI, breach check e auditoria automatizada 2026-08-15
+
+> **Solicitação:** "Crie uma rotina automatizada de segurança forte blindagem de todos as páginas e banco de dados prepare a estrutura". Itens aprovados: P1 CSP sem unsafe-inline + headers 2026, P2 Vercel WAF, P2 breach check HIBP, P2 SRI.
+
+- [x] **#86 — Conversão de handlers dinâmicos para data-act (delegação CSP-safe)** ✅ 2026-08-15
+  - 43 handlers com interpolação `${...}` convertidos em **`data-act` + `window.__acts`** (listener em `document`, dispatch por `closest('[data-act]')`; handlers por arrow property → imunes à CSP).
+  - **admin.html (23 atos):** markNotif, goSuporteTicket, userApprove, openPerm, blockUser, unblockUser, deleteUser, refuseUser, selectTicket, ticketStatus, deleteTicket, editContent, deleteContent, togglePlanCat, demoteGestor, applyPlan, toggleModule, setModuleLevel, toggleAccEdit, saveAccEdit etc.
+  - **membros.html (14 atos):** downloadContent, upgrade, toggleFav, openContent, downloadModal, openTicketViewer, requestPlan, scrollToBltSec (com `Number(dataset.i)`) etc.
+  - **superadmin.html (10 atos):** editSaContent, toggleSaVisibility, deleteSaContent, openEditor, publishItem, deleteItem + **saPromote/saDeleteUser/saRemoveAccess/saEditPlan** (convertidos também handlers **concatenados** `' + esc(u.id) + '` — não hasháveis, quebrariam a CSP em produção).
+  - **email-config.html (0 dinâmicos):** 19 handlers estáticos — cobertos por hash, sem conversão.
+
+- [x] **#87 — CSP sem `unsafe-inline` (script-src) + headers 2026** ✅ 2026-08-15
+  - `scripts/generate-csp.js` reescrito: hasheia os **4 blocos `<script>` inline** (sha256 do conteúdo exato) + **todos os valores de event handlers** (normalização DOM: decode de entidades, trim, `\n`→espaço) sob `'unsafe-hashes'`. **Zero `unsafe-inline` em script-src.** Build falha se houver handler interpolado.
+  - Fix: `build-config.js` agora chama `generate-csp.js.main()` (o `require` puro não executava — CSP ficava stale).
+  - Headers no catch-all `/(.*)`: +`Cross-Origin-Opener-Policy: same-origin`, +`Cross-Origin-Embedder-Policy: credentialless`, +`Cross-Origin-Resource-Policy: same-origin`; **removido `X-XSS-Protection`** (deprecado).
+  - `connect-src` inclui `https://api.pwnedpasswords.com` (breach check).
+
+- [x] **#88 — Subresource Integrity (SRI) em todos os assets locais** ✅ 2026-08-15
+  - `scripts/sri-inject.js`: injeta `integrity="sha384-…"` em `js/*.js` e `css/*.css` **durante o build** (após `build-config` → hash do `supabase-config.js` sempre correto no deploy). Idempotente. Ignora `/_vercel/` e `data:` URIs. 38 tags cobertas.
+
+- [x] **#89 — Breach check de senha (HIBP k-anonymity)** ✅ 2026-08-15
+  - `AUTH.checkBreachedPassword()`: consulta a Range API do Have I Been Pwned com os **5 primeiros dígitos do SHA-1** (senha nunca sai do navegador). **Hard block** em `AUTH.register` (cadastro) e `AUTH.createUserDirect` (criação de usuário — bypass com `{ checkBreach:false }`). **Fail-open** offline. Testado contra API real (`password123` → 2.2M ocorrências; senha aleatória → 0).
+
+- [x] **#90 — Rotina automatizada de auditoria (páginas + banco)** ✅ 2026-08-15
+  - `npm run security` → `scripts/security-audit.js` (exit 1 em falha): cobertura da CSP (scripts inline + handlers), sem `unsafe-inline`/`eval`/`new Function`/`document.write` no doc principal/`javascript:`, SRI presente e com hash batendo, 9 headers obrigatórios com valores corretos, varredura de segredos (`sb_secret_`, JWTs, AWS, `service_role` com valor) ignorando `supabase-config.js` (anon key pública por design).
+  - `npm run security:db` → `bash scripts/security-audit-db.sh` executa as 8 seções de `sql/security_audit/*.sql` **individualmente** (`supabase db query` só renderiza o último result set de um script — por isso cada seção vira um arquivo): tabelas sem RLS, `SECURITY DEFINER` sem `search_path`, `EXECUTE` para anon/authenticated, buckets públicos, políticas por tabela, usuários sem MFA, usuários bloqueados.
+  - `security/README.md`: instruções WAF (Attack Mode via CLI/dashboard — **não é configurável no `vercel.json`**) + roadmap (remover `unsafe-hashes` convertendo os ~187 handlers estáticos; Trusted Types adiado pois toda renderização usa innerHTML).
+  - **Estado:** auditoria de frontend ✅ "OK — tudo coberto" (187 hashes de handlers + 4 de blocos). Auditoria de banco ✅ executada em 2026-08-15 — **0 tabelas sem RLS, 0 funções `SECURITY DEFINER` com `search_path` perigoso, 0 buckets públicos**; funções helper (`can_manage_role`, `get_my_role`, `is_admin*`, `role_level`) expostas a anon/authenticated são intencionais (usadas nas políticas RLS); políticas por tabela: users 4, tickets 4, settings 4, notifications 8, audit_logs 2. **Ponto de atenção:** 3 usuários com **0 fatores TOTP** (MFA inativo) → alinhado com pendência manual B/C. **Deploy Vercel prod pendente** — validar no browser que nenhum handler está bloqueado pela CSP antes de considerar concluído.

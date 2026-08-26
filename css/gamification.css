@@ -1,0 +1,387 @@
+/* ================================================
+   ADAS PRO — Gamification Styles
+   ================================================
+   Variables reutilizadas de style.css / auth.css:
+   --accent: #FF6B35  --primary: #1B2B4D
+   --tech: #00B4D8     --success: #06A77D
+   --warning: #F4A261  --white: #FFFFFF
+   --font-h: 'Poppins' --font-b: 'Inter'
+   ================================================ */
+
+/* ─── Dashboard Widget ─── */
+.gam-dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  font-family: var(--font-b);
+}
+
+.gam-dash-card {
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: border-color .3s, box-shadow .3s;
+}
+.gam-dash-card:hover {
+  border-color: rgba(255,255,255,.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+}
+
+/* ─── Streak Card ─── */
+.gam-streak-flame {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  filter: grayscale(1) opacity(.3);
+  transition: filter .4s;
+}
+.gam-streak-flame--active {
+  filter: none;
+  animation: gam-flame 1.5s ease-in-out infinite;
+}
+.gam-streak-count {
+  font-family: var(--font-h);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.gam-streak-label {
+  font-size: .78rem;
+  color: rgba(255,255,255,.5);
+  margin-top: 4px;
+}
+
+@keyframes gam-flame {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.12) rotate(-3deg); }
+  50% { transform: scale(1.05) rotate(2deg); }
+  75% { transform: scale(1.1) rotate(-1deg); }
+}
+
+/* ─── Badges Count Card ─── */
+.gam-dash-badges__count {
+  font-family: var(--font-h);
+  font-size: 2.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--warning), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.gam-dash-badges__label {
+  font-size: .78rem;
+  color: rgba(255,255,255,.5);
+  margin-top: 6px;
+}
+
+/* ─── Progress Ring ─── */
+.gam-ring {
+  display: block;
+}
+.gam-ring__fill {
+  stroke-dashoffset: 339.292;
+  transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+}
+.gam-ring__bg {
+  opacity: .5;
+}
+.gam-ring__pct {
+  font-family: var(--font-h);
+  font-size: 1.6rem;
+  font-weight: 800;
+  fill: var(--white);
+}
+.gam-ring__sub {
+  font-size: .7rem;
+  fill: rgba(255,255,255,.45);
+}
+
+/* ─── Rank Card ─── */
+.gam-dash-rank {
+  flex-direction: row !important;
+  gap: 14px;
+  text-align: left !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+.gam-dash-rank__icon {
+  font-size: 2rem;
+}
+.gam-dash-rank__info {
+  display: flex;
+  flex-direction: column;
+}
+.gam-dash-rank__label {
+  font-size: .72rem;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.gam-dash-rank__value {
+  font-family: var(--font-h);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+}
+.gam-dash-rank__pts {
+  font-size: .78rem;
+  color: var(--tech);
+}
+
+/* ─── Recent Badges ─── */
+.gam-dash-recent {
+  grid-column: span 4;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+.gam-dash-recent__title {
+  font-family: var(--font-h);
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.55);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 14px;
+}
+.gam-dash-recent__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gam-dash-recent__empty {
+  font-size: .82rem;
+  color: rgba(255,255,255,.3);
+  font-style: italic;
+}
+
+/* Badge chip */
+.gam-dash-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 40px;
+  padding: 8px 16px 8px 12px;
+  transition: border-color .2s, transform .2s;
+}
+.gam-dash-badge-chip:hover {
+  border-color: var(--badge-color, rgba(255,255,255,.2));
+  transform: translateY(-1px);
+}
+.gam-dash-badge-chip__icon { font-size: 1.1rem; }
+.gam-dash-badge-chip__name {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.gam-dash-badge-chip__tier {
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--badge-color, var(--warning));
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* ═══════════════════════════════════════════════
+   BADGE CARDS — Grid view
+   ═══════════════════════════════════════════════ */
+.gam-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.gam-badge-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  text-align: center;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  position: relative;
+  overflow: hidden;
+}
+.gam-badge-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.2);
+}
+.gam-badge-card--earned {
+  border-color: var(--badge-glow, rgba(255,215,0,.3));
+  box-shadow: 0 0 20px var(--badge-glow, rgba(255,215,0,.15));
+}
+.gam-badge-card__icon {
+  font-size: 2.6rem;
+  margin-bottom: 10px;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.3));
+}
+.gam-badge-card__name {
+  font-family: var(--font-h);
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+.gam-badge-card__tier {
+  font-size: .7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--badge-color, rgba(255,255,255,.35));
+  margin-bottom: 12px;
+}
+.gam-badge-card__progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gam-badge-card__progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--tech));
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.gam-badge-card__progress-text {
+  font-size: .7rem;
+  color: rgba(255,255,255,.4);
+  margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BARS — standalone
+   ═══════════════════════════════════════════════ */
+.gam-progress {
+  width: 100%;
+  background: rgba(255,255,255,.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.gam-progress__track {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.gam-progress__track--animated {
+  background-size: 200% 100%;
+  animation: gam-progress-shimmer 2s linear infinite;
+}
+.gam-progress__label {
+  font-size: .75rem;
+  color: rgba(255,255,255,.5);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+@keyframes gam-progress-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════
+   STREAK DISPLAY — standalone
+   ═══════════════════════════════════════════════ */
+.gam-streak {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255,107,53,.08);
+  border: 1px solid rgba(255,107,53,.2);
+  border-radius: var(--radius);
+}
+.gam-streak__flame {
+  font-size: 1.8rem;
+  animation: gam-flame 1.5s ease-in-out infinite;
+}
+.gam-streak__number {
+  font-family: var(--font-h);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.gam-streak__text {
+  font-size: .82rem;
+  color: rgba(255,255,255,.5);
+}
+
+/* ═══════════════════════════════════════════════
+   LEADERBOARD TABLE
+   ═══════════════════════════════════════════════ */
+.gam-leaderboard {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+.gam-leaderboard thead th {
+  font-family: var(--font-h);
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.4);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 0 16px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.gam-leaderboard tbody tr {
+  background: rgba(255,255,255,.03);
+  transition: background .2s;
+}
+.gam-leaderboard tbody tr:hover {
+  background: rgba(255,255,255,.06);
+}
+.gam-leaderboard tbody td {
+  padding: 12px 16px;
+  font-size: .88rem;
+  color: var(--white);
+  vertical-align: middle;
+}
+.gam-leaderboard tbody tr td:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+  font-family: var(--font-h);
+  font-weight: 800;
+  color: var(--warning);
+  width: 48px;
+  text-align: center;
+}
+.gam-leaderboard tbody tr td:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  text-align: right;
+  font-family: var(--font-h);
+  font-weight: 700;
+  color: var(--tech);
+}
+.gam-leaderboard--rank-1 td:first-child { color: #FFD700; }
+.gam-leaderboard--rank-2 td:first-child { color: #C0C0C0; }
+.gam-leaderboard--rank-3 td:first-child { color: #CD7F32; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .gam-dashboard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gam-dash-recent { grid-column: span 2; }
+}
+@media (max-width: 520px) {
+  .gam-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .gam-dash-recent { grid-column: span 1; }
+  .gam-badge-grid { grid-template-columns: 1fr 1fr; }
+}

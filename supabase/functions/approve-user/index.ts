@@ -26,6 +26,13 @@ const UPDATE_ALLOWED_FIELDS = ['name', 'role', 'status', 'plan', 'level', 'permi
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  // SECURITY: Reject non-POST methods
+  if (req.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+
+  // SECURITY: Reject oversized payloads
+  const contentLength = parseInt(req.headers.get('content-length') || '0');
+  if (contentLength > 65536) return json({ error: 'Payload muito grande.' }, 413);
+
   try {
     // 1. Validar JWT do chamador
     const authHeader = req.headers.get('authorization');
@@ -93,6 +100,21 @@ serve(async (req) => {
       const { email, password, name, role: newRole, status: newStatus, permissions, plan, level } = body;
       if (!email || !password || !name) return json({ error: 'email, password e name são obrigatórios.' }, 400);
       if (password.length < 8) return json({ error: 'A senha deve ter no mínimo 8 caracteres.' }, 400);
+
+      // SECURITY: Validate create action fields (same as update)
+      const VALID_PLANS_C = ['free', 'modulo', 'pro', 'premium'];
+      const VALID_LEVELS = ['tecnico', 'intermediario', 'avancado'];
+      
+      if (plan !== undefined && plan !== null && plan !== '' && !VALID_PLANS_C.includes(plan as string))
+        return json({ error: 'Plano inválido.' }, 400);
+      if (level !== undefined && level !== null && level !== '' && !VALID_LEVELS.includes(level as string))
+        return json({ error: 'Level inválido.' }, 400);
+      if (permissions !== undefined && permissions !== null) {
+        if (!Array.isArray(permissions) || permissions.some((p: unknown) => typeof p !== 'string'))
+          return json({ error: 'permissions deve ser uma lista de strings.' }, 400);
+      }
+      if (role !== undefined && role !== null && role !== '' && !['membro', 'gestor', 'admin', 'superadmin'].includes(role as string))
+        return json({ error: 'Role inválido.' }, 400);
 
       const safeRole = VALID_ROLES.includes(newRole) ? newRole : 'membro';
       const safeStatus = VALID_STATUS.includes(newStatus) ? newStatus : 'active';
@@ -194,6 +216,11 @@ serve(async (req) => {
           return json({ error: 'permissions deve ser uma lista de strings.' }, 400);
         }
       }
+      if (safe.level !== undefined && safe.level !== null && safe.level !== '') {
+        const VALID_LEVELS_UPD = ['tecnico', 'intermediario', 'avancado'];
+        if (!VALID_LEVELS_UPD.includes(safe.level as string))
+          return json({ error: 'Level inválido.' }, 400);
+      }
       result = await supabaseAdmin.from('users').update(safe).eq('id', targetId);
     } else {
       return json({ error: 'Ação inválida.' }, 400);
@@ -211,8 +238,8 @@ serve(async (req) => {
     return json({ ok: true });
 
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return json({ error: msg }, 500);
+    console.error('[approve-user] unhandled:', e);
+    return json({ error: 'Erro interno do servidor.' }, 500);
   }
 });
 

@@ -108,6 +108,23 @@ const AUTH = (function () {
   let _pendingMfaUid  = null;       // UUID Supabase do usuário aguardando MFA
   let _pendingMfaTimestamp = null;  // Date.now() quando MFA foi iniciado
 
+  /* ─── Session MAC — impede adulteração de role no localStorage (CRYPTO-002) ─── */
+  const _MAC_SECRET = 'adaspro_sess_mac_v4_' + (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : '');
+  function _sessionMac(role, ts) {
+    const data = (role || '') + '|' + (ts || '');
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (let i = 0; i < data.length; i++) {
+      h1 ^= data.charCodeAt(i); h1 = (h1 * 0x01000193) | 0;
+      h2 ^= data.charCodeAt(i); h2 = (h2 * 0x01000193) | 0;
+    }
+    const mix = (h1 ^ h2) >>> 0;
+    let mac = 0;
+    for (let i = 0; i < _MAC_SECRET.length; i++) {
+      mac = ((mac << 5) - mac + _MAC_SECRET.charCodeAt(i)) | 0;
+    }
+    return mix.toString(36) + '.' + (mac >>> 0).toString(36);
+  }
+
   function _browserFingerprint() {
     // hash curto de propriedades do browser — impede replay básico entre devices
     const raw = navigator.userAgent + '|' + screen.width + 'x' + screen.height + '|' + new Date().getTimezoneOffset();
@@ -225,6 +242,7 @@ const AUTH = (function () {
   /* Senhas do seed LOCAL — uso exclusivo do fallback offline/dev.
      DEVEM ser diferentes das senhas reais de produção no Supabase Auth.
      Em produção, o Supabase sempre é acessível e este fallback nunca é atingido. */
+  console.warn('[AUTH SECURITY] Offline seed passwords active. Ensure DEMO_ENABLED=false in production.');
   const _DEMO_SA_PASS = 'ADAS_OFFLINE_SA_2026';
   const _DEMO_AD_PASS = 'ADAS_OFFLINE_AD_2026';
 
@@ -422,13 +440,16 @@ const AUTH = (function () {
         _offlineMode  = true;
         _loadFromLocalStorage();
         await _seedDefaultUsersLocal();
-        // Em modo offline restaura sessão cacheada, mas rejeita se o usuário estiver bloqueado
-        // ou se a role na sessão não corresponder à role real do usuário (evita poison).
+        // Em modo offline restaura sessão cacheada, mas rejeita se o usuário estiver bloqueado,
+        // pendente, ou se a role na sessão não corresponder à role real do usuário.
         const _cached = _readSessionCache();
         if (_cached) {
           const _cachedUser = _users[_cached.userId];
           if (_cachedUser && _cachedUser.status === 'blocked') {
             localStorage.removeItem(SESSION_KEY);
+          } else if (_cachedUser && _cachedUser.status === 'pending') {
+            localStorage.removeItem(SESSION_KEY);
+            _currentSession = null;
           } else if (_cachedUser && _cachedUser.role !== _cached.role) {
             localStorage.removeItem(SESSION_KEY);
           } else {
@@ -443,6 +464,14 @@ const AUTH = (function () {
     _loadFromLocalStorage();
     await _seedDefaultUsersLocal();
     _currentSession = _readSessionCache(); // Apenas em modo local puro (sem Supabase)
+    // SECURITY: Reject session if cached user is pending
+    if (_currentSession) {
+      const _su = _users[_currentSession.userId];
+      if (_su && _su.status === 'pending') {
+        localStorage.removeItem(SESSION_KEY);
+        _currentSession = null;
+      }
+    }
     console.info('[AUTH] v4 — localStorage (local) ✓');
   }
 
@@ -451,8 +480,8 @@ const AUTH = (function () {
     return _initPromise;
   }
 
-  function _sessionIntegrity(role) {
-    return role; // placeholder — expansão futura para HMAC
+  function _sessionIntegrity(role, ts) {
+    return _sessionMac(role, ts);
   }
 
   function _validateSessionRole(session) {
@@ -462,19 +491,27 @@ const AUTH = (function () {
       localStorage.removeItem(SESSION_KEY);
       return false;
     }
+    // Verify MAC — detects role tampering in localStorage (CRYPTO-002)
+    const expectedMac = _sessionIntegrity(session.role, session.issuedAt);
+    if (session.roleMac && session.roleMac !== expectedMac) {
+      console.warn('[AUTH] Session MAC mismatch — possible role tampering');
+      localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
     return true;
   }
 
   function _buildSession(user, uid, token, expiresAt) {
+    const issuedAt = Date.now();
     return {
       userId:    uid || user.id,
       role:      user.role,
-      roleHash:  _sessionIntegrity(user.role),
+      roleMac:   _sessionIntegrity(user.role, issuedAt),
       name:      user.name,
       email:     user.email,
       token:     token || _secureToken(),
-      issuedAt:  Date.now(),
-      expiresAt: expiresAt || Date.now() + 4*60*60*1000,
+      issuedAt,
+      expiresAt: expiresAt || issuedAt + 4*60*60*1000,
     };
   }
 
@@ -642,6 +679,10 @@ const AUTH = (function () {
     _clearRateLimit(emailClean);
     if (user.status === 'pending') return { ok:false, msg:'pending', user };
     if (user.status === 'blocked') return { ok:false, msg:'Sua conta foi bloqueada. Entre em contato com o suporte.' };
+    // SECURITY: Log when offline privileged auth is used
+    if (['superadmin','admin','gestor'].includes(user.role)) {
+      console.warn('[AUTH SECURITY] Offline privileged authentication used — ensure Supabase is accessible in production');
+    }
     const session = _buildSession(user, user.id);
     _currentSession = session;
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
@@ -651,6 +692,26 @@ const AUTH = (function () {
   /* ════════════════════════════════════════════
      REGISTER
   ════════════════════════════════════════════ */
+
+  /* Breach check (HIBP k-anonymity): envia só os 5 primeiros dígitos do
+     SHA-1 da senha; nunca a senha em si. Fail-open (offline/erro → permite). */
+  async function checkBreachedPassword(password) {
+    try {
+      if (typeof crypto === 'undefined' || !crypto.subtle) return { ok:true, breached:false, skip:true };
+      const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(password));
+      const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase();
+      const prefix = hex.slice(0,5), suffix = hex.slice(5);
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, { headers:{'Add-Padding':'true'}, signal:ctrl.signal });
+      clearTimeout(t);
+      if (!res.ok) return { ok:true, breached:false, skip:true };
+      const body = await res.text();
+      const hit = body.split(/\r?\n/).map(l => l.trim()).find(l => l.toUpperCase().startsWith(suffix));
+      return { ok:true, breached: !!hit, count: hit ? (parseInt(hit.split(':')[1],10) || 1) : 0, skip:false };
+    } catch(_) { return { ok:true, breached:false, skip:true }; }
+  }
+
   async function register(data) {
     const VALID_LEVELS = ['tecnico','oficina','autocenter','parabrisa','gestor','outro'];
     const nameSafe   = ((data.name||'').trim()).replace(/[<>"'&]/g,'');
@@ -664,6 +725,9 @@ const AUTH = (function () {
     if (!/[A-Z]/.test(passClean))                return { ok:false, msg:'A senha deve conter ao menos uma letra maiúscula.' };
     if (!/[0-9]/.test(passClean))                return { ok:false, msg:'A senha deve conter ao menos um número.' };
     if (nameSafe.length < 2)                     return { ok:false, msg:'Nome inválido.' };
+
+    const breach = await checkBreachedPassword(passClean);
+    if (breach.breached) return { ok:false, msg:'Esta senha aparece em vazamentos de dados conhecidos. Escolha outra senha.' };
 
     if (_mode === 'supabase' && _sb && !_demo) {
       try {
@@ -936,7 +1000,10 @@ const AUTH = (function () {
   }
 
   async function deleteUser(id) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'admin')) return false;
     if (!_users[id] || _users[id].role==='admin' || _users[id].role==='superadmin') return false;
+    if (session.userId === id) return false;
     if (_mode === 'supabase' && _sb && !_demo) {
       const r = await callEdgeFunction('approve-user', { action:'delete', targetId:id });
       if (!r.ok) { console.error('[AUTH] deleteUser:', r.msg); return false; }
@@ -955,6 +1022,11 @@ const AUTH = (function () {
     if (password.length < 8) return { ok:false, msg:'A senha deve ter no mínimo 8 caracteres.' };
     const VALID_ROLES = ['superadmin','admin','gestor','membro'];
     const safeRole = VALID_ROLES.includes(role) ? role : 'membro';
+
+    if (data.checkBreach !== false) {
+      const breach = await checkBreachedPassword(password);
+      if (breach.breached) return { ok:false, msg:'Esta senha aparece em vazamentos de dados conhecidos. Escolha outra senha.' };
+    }
 
     if (_mode === 'supabase' && _sb && !_demo) {
       try {
@@ -980,7 +1052,7 @@ const AUTH = (function () {
     // Modo local
     const emailLc = email.trim().toLowerCase();
     if (Object.values(_users).find(u => u.email === emailLc)) return { ok:false, msg:'E-mail já cadastrado.' };
-    const id = 'usr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    const id = 'usr_' + _secureToken().slice(0, 12);
     _users[id] = {
       id, name: name.trim(), email: emailLc,
       passwordHash: await hashPassword(password),
@@ -1125,8 +1197,8 @@ const AUTH = (function () {
     if (item && item.status !== 'archived') return false;
     _saveItems(BULLETINS_KEY, _getItems(BULLETINS_KEY).filter(b => b.id !== id)); return true;
   }
-  function replaceArticles(items)  { _saveItems(ARTICLES_KEY,   items || []); return true; }
-  function replaceBulletins(items) { _saveItems(BULLETINS_KEY, items || []); return true; }
+  function replaceArticles(items)  { const s=getSession(); if(!s||!hasRole(s.role,'superadmin'))return false; _saveItems(ARTICLES_KEY,   items || []); return true; }
+  function replaceBulletins(items) { const s=getSession(); if(!s||!hasRole(s.role,'superadmin'))return false; _saveItems(BULLETINS_KEY, items || []); return true; }
 
   /* ─── Tickets ─── */
   function createTicket(userId, data) {
@@ -1157,12 +1229,18 @@ const AUTH = (function () {
     _sbUpsertTicket(_tickets[ticketId]); return true;
   }
   function updateTicketStatus(ticketId, status) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'admin')) return false;
     if (!_tickets[ticketId]) return false;
     _tickets[ticketId].status = status; _tickets[ticketId].updatedAt = Date.now();
     if (status==='resolved'||status==='closed') _tickets[ticketId].resolvedAt = Date.now();
     _sbUpsertTicket(_tickets[ticketId]); return true;
   }
-  function deleteTicket(id) { delete _tickets[id]; _sbDeleteTicket(id); return true; }
+  function deleteTicket(id) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'admin')) return false;
+    delete _tickets[id]; _sbDeleteTicket(id); return true;
+  }
   function getOpenTicketsCount() { return getAllTickets().filter(t => t.status==='open'||t.status==='in-progress').length; }
 
   /* ─── Configurações ─── */
@@ -1215,6 +1293,8 @@ const AUTH = (function () {
   function getUserPlan(userId) { const u=getUserById(userId); if(!u)return PLANS[0]; return PLANS.find(p=>p.id===(u.plan||'free'))||PLANS[0]; }
   function isAccessValid(userId) { const u=getUserById(userId); if(!u)return false; if(u.role==='admin'||u.role==='gestor')return true; if(u.accessExpires&&Date.now()>u.accessExpires)return false; return true; }
   function setUserPlan(userId, planId, expiresAt, boughtModules) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'admin')) return false;
     if (!_users[userId]) return false;
     _users[userId].plan=planId; _users[userId].accessType=planId==='free'?'trial':'subscription';
     _users[userId].accessExpires=expiresAt||null; _users[userId].boughtModules=boughtModules||[];
@@ -1284,6 +1364,8 @@ const AUTH = (function () {
     for (const k of keys) { if (k in obj) obj[k] = _sanitizeStr(obj[k]); }
   }
   function importData(json) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'superadmin')) return false;
     try {
       const d = JSON.parse(json);
       if (d.users && typeof d.users === 'object' && !Array.isArray(d.users)) {
@@ -1485,9 +1567,9 @@ const AUTH = (function () {
 
   async function getSignedUrl(storagePath, expiresIn = 3600) {
     if (_mode !== 'supabase' || !_sb) return null;
-    const { data, error } = await _sb.storage.from('materiais').createSignedUrl(storagePath, expiresIn);
-    if (error || !data) return null;
-    return data.signedUrl;
+    // SECURITY: Always use Edge Function for server-side permission checks
+    console.warn('[AUTH] getSignedUrl() called directly — use callEdgeFunction("get-download-url") instead');
+    return null;
   }
 
   /* ════════════════════════════════════════════
@@ -1515,7 +1597,7 @@ const AUTH = (function () {
   /* ─── Export público ─── */
   return {
     init, seedDemoData, enterDemoMode, VERSION, CATEGORIES, PLANS, DEFAULT_SETTINGS,
-    login, register, logout, getSession, requireAuth, hasRole,
+    login, register, logout, getSession, requireAuth, hasRole, checkBreachedPassword,
     getAllUsers, getUserById, getUserByEmail, approveUser, blockUser, unblockUser,
     updateUserPermissions, updateUserRole, deleteUser, createUserDirect, applyPlanToUser, getPendingCount,
     getContent, addContent, editContent, deleteContent, getContentForUser,

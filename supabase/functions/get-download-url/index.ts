@@ -44,6 +44,10 @@ const CONTENT_MAP: Record<string, { cat: string; filePath: string | null; access
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  if (req.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+  const cl = parseInt(req.headers.get('content-length') || '0');
+  if (cl > 8192) return json({ error: 'Payload muito grande.' }, 413);
+
   try {
     // 1. Validar JWT
     const authHeader = req.headers.get('authorization');
@@ -146,7 +150,8 @@ serve(async (req) => {
     return json({ ok: true, url: signedData.signedUrl, expiresIn: 3600 });
 
   } catch (e) {
-    return json({ error: e.message }, 500);
+    console.error('[get-download-url] unhandled:', e);
+    return json({ error: 'Erro interno do servidor.' }, 500);
   }
 });
 

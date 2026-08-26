@@ -47,6 +47,7 @@ CREATE OR REPLACE FUNCTION public.role_level(r text)
 RETURNS int
 LANGUAGE sql
 IMMUTABLE
+SET search_path = ''
 AS $$
   SELECT CASE r
     WHEN 'superadmin' THEN 4
@@ -204,6 +205,10 @@ CREATE POLICY "tickets_update" ON public.tickets
   USING (
     auth.uid()::text = "userId"
     OR public.is_admin()
+  )
+  WITH CHECK (
+    auth.uid()::text = "userId"
+    OR public.is_admin()
   );
 
 -- DELETE: apenas admin+
@@ -279,7 +284,7 @@ DROP POLICY IF EXISTS "settings_delete" ON public.settings;
 -- SELECT: qualquer usuário autenticado (membros leem moduleAccess p/ filtrar UI)
 CREATE POLICY "settings_select" ON public.settings
   FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING ((select auth.jwt()->> 'role') = 'authenticated');
 
 -- INSERT/UPDATE/DELETE: apenas admin+ (gestor não gerencia configurações)
 CREATE POLICY "settings_insert" ON public.settings

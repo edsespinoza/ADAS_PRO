@@ -1,0 +1,25 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ADAS PRO API",
+    "description": "API pública da plataforma ADAS PRO — acesso a conteúdo técnico, certificações e progresso de aprendizado.",
+    "version": "1.0.0",
+    "contact": { "name": "ADAS PRO Support", "url": "https://adaspro.com.br" }
+  },
+  "servers": [
+    { "url": "https://zqydyyticvtmirjzskly.supabase.co/functions/v1", "description": "Produção" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": { "type": "apiKey", "in": "header", "name": "X-API-Key" },
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "SuccessResponse": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "type": "object" } } },
+      "ErrorResponse": { "type": "object", "properties": { "ok": { "type": "boolean", "example": false }, "error": { "type": "string" }, "code": { "type": "string" } } },
+      "PaginatedResponse": { "type": "object", "properties": { "ok": { "type": "boolean" }, "data": { "type": "array" }, "total": { "type": "integer" }, "page": { "type": "integer" }, "per_page": { "type": "integer" } } }
+    }
+  },
+  "security": [{ "apiKey": [] }, { "bearerAuth": [] }],
+  "paths": {}
+}

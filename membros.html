@@ -8,8 +8,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://zqydyyticvtmirjzskly.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css?v=20260815"/>
-  <link rel="stylesheet" href="css/auth.css?v=20260815"/>
+  <link rel="stylesheet" href="css/style.css?v=20260815" integrity="sha384-AxgvIDyrJlL2nqpGzhXvkmYI7mA2WTAEUUpQn6t+rAAKczm1dqMH/6qTcH/mhCu8" />
+  <link rel="stylesheet" href="css/auth.css?v=20260815" integrity="sha384-ej7SvI5Zp6TDU+QfkaFsiSSG0xknpzNaXmQWhIb2dlQp7d0BL1cR+zVQNzM5xB12" />
+  <link rel="stylesheet" href="css/gamification.css" integrity="sha384-NWRQeZ+htS+kYYerkaHgxhuhgbsbY4lvwNiq8YNT/IzDb2Nao/NZ0cujI+VlWA9T" />
+  <link rel="stylesheet" href="css/recommendations.css" integrity="sha384-ez4rQqQkDScTov70jp0Z/G0yCnoUWGMl02QgxDfSwgSR28pS4nZ8VjB1HECY66iL" />
+  <link rel="stylesheet" href="css/certifications.css" integrity="sha384-J7xYOk5Nm+OvCoofJQX7lBjZd6XSnsARJcduI8Z1F67G/RWieGYe3QNjNUsoZZSx" />
+  <link rel="stylesheet" href="css/adaptive-quiz.css" integrity="sha384-XbxSWJZJV/6ZCFymAT8M/M7e6nE/1pgQRywV2kVkOrFw9c3RAp6rQBhO+tKIMh8l" />
+  <link rel="stylesheet" href="css/chatbot.css" integrity="sha384-xJl/Oe3Rg6q/JNTDCq7kDg4GUODnOPy1bLWK0IgBEnsfMKMmZFebYEDcFNANj11A" />
+  <link rel="stylesheet" href="css/simulators.css" integrity="sha384-kWFD/7X5BlzZ/ViF/Z2kArSMydD/nOtYppTrGyJqcpay3uJ+PJx09Niha4vM6mGN" />
+  <link rel="stylesheet" href="css/whatsapp.css" integrity="sha384-R5JE6Ik1NR+WOPYFgqrYH2UIv+CpaOBtM4Oi8w4bmTt/RgokVOu9qBCZTHe9Kv0Z" />
   <style>
     body{background:#0f1923;color:rgba(255,255,255,.85);font-family:var(--font-b);margin:0;}
 
@@ -467,6 +474,10 @@
   <!-- Vercel Analytics & Speed Insights -->
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <link rel="manifest" href="/manifest.json" integrity="sha384-13ljjGgvMl87cgEDu5SKXxARQDMu1+6e58mTYeRlx6pdngKw63Tj25Ty5G5I9/jG" />
+  <meta name="theme-color" content="#FF6B35" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
 <div class="dashboard">
@@ -1048,10 +1059,10 @@
 <div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:10px 24px;font-size:.85rem;color:#fff;transition:transform .3s ease;z-index:9999;opacity:0"></div>
 
 <!-- ─── Supabase SDK ─── -->
-<script src="js/supabase.min.js" integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"></script>
+<script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <!-- ─── ADAS PRO Scripts ─── -->
-<script src="js/supabase-config.js?v=20260815"></script>
-<script src="js/auth.js?v=20260815"></script>
+<script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-Rt6XccNd67acjrNfOpiaa1voyJ93W0YwLku8+ipPcTNM+Veg8oF3dz/aWrI9q1Ob"></script>
 
 <!-- Overlay de carregamento -->
 <div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
@@ -1063,6 +1074,21 @@
 
 <script>
 history.replaceState({}, document.title, window.location.pathname);
+/* ─── Delegation CSP — handlers dinâmicos (data-act) + listeners propriedade ─── */
+window.__acts = {
+  downloadContent: el => downloadContent(el.dataset.id),
+  upgrade:         el => openUpgradeModal(el.dataset.cat, el.dataset.label),
+  toggleFav:       el => toggleFav(el.dataset.id, el),
+  openContent:     el => openContent(el.dataset.id),
+  downloadModal:   el => { downloadContent(el.dataset.id); const m = el.closest('[data-modal]'); if (m) m.remove(); },
+  openTicketViewer:el => openTicketViewer(el.dataset.id),
+  requestPlan:     el => requestPlan(el.dataset.pid, el.dataset.cat),
+  scrollToBltSec:  el => scrollToBltSec(Number(el.dataset.i)),
+};
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
 /* ─── Auth — aguarda init do Supabase antes de verificar sessão ─── */
 let session = null;
 
@@ -1256,11 +1282,11 @@ function renderContent() {
     const fileInfo  = item.fileSize ? `<span style="font-size:.68rem;color:rgba(255,255,255,.25);margin-left:4px">${esc(item.fileSize)}</span>` : '';
 
     const dlButton = canDl
-      ? `<button class="content-dl-btn" onclick="downloadContent('${item.id}')">
+      ? `<button class="content-dl-btn" data-act="downloadContent" data-id="${item.id}">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
            Download${fileInfo}
          </button>`
-      : `<button class="content-dl-locked" onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')">
+      : `<button class="content-dl-locked" data-act="upgrade" data-cat="${esc(item.cat)}" data-label="${esc(cat.label)}">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
            Download — ${dlPlanLbl}+
          </button>`;
@@ -1287,7 +1313,7 @@ function renderContent() {
             <span>Acesso bloqueado</span>
             <span class="unlock-plan-badge">${reqPlanLbl} ou superior</span>
           </div>
-          <button class="unlock-btn" onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')">
+          <button class="unlock-btn" data-act="upgrade" data-cat="${esc(item.cat)}" data-label="${esc(cat.label)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/></svg>
             Desbloquear
           </button>
@@ -1301,7 +1327,7 @@ function renderContent() {
     ].filter(Boolean).join('<span style="color:rgba(255,255,255,.1);margin:0 4px">·</span>');
 
     const isFav = AUTH.isFavorite(session.userId, item.id);
-    const favBtn = `<button class="fav-btn ${isFav?'fav-active':''}" onclick="toggleFav('${item.id}',this)" title="${isFav?'Remover dos favoritos':'Adicionar aos favoritos'}">
+    const favBtn = `<button class="fav-btn ${isFav?'fav-active':''}" data-act="toggleFav" data-id="${item.id}" title="${isFav?'Remover dos favoritos':'Adicionar aos favoritos'}">
       ${isFav?'⭐':'☆'}
     </button>`;
 
@@ -1321,7 +1347,7 @@ function renderContent() {
       <div class="content-item-body">
         <div class="content-item-desc">${esc(item.desc||'')}</div>
         <div class="content-item-actions">
-          <button class="content-item-action content-action-open" onclick="openContent('${item.id}')">Ver detalhes →</button>
+          <button class="content-item-action content-action-open" data-act="openContent" data-id="${item.id}">Ver detalhes →</button>
           ${dlButton}
         </div>
       </div></div>`;
@@ -1358,14 +1384,14 @@ function openContent(id) {
   ).join('');
 
   const dlSection = canDl
-    ? `<button onclick="downloadContent('${item.id}');this.closest('[data-modal]').remove()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:linear-gradient(135deg,#06A77D,#048a67);color:#fff;border-radius:10px;font-family:var(--font-h);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;border:none;box-shadow:0 4px 14px rgba(6,167,125,.3)">
+    ? `<button data-act="downloadModal" data-id="${item.id}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:linear-gradient(135deg,#06A77D,#048a67);color:#fff;border-radius:10px;font-family:var(--font-h);font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;border:none;box-shadow:0 4px 14px rgba(6,167,125,.3)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Baixar PDF — ${esc(item.title)}
       </button>`
     : `<div style="background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.18);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <span style="font-size:.82rem;color:rgba(255,255,255,.5);flex:1">Download disponível no plano <strong style="color:#FF6B35">PRO ou superior</strong></span>
-        <button onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')" style="padding:6px 12px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:7px;color:#FF6B35;font-size:.75rem;font-weight:600;cursor:pointer">Desbloquear</button>
+        <button data-act="upgrade" data-cat="${esc(item.cat)}" data-label="${esc(cat.label)}" style="padding:6px 12px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:7px;color:#FF6B35;font-size:.75rem;font-weight:600;cursor:pointer">Desbloquear</button>
       </div>`;
 
   const modal = document.createElement('div');
@@ -1442,18 +1468,13 @@ async function downloadContent(id) {
   showToast('⏳ Verificando permissões...');
 
   try {
-    // Tenta URL assinada diretamente via Storage (sem precisar de Edge Function)
-    let url = await AUTH.getSignedUrl(item.filePath, 3600);
-
-    if (!url) {
-      // Fallback: Edge Function (para lógica de permissão customizada)
-      const result = await AUTH.callEdgeFunction('get-download-url', { contentId: id });
-      if (!result.ok || !result.data?.url) {
-        showToast('⛔ Sem permissão para este arquivo. Verifique seu plano.', 4000);
-        return;
-      }
-      url = result.data.url;
+    // SECURITY: Always use Edge Function for server-side permission validation
+    const result = await AUTH.callEdgeFunction('get-download-url', { contentId: id });
+    if (!result.ok || !result.data?.url) {
+      showToast('⛔ Sem permissão para este arquivo. Verifique seu plano.', 4000);
+      return;
     }
+    const url = result.data.url;
 
     AUTH.trackDownload(session.userId, id);
     const a = document.createElement('a');
@@ -1507,11 +1528,11 @@ function renderFavorites() {
     const dlPlanLbl = (LEVEL_INFO[dlLvl]||LEVEL_INFO[3]).label;
     const fileInfo = item.fileSize ? `<span style="font-size:.68rem;color:rgba(255,255,255,.25);margin-left:4px">${esc(item.fileSize)}</span>` : '';
     const dlButton = canDl
-      ? `<button class="content-dl-btn" onclick="downloadContent('${item.id}')">
+      ? `<button class="content-dl-btn" data-act="downloadContent" data-id="${item.id}">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
            Download${fileInfo}
          </button>`
-      : `<button class="content-dl-locked" onclick="openUpgradeModal('${esc(item.cat)}','${esc(cat.label)}')">
+      : `<button class="content-dl-locked" data-act="upgrade" data-cat="${esc(item.cat)}" data-label="${esc(cat.label)}">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
            Download — ${dlPlanLbl}+
          </button>`;
@@ -1527,12 +1548,12 @@ function renderFavorites() {
           <div class="content-item-name">${esc(item.title)}</div>
           ${metaChips?`<div style="margin-top:5px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${metaChips}</div>`:''}
         </div>
-        <button class="fav-btn fav-active" onclick="toggleFav('${item.id}',this)" title="Remover dos favoritos">⭐</button>
+        <button class="fav-btn fav-active" data-act="toggleFav" data-id="${item.id}" title="Remover dos favoritos">⭐</button>
       </div>
       <div class="content-item-body">
         <div class="content-item-desc">${esc(item.desc||'')}</div>
         <div class="content-item-actions">
-          <button class="content-item-action content-action-open" onclick="openContent('${item.id}')">Ver detalhes →</button>
+          <button class="content-item-action content-action-open" data-act="openContent" data-id="${item.id}">Ver detalhes →</button>
           ${dlButton}
         </div>
       </div></div>`;
@@ -1624,7 +1645,7 @@ function loadMeusTickets() {
     const catLabel = catLabels[t.category] || 'Suporte';
     const lastMsg = t.messages.length ? t.messages[t.messages.length-1].message : 'Nenhuma mensagem ainda.';
     const num = String(i+1).padStart(3,'0');
-    return `<div class="tkt-card-item prio-${esc(prio)}" data-status="${esc(t.status)}" onclick="openTicketViewer('${esc(t.id)}')" style="animation-delay:${i*.05}s">
+    return `<div class="tkt-card-item prio-${esc(prio)}" data-status="${esc(t.status)}" data-act="openTicketViewer" data-id="${esc(t.id)}" style="animation-delay:${i*.05}s">
       <div class="tkt-card-inner">
         <div class="tkt-card-top">
           <div class="tkt-card-num">TKT-${num}</div>
@@ -1793,7 +1814,7 @@ function openUpgradeModal(catId, catLabel) {
       <ul class="plan-card-features">
         ${plan.features.map(f => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#06A77D;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>${f}</li>`).join('')}
       </ul>
-      <button class="plan-card-cta ${plan.id === 'free' ? 'cta-disabled' : ''}" onclick="requestPlan('${plan.id}','${catId}')">
+      <button class="plan-card-cta ${plan.id === 'free' ? 'cta-disabled' : ''}" data-act="requestPlan" data-pid="${plan.id}" data-cat="${catId}">
         ${plan.id === 'free' ? 'Plano atual' : 'Solicitar'}
       </button>
     </div>
@@ -2024,7 +2045,7 @@ function _renderBulletin(b) {
     S.push({t:'Informações adicionais', h:DOMPurify ? DOMPurify.sanitize(body) : body});
 
   // Montagem final: TOC + seções numeradas
-  const toc = S.map((s,i)=>`<button class="blt-toc-chip" onclick="scrollToBltSec(${i})">${i+1}. ${esc(s.t)}</button>`).join('');
+  const toc = S.map((s,i)=>`<button class="blt-toc-chip" data-act="scrollToBltSec" data-i="${i}">${i+1}. ${esc(s.t)}</button>`).join('');
   const html = `<div class="blt-toc">${toc}</div>${S.map((s,i)=>`<div class="blt-sec" id="blt-sec-${i}">${i+1}. ${esc(s.t)}</div>${s.h}`).join('')}`;
 
   // Ações
@@ -2209,6 +2230,28 @@ if (_bltCnt) _bltCnt.textContent = _bltCards.length;
 const _bltNewCnt = document.querySelectorAll('#bltGrid .blt-new-badge').length;
 const _bltBadge = document.getElementById('bltUnreadBadge');
 if (_bltBadge && _bltNewCnt > 0) { _bltBadge.textContent = _bltNewCnt; _bltBadge.style.display = ''; }
+</script>
+<script src="js/gamification.js" integrity="sha384-YIYM7It/CLFn+056Hwfz96l9xBTfdzr5SDllil/HalI3htdMqoaFwpCh1E1lgYvu"></script>
+<script src="js/recommendations.js" integrity="sha384-muaG/FezLfik2ghVRKlbJkLiBaMB6rbXgFuoHru0rL47bKLAIoSoYCHbqLaWrOpG"></script>
+<script src="js/certifications.js" integrity="sha384-R8d2C7FPznmnR69K0ooDsFxPbtwhJdpQrmJ3TWV1afF7prJIPZu15WUb4/ROYXOB"></script>
+<script src="js/adaptive-quiz.js" integrity="sha384-S0Rr5QNPU/hL5bVmDCGwaQmVT+UXXZbg8e3JTZwzrvQdzaY1oIU+GVxgRnN4UEaY"></script>
+<script src="js/chatbot.js" integrity="sha384-kVeaCuKgXKzGXKBJO08JxCXVMUkSHUXbPR4P6hg9kDCwU6HjXan3mm+2iDu+gfEe"></script>
+<script src="js/simulators.js" integrity="sha384-bRzEazmE2fNIK2WC298XNxRMtXul8CE9O58y0gGd4aCuF8rdHhkOfiNGaP9mrSCB"></script>
+<script src="js/whatsapp.js" integrity="sha384-++A3c1Sf7uvWuToTtrZTmv+wwVYQBzyyfqH9BKLWoSuT1mec5F6rZGonfZMugK6n"></script>
+<script src="js/i18n.js" integrity="sha384-EBnyoV+87VUONoVtxonAUNP85hnYmeN+ABYa4ZnVmmEjCzLHqUlH3MA4WLrncWBn"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'activated') {
+          if (typeof showToast === 'function') showToast('🔄 Plataforma atualizada! Recarregue para ver as novidades.');
+        }
+      });
+    });
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>

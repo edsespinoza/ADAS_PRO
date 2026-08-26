@@ -3,3 +3,31 @@
 .env
 node_modules/
 supabase/.temp/
+
+# IDE/tooling diagnostic artifacts
+.diag_*.cjs
+.tab_*.png
+.screenshot_*.png
+.shot_ref.png
+
+# Temporary design files
+telas/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.swp
+*.tmp
+
+# Internal / dev artifacts
+link mcp_*.txt
+memory/
+security/
+sql/security_audit/
+scripts/security-audit-db.sh
+scripts/security-audit.js
+scripts/serve-csp.js
+SECURITY_TRENDS_2026.md

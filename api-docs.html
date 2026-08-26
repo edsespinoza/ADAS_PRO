@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADAS PRO — Documentação da API</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/api-docs.css"/>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+</button>
+
+<div class="docs-wrapper">
+
+  <!-- ═══ Sidebar ═══ -->
+  <aside class="docs-sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-logo">
+      <div class="logo-hex">AP</div>
+      <span>ADAS<strong>PRO</strong></span>
+    </a>
+    <div class="sidebar-version">API v1.0.0</div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Introdução</div>
+      <a class="sidebar-link active" data-section="overview">Visão Geral</a>
+      <a class="sidebar-link" data-section="authentication">Autenticação</a>
+      <a class="sidebar-link" data-section="rate-limiting">Rate Limiting</a>
+      <a class="sidebar-link" data-section="errors">Erros</a>
+      <a class="sidebar-link" data-section="pagination">Paginação</a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Endpoints</div>
+      <a class="sidebar-link" data-section="ep-content-list">
+        <span class="sidebar-method method-get">GET</span> /content
+      </a>
+      <a class="sidebar-link" data-section="ep-content-detail">
+        <span class="sidebar-method method-get">GET</span> /content/:id
+      </a>
+      <a class="sidebar-link" data-section="ep-content-download">
+        <span class="sidebar-method method-get">GET</span> /content/:id/download
+      </a>
+      <a class="sidebar-link" data-section="ep-categories">
+        <span class="sidebar-method method-get">GET</span> /categories
+      </a>
+      <a class="sidebar-link" data-section="ep-user-me">
+        <span class="sidebar-method method-get">GET</span> /users/me
+      </a>
+      <a class="sidebar-link" data-section="ep-user-progress">
+        <span class="sidebar-method method-post">POST</span> /users/me/progress
+      </a>
+      <a class="sidebar-link" data-section="ep-bulletins">
+        <span class="sidebar-method method-get">GET</span> /bulletins
+      </a>
+      <a class="sidebar-link" data-section="ep-articles">
+        <span class="sidebar-method method-get">GET</span> /articles
+      </a>
+      <a class="sidebar-link" data-section="ep-certifications">
+        <span class="sidebar-method method-get">GET</span> /certifications
+      </a>
+      <a class="sidebar-link" data-section="ep-quiz-start">
+        <span class="sidebar-method method-post">POST</span> /certifications/:id/quiz
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Recursos</div>
+      <a class="sidebar-link" data-section="schemas">Schemas</a>
+      <a class="sidebar-link" data-section="sdks">SDKs &amp; Exemplos</a>
+    </div>
+  </aside>
+
+  <!-- ═══ Main Content ═══ -->
+  <main class="docs-main">
+
+    <!-- Overview -->
+    <section class="docs-section" id="overview">
+      <div class="docs-header">
+        <h1>API Reference</h1>
+        <p>Documentação completa da API REST da plataforma ADAS PRO. Acesse conteúdo técnico, gerencie progresso e certificações.</p>
+        <div style="margin-top:16px">
+          <span class="docs-badge badge-version">v1.0.0</span>
+          <span class="docs-badge badge-status">Stable</span>
+          <span class="docs-badge badge-base">Base URL: /functions/v1</span>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-icon auth-icon">🔐</div>
+          <h4>Autenticação</h4>
+          <p>API Key ou JWT Bearer Token. Obrigatório para todos os endpoints.</p>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon rate-icon">⚡</div>
+          <h4>Rate Limit</h4>
+          <p>100 requisições por minuto por chave de API ou token JWT.</p>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon ssl-icon">🔒</div>
+          <h4>HTTPS</h4>
+          <p>Todas as requisições devem usar HTTPS. HTTP é rejeitado automaticamente.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Authentication -->
+    <section class="docs-section" id="authentication">
+      <h2>Autenticação</h2>
+      <p>A API suporta dois métodos de autenticação. Passe um deles no cabeçalho de cada requisição.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="showAuthTab('apikey')">API Key</button>
+        <button class="auth-tab" onclick="showAuthTab('jwt')">JWT Token</button>
+      </div>
+
+      <div id="authTabApikey" class="auth-tab-content">
+        <p>Gerada no painel de controle em <strong>Configurações → API Keys</strong>. Passe no cabeçalho <code>X-API-Key</code>.</p>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTTP Header</span>
+            <button class="code-copy-btn" onclick="copyCode(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copiar
+            </button>
+          </div>
+          <div class="code-content"><pre>X-API-Key: adas_live_xxxxxxxxxxxxxxxxxxxx</pre></div>
+        </div>
+      </div>
+
+      <div id="authTabJwt" class="auth-tab-content" style="display:none">
+        <p>Token JWT obtido via <code>supabase.auth.signInWithPassword()</code>. Passe no cabeçalho <code>Authorization</code>.</p>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">HTTP Header</span>
+            <button class="code-copy-btn" onclick="copyCode(this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copiar
+            </button>
+          </div>
+          <div class="code-content"><pre>Authorization: B eyJhbGciOiJIUzI1NiIs...</pre></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rate Limiting -->
+    <section class="docs-section" id="rate-limiting">
+      <h2>Rate Limiting</h2>
+      <div class="rate-limit-box">
+        <div class="rate-limit-icon">⚡</div>
+        <div class="rate-limit-text">
+          <h4>100 requisições / minuto</h4>
+          <p>Limite por API Key ou JWT. Cabeçalhos de resposta indicam o estado atual.</p>
+        </div>
+      </div>
+      <p>Cada requisição retorna os seguintes cabeçalhos de rate limit:</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Response Headers</span>
+          <button class="code-copy-btn" onclick="copyCode(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="code-content"><pre>X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 87
+X-RateLimit-Reset: 1703001660</pre></div>
+      </div>
+    </section>
+
+    <!-- Errors -->
+    <section class="docs-section" id="errors">
+      <h2>Tratamento de Erros</h2>
+      <p>Todas as respostas de erro seguem o formato padrão:</p>
+      <div class="schema-block">
+        <div class="schema-title">ErrorResponse</div>
+        <div class="schema-field">
+          <span class="schema-field-name">ok</span>
+          <span class="schema-field-type">boolean</span>
+          <span class="schema-field-desc">Sempre <code>false</code> em erros</span>
+        </div>
+        <div class="schema-field">
+          <span class="schema-field-name">error</span>
+          <span class="schema-field-type">string</span>
+          <span class="schema-field-desc">Mensagem descritiva do erro</span>
+        </div>
+        <div class="schema-field">
+          <span class="schema-field-name">code</span>
+          <span class="schema-field-type">string</span>
+          <span class="schema-field-desc">Código de erro para tratamento programático</span>
+        </div>
+      </div>
+
+      <p>Principais códigos de erro:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">HTTP Status Codes</span></div>
+        <div class="code-content"><pre>401  UNAUTHORIZED          Credenciais ausentes ou inválidas
+403  FORBIDDEN              Permissão insuficiente para este recurso
+404  NOT_FOUND              Recurso não encontrado
+429  RATE_LIMITED           Limite de requisições excedido
+500  INTERNAL_ERROR         Erro interno do servidor</pre></div>
+      </div>
+    </section>
+
+    <!-- Pagination -->
+    <section class="docs-section" id="pagination">
+      <h2>Paginação</h2>
+      <p>Endpoints de listagem suportam paginação via query params <code>page</code> e <code>per_page</code>.</p>
+      <div class="schema-block">
+        <div class="schema-title">PaginatedResponse</div>
+        <div class="schema-field">
+          <span class="schema-field-name">ok</span>
+          <span class="schema-field-type">boolean</span>
+          <span class="schema-field-desc"><code>true</code></span>
+        </div>
+        <div class="schema-field">
+          <span class="schema-field-name">data</span>
+          <span class="schema-field-type">array</span>
+          <span class="schema-field-desc">Lista de itens</span>
+        </div>
+        <div class="schema-field">
+          <span class="schema-field-name">total</span>
+          <span class="schema-field-type">integer</span>
+          <span class="schema-field-desc">Total de itens disponíveis</span>
+        </div>
+        <div class="schema-field">
+          <span class="schema-field-name">page</span>
+          <span class="schema-field-type">integer</span>
+          <span class="schema-field-desc">Página atual (1-indexed)</span>
+        </div>
+        <div class="schema-field">
+          <span class="schema-field-name">per_page</span>
+          <span class="schema-field-type">integer</span>
+          <span class="schema-field-desc">Itens por página (máx. 100)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ ENDPOINTS ═══ -->
+
+    <!-- GET /content -->
+    <section class="docs-section" id="ep-content-list">
+      <h2>Conteúdo</h2>
+
+      <div class="endpoint-card open">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/content</span>
+          <span class="endpoint-summary">Listar todo o conteúdo disponível</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna lista paginada de materiais técnicos (PDFs, guias). Pode ser filtrado por categoria.</p>
+
+          <h3>Parâmetros Query</h3>
+          <table class="params-table">
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="param-name">category</td>
+                <td class="param-type">string</td>
+                <td>Não</td>
+                <td>Filtrar por ID da categoria (ex: <code>honda</code>, <code>toyota</code>)</td>
+              </tr>
+              <tr>
+                <td class="param-name">page</td>
+                <td class="param-type">integer</td>
+                <td>Não</td>
+                <td>Número da página (padrão: 1)</td>
+              </tr>
+              <tr>
+                <td class="param-name">per_page</td>
+                <td class="param-type">integer</td>
+                <td>Não</td>
+                <td>Itens por página (padrão: 20, máx: 100)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="response-block">
+            <div class="response-label">
+              <span class="status-code status-2xx">200</span> Resposta de sucesso
+            </div>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JSON</span>
+                <button class="code-copy-btn" onclick="copyCode(this)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  Copiar
+                </button>
+              </div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="str">"honda-lkas"</span>,
+      <span class="key">"cat"</span>: <span class="str">"honda"</span>,
+      <span class="key">"title"</span>: <span class="str">"Honda LKAS Calibration"</span>,
+      <span class="key">"desc"</span>: <span class="str">"Guia completo de calibração..."</span>,
+      <span class="key">"type"</span>: <span class="str">"pdf"</span>,
+      <span class="key">"accessLevel"</span>: <span class="num">2</span>,
+      <span class="key">"downloadLevel"</span>: <span class="num">3</span>,
+      <span class="key">"fileSize"</span>: <span class="str">"2.4 MB"</span>,
+      <span class="key">"pages"</span>: <span class="num">18</span>,
+      <span class="key">"version"</span>: <span class="str">"v3.1"</span>,
+      <span class="key">"updatedAt"</span>: <span class="str">"Abr/2026"</span>,
+      <span class="key">"models"</span>: [<span class="str">"Civic"</span>, <span class="str">"CR-V"</span>, <span class="str">"HR-V"</span>]
+    }
+  ],
+  <span class="key">"total"</span>: <span class="num">22</span>,
+  <span class="key">"page"</span>: <span class="num">1</span>,
+  <span class="key">"per_page"</span>: <span class="num">20</span>
+}</pre></div>
+            </div>
+          </div>
+
+          <!-- Try It Out -->
+          <div class="try-it-panel">
+            <div class="try-it-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Try It Out
+            </div>
+            <div class="try-it-row">
+              <div class="try-it-field">
+                <label class="try-it-label">API Key</label>
+                <input class="try-it-input" type="text" id="tryApiKey" placeholder="adas_live_xxx..." />
+              </div>
+              <div class="try-it-field">
+                <label class="try-it-label">Categoria (opcional)</label>
+                <input class="try-it-input" type="text" id="tryCategory" placeholder="honda, toyota..." />
+              </div>
+            </div>
+            <button class="try-it-btn" onclick="tryItOut('content')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Enviar Requisição
+            </button>
+            <div class="try-it-response" id="tryResponse-content">
+              <div class="try-it-status" id="tryStatus-content"></div>
+              <div class="code-block">
+                <div class="code-header">
+                  <span class="code-lang">Response</span>
+                  <button class="code-copy-btn" onclick="copyCode(this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    Copiar
+                  </button>
+                </div>
+                <div class="code-content"><pre id="tryBody-content"></pre></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /content/:id -->
+    <section class="docs-section" id="ep-content-detail">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/content/:id</span>
+          <span class="endpoint-summary">Detalhes de um material específico</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <table class="params-table">
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="param-name">id</td>
+                <td class="param-type">string</td>
+                <td><span class="param-required">Sim</span></td>
+                <td>ID do material (ex: <code>honda-lkas</code>)</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>: <span class="str">"honda-lkas"</span>,
+    <span class="key">"cat"</span>: <span class="str">"honda"</span>,
+    <span class="key">"title"</span>: <span class="str">"Honda LKAS Calibration"</span>,
+    <span class="key">"desc"</span>: <span class="str">"Guia completo de calibração do sistema LKAS..."</span>,
+    <span class="key">"highlights"</span>: [<span class="str">"Target Tipo 1: impressão A4"</span>, <span class="str">"3.0 m da câmera"</span>],
+    <span class="key">"models"</span>: [<span class="str">"Civic"</span>, <span class="str">"CR-V"</span>, <span class="str">"HR-V"</span>]
+  }
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /content/:id/download -->
+    <section class="docs-section" id="ep-content-download">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/content/:id/download</span>
+          <span class="endpoint-summary">Obter URL de download temporária</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna uma URL assinada temporária (1 hora) para download do arquivo PDF. Valida permissões do usuário e nível de acesso.</p>
+          <table class="params-table">
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="param-name">id</td>
+                <td class="param-type">string</td>
+                <td><span class="param-required">Sim</span></td>
+                <td>ID do material</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"url"</span>: <span class="str">"https://zqydyyticvtmirjzskly.supabase.co/storage/v1/object/sign/materiais/honda/honda-lkas-calibration.pdf?token=xxx"</span>,
+    <span class="key">"expiresAt"</span>: <span class="str">"2026-08-25T16:00:00Z"</span>,
+    <span class="key">"fileName"</span>: <span class="str">"honda-lkas-calibration.pdf"</span>
+  }
+}</pre></div>
+            </div>
+          </div>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-4xx">403</span> Sem permissão</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">false</span>,
+  <span class="key">"error"</span>: <span class="str">"Nível de acesso insuficiente para este material."</span>,
+  <span class="key">"code"</span>: <span class="str">"INSUFFICIENT_ACCESS"</span>
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /categories -->
+    <section class="docs-section" id="ep-categories">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/categories</span>
+          <span class="endpoint-summary">Listar todas as categorias</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna as 12 categorias de conteúdo da plataforma ADAS PRO.</p>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: [
+    { <span class="key">"id"</span>: <span class="str">"honda"</span>,      <span class="key">"label"</span>: <span class="str">"Honda &amp; Acura"</span>,       <span class="key">"icon"</span>: <span class="str">"🔵"</span> },
+    { <span class="key">"id"</span>: <span class="str">"toyota"</span>,     <span class="key">"label"</span>: <span class="str">"Toyota &amp; Lexus"</span>,       <span class="key">"icon"</span>: <span class="str">"🔴"</span> },
+    { <span class="key">"id"</span>: <span class="str">"nissan"</span>,     <span class="key">"label"</span>: <span class="str">"Nissan &amp; Infiniti"</span>,    <span class="key">"icon"</span>: <span class="str">"🟡"</span> },
+    { <span class="key">"id"</span>: <span class="str">"subaru"</span>,     <span class="key">"label"</span>: <span class="str">"Subaru EyeSight"</span>,      <span class="key">"icon"</span>: <span class="str">"🟢"</span> },
+    { <span class="key">"id"</span>: <span class="str">"hyundai"</span>,    <span class="key">"label"</span>: <span class="str">"Hyundai &amp; Kia"</span>,        <span class="key">"icon"</span>: <span class="str">"🔷"</span> },
+    { <span class="key">"id"</span>: <span class="str">"vag"</span>,        <span class="key">"label"</span>: <span class="str">"VAG (Audi/VW/Seat)"</span>,   <span class="key">"icon"</span>: <span class="str">"🟣"</span> },
+    { <span class="key">"id"</span>: <span class="str">"mercedes"</span>,   <span class="key">"label"</span>: <span class="str">"Mercedes-Benz"</span>,        <span class="key">"icon"</span>: <span class="str">"⭕"</span> },
+    { <span class="key">"id"</span>: <span class="str">"ford"</span>,       <span class="key">"label"</span>: <span class="str">"Ford &amp; Lincoln"</span>,       <span class="key">"icon"</span>: <span class="str">"🔸"</span> },
+    { <span class="key">"id"</span>: <span class="str">"radar"</span>,      <span class="key">"label"</span>: <span class="str">"Radar Universal"</span>,      <span class="key">"icon"</span>: <span class="str">"📡"</span> },
+    { <span class="key">"id"</span>: <span class="str">"mazda"</span>,      <span class="key">"label"</span>: <span class="str">"Mazda AVM 360°"</span>,       <span class="key">"icon"</span>: <span class="str">"🔶"</span> },
+    { <span class="key">"id"</span>: <span class="str">"mitsubishi"</span>, <span class="key">"label"</span>: <span class="str">"Mitsubishi"</span>,           <span class="key">"icon"</span>: <span class="str">"🔹"</span> },
+    { <span class="key">"id"</span>: <span class="str">"chineses"</span>,   <span class="key">"label"</span>: <span class="str">"BYD / Chery / MG"</span>,     <span class="key">"icon"</span>: <span class="str">"🇨🇳"</span> }
+  ]
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /users/me -->
+    <section class="docs-section" id="ep-user-me">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/users/me</span>
+          <span class="endpoint-summary">Dados do usuário autenticado</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna os dados do usuário autenticado (nome, email, role, plano, permissões).</p>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>: <span class="str">"a1b2c3d4-..."</span>,
+    <span class="key">"name"</span>: <span class="str">"João Silva"</span>,
+    <span class="key">"email"</span>: <span class="str">"joao@oficina.com"</span>,
+    <span class="key">"role"</span>: <span class="str">"membro"</span>,
+    <span class="key">"plan"</span>: <span class="str">"pro"</span>,
+    <span class="key">"status"</span>: <span class="str">"active"</span>,
+    <span class="key">"permissions"</span>: [<span class="str">"honda"</span>, <span class="str">"toyota"</span>, <span class="str">"nissan"</span>]
+  }
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POST /users/me/progress -->
+    <section class="docs-section" id="ep-user-progress">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/api/v1/users/me/progress</span>
+          <span class="endpoint-summary">Atualizar progresso de aprendizado</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Registra progresso de leitura/estudo de um material. Usado para gamificação e tracking.</p>
+          <h3>Request Body</h3>
+          <div class="schema-block">
+            <div class="schema-field">
+              <span class="schema-field-name">contentId</span>
+              <span class="schema-field-type">string</span>
+              <span class="schema-field-desc"><strong>Obrigatório.</strong> ID do material</span>
+            </div>
+            <div class="schema-field">
+              <span class="schema-field-name">progress</span>
+              <span class="schema-field-type">number</span>
+              <span class="schema-field-desc">Percentual de progresso (0-100)</span>
+            </div>
+            <div class="schema-field">
+              <span class="schema-field-name">completed</span>
+              <span class="schema-field-type">boolean</span>
+              <span class="schema-field-desc">Se o material foi concluído</span>
+            </div>
+          </div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="code-copy-btn" onclick="copyCode(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copiar
+              </button>
+            </div>
+            <div class="code-content"><pre>curl -X POST https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: adas_live_xxx" \
+  -d '{
+    <span class="key">"action"</span>: <span class="str">"update_progress"</span>,
+    <span class="key">"contentId"</span>: <span class="str">"honda-lkas"</span>,
+    <span class="key">"progress"</span>: <span class="num">100</span>,
+    <span class="key">"completed"</span>: <span class="num">true</span>
+  }'</pre></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /bulletins -->
+    <section class="docs-section" id="ep-bulletins">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/bulletins</span>
+          <span class="endpoint-summary">Listar boletins técnicos</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna boletins técnicos publicados. Tipos: <code>novidade</code>, <code>atualizacao</code>, <code>alerta</code>, <code>procedimento</code>.</p>
+          <table class="params-table">
+            <thead><tr><th>Nome</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="param-name">type</td>
+                <td class="param-type">string</td>
+                <td>Não</td>
+                <td>Filtrar por tipo do boletim</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="str">"blt-001"</span>,
+      <span class="key">"title"</span>: <span class="str">"Atualização Honda LKAS v3.2"</span>,
+      <span class="key">"content"</span>: <span class="str">"Nova versão com suporte ao Civic 2026..."</span>,
+      <span class="key">"type"</span>: <span class="str">"atualizacao"</span>,
+      <span class="key">"createdAt"</span>: <span class="str">"2026-08-20T14:30:00Z"</span>
+    }
+  ]
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /articles -->
+    <section class="docs-section" id="ep-articles">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/articles</span>
+          <span class="endpoint-summary">Listar artigos editoriais</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna artigos publicados pela equipe ADAS PRO.</p>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="str">"art-001"</span>,
+      <span class="key">"title"</span>: <span class="str">"Guia Completo de Calibração ADAS"</span>,
+      <span class="key">"content"</span>: <span class="str">"Markdown do artigo..."</span>,
+      <span class="key">"status"</span>: <span class="str">"published"</span>,
+      <span class="key">"createdAt"</span>: <span class="str">"2026-08-15T10:00:00Z"</span>
+    }
+  ]
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GET /certifications -->
+    <section class="docs-section" id="ep-certifications">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/v1/certifications</span>
+          <span class="endpoint-summary">Listar programas de certificação</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Retorna os níveis de certificação disponíveis no programa SENAI/CNA.</p>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="str">"cert-level-1"</span>,
+      <span class="key">"name"</span>: <span class="str">"ADAS Fundamentals"</span>,
+      <span class="key">"level"</span>: <span class="num">1</span>,
+      <span class="key">"hours"</span>: <span class="num">8</span>,
+      <span class="key">"modules"</span>: <span class="num">4</span>,
+      <span class="key">"description"</span>: <span class="str">"Fundamentos de sistemas ADAS..."</span>
+    },
+    {
+      <span class="key">"id"</span>: <span class="str">"cert-level-2"</span>,
+      <span class="key">"name"</span>: <span class="str">"ADAS Calibration Specialist"</span>,
+      <span class="key">"level"</span>: <span class="num">2</span>,
+      <span class="key">"hours"</span>: <span class="num">16</span>,
+      <span class="key">"modules"</span>: <span class="num">5</span>,
+      <span class="key">"description"</span>: <span class="str">"Especialização em calibração ADAS..."</span>
+    },
+    {
+      <span class="key">"id"</span>: <span class="str">"cert-level-3"</span>,
+      <span class="key">"name"</span>: <span class="str">"ADAS Advanced Diagnostics"</span>,
+      <span class="key">"level"</span>: <span class="num">3</span>,
+      <span class="key">"hours"</span>: <span class="num">24</span>,
+      <span class="key">"modules"</span>: <span class="num">6</span>,
+      <span class="key">"description"</span>: <span class="str">"Diagnóstico avançado de sistemas ADAS..."</span>
+    }
+  ]
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POST /certifications/:id/quiz -->
+    <section class="docs-section" id="ep-quiz-start">
+      <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/api/v1/certifications/:id/quiz</span>
+          <span class="endpoint-summary">Iniciar/enviar quiz de certificação</span>
+          <svg class="endpoint-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="endpoint-body">
+          <p>Inicia um quiz ou envia respostas para avaliação. Para iniciar, envie apenas o <code>moduleId</code>. Para enviar respostas, inclua o array <code>answers</code>.</p>
+          <h3>Request Body</h3>
+          <div class="schema-block">
+            <div class="schema-field">
+              <span class="schema-field-name">moduleId</span>
+              <span class="schema-field-type">string</span>
+              <span class="schema-field-desc"><strong>Obrigatório.</strong> ID do módulo</span>
+            </div>
+            <div class="schema-field">
+              <span class="schema-field-name">answers</span>
+              <span class="schema-field-type">array</span>
+              <span class="schema-field-desc">Array de respostas (opcional — vazio = iniciar quiz)</span>
+            </div>
+          </div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="code-copy-btn" onclick="copyCode(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copiar
+              </button>
+            </div>
+            <div class="code-content"><pre>curl -X POST https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: adas_live_xxx" \
+  -d '{
+    <span class="key">"action"</span>: <span class="str">"submit_quiz"</span>,
+    <span class="key">"certificationId"</span>: <span class="str">"cert-level-1"</span>,
+    <span class="key">"moduleId"</span>: <span class="str">"mod-1-1"</span>,
+    <span class="key">"answers"</span>: [
+      { <span class="key">"questionId"</span>: <span class="str">"q1"</span>, <span class="key">"selected"</span>: <span class="str">"a"</span> },
+      { <span class="key">"questionId"</span>: <span class="str">"q2"</span>, <span class="key">"selected"</span>: <span class="str">"c"</span> }
+    ]
+  }'</pre></div>
+          </div>
+          <div class="response-block">
+            <div class="response-label"><span class="status-code status-2xx">200</span> Sucesso</div>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">JSON</span></div>
+              <div class="code-content"><pre>{
+  <span class="key">"ok"</span>: <span class="num">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"certificationId"</span>: <span class="str">"cert-level-1"</span>,
+    <span class="key">"moduleId"</span>: <span class="str">"mod-1-1"</span>,
+    <span class="key">"score"</span>: <span class="num">85</span>,
+    <span class="key">"passed"</span>: <span class="num">true</span>,
+    <span class="key">"correctCount"</span>: <span class="num">17</span>,
+    <span class="key">"totalCount"</span>: <span class="num">20</span>,
+    <span class="key">"completedAt"</span>: <span class="str">"2026-08-25T15:30:00Z"</span>
+  }
+}</pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Schemas -->
+    <section class="docs-section" id="schemas">
+      <h2>Schemas</h2>
+
+      <div class="schema-block">
+        <div class="schema-title">Content</div>
+        <div class="schema-field"><span class="schema-field-name">id</span><span class="schema-field-type">string</span><span class="schema-field-desc">ID único do material</span></div>
+        <div class="schema-field"><span class="schema-field-name">cat</span><span class="schema-field-type">string</span><span class="schema-field-desc">ID da categoria</span></div>
+        <div class="schema-field"><span class="schema-field-name">title</span><span class="schema-field-type">string</span><span class="schema-field-desc">Título do material</span></div>
+        <div class="schema-field"><span class="schema-field-name">desc</span><span class="schema-field-type">string</span><span class="schema-field-desc">Descrição detalhada</span></div>
+        <div class="schema-field"><span class="schema-field-name">accessLevel</span><span class="schema-field-type">integer</span><span class="schema-field-desc">Nível mínimo para visualizar (1-4)</span></div>
+        <div class="schema-field"><span class="schema-field-name">downloadLevel</span><span class="schema-field-type">integer</span><span class="schema-field-desc">Nível mínimo para baixar (1-4)</span></div>
+        <div class="schema-field"><span class="schema-field-name">models</span><span class="schema-field-type">string[]</span><span class="schema-field-desc">Modelos de veículo suportados</span></div>
+      </div>
+
+      <div class="schema-block">
+        <div class="schema-title">User</div>
+        <div class="schema-field"><span class="schema-field-name">id</span><span class="schema-field-type">string</span><span class="schema-field-desc">UUID</span></div>
+        <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">string</span><span class="schema-field-desc">Nome completo</span></div>
+        <div class="schema-field"><span class="schema-field-name">email</span><span class="schema-field-type">string</span><span class="schema-field-desc">Email (único)</span></div>
+        <div class="schema-field"><span class="schema-field-name">role</span><span class="schema-field-type">enum</span><span class="schema-field-desc">membro | gestor | admin | superadmin</span></div>
+        <div class="schema-field"><span class="schema-field-name">plan</span><span class="schema-field-type">enum</span><span class="schema-field-desc">free | modulo | pro | premium</span></div>
+        <div class="schema-field"><span class="schema-field-name">permissions</span><span class="schema-field-type">string[]</span><span class="schema-field-desc">Categorias com acesso liberado</span></div>
+      </div>
+
+      <div class="schema-block">
+        <div class="schema-title">Certification</div>
+        <div class="schema-field"><span class="schema-field-name">id</span><span class="schema-field-type">string</span><span class="schema-field-desc">ID do programa</span></div>
+        <div class="schema-field"><span class="schema-field-name">name</span><span class="schema-field-type">string</span><span class="schema-field-desc">Nome da certificação</span></div>
+        <div class="schema-field"><span class="schema-field-name">level</span><span class="schema-field-type">integer</span><span class="schema-field-desc">Nível (1-3)</span></div>
+        <div class="schema-field"><span class="schema-field-name">hours</span><span class="schema-field-type">integer</span><span class="schema-field-desc">Carga horária total</span></div>
+        <div class="schema-field"><span class="schema-field-name">modules</span><span class="schema-field-type">integer</span><span class="schema-field-desc">Número de módulos</span></div>
+      </div>
+    </section>
+
+    <!-- SDKs -->
+    <section class="docs-section" id="sdks">
+      <h2>SDKs &amp; Exemplos</h2>
+
+      <h3>JavaScript / Node.js</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">JavaScript</span>
+          <button class="code-copy-btn" onclick="copyCode(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="code-content"><pre><span class="kw">const</span> ADAS_API = <span class="str">'https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway'</span>;
+
+<span class="kw">async function</span> <span class="fn">listContent</span>(category) {
+  <span class="kw">const</span> params = <span class="kw">new</span> URLSearchParams({ action: <span class="str">'list_content'</span> });
+  <span class="kw">if</span> (category) params.set(<span class="str">'category'</span>, category);
+
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(`${ADAS_API}?${params}`, {
+    headers: { <span class="str">'X-API-Key'</span>: <span class="str">'adas_live_xxx'</span> }
+  });
+  <span class="kw">return</span> res.json();
+}
+
+<span class="kw">async function</span> <span class="fn">downloadContent</span>(contentId) {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(ADAS_API, {
+    method: <span class="str">'POST'</span>,
+    headers: {
+      <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+      <span class="str">'X-API-Key'</span>: <span class="str">'adas_live_xxx'</span>
+    },
+    body: JSON.stringify({ action: <span class="str">'get_download_url'</span>, contentId })
+  });
+  <span class="kw">return</span> res.json();
+}</pre></div>
+      </div>
+
+      <h3>Python</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Python</span>
+          <button class="code-copy-btn" onclick="copyCode(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="code-content"><pre><span class="kw">import</span> requests
+
+ADAS_API = <span class="str">"https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway"</span>
+API_KEY = <span class="str">"adas_live_xxx"</span>
+
+<span class="kw">def</span> <span class="fn">list_content</span>(category=<span class="num">None</span>):
+    params = {<span class="str">"action"</span>: <span class="str">"list_content"</span>}
+    <span class="kw">if</span> category:
+        params[<span class="str">"category"</span>] = category
+    <span class="kw">return</span> requests.get(
+        ADAS_API,
+        params=params,
+        headers={<span class="str">"X-API-Key"</span>: API_KEY}
+    ).json()</pre></div>
+      </div>
+
+      <h3>curl</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="code-copy-btn" onclick="copyCode(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copiar
+          </button>
+        </div>
+        <div class="code-content"><pre><span class="cmt"># Listar conteúdo</span>
+curl <span class="str">"https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway?action=list_content&category=honda"</span> \
+  -H <span class="str">"X-API-Key: adas_live_xxx"</span>
+
+<span class="cmt"># Obter detalhes</span>
+curl <span class="str">"https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway?action=get_content&id=honda-lkas"</span> \
+  -H <span class="str">"X-API-Key: adas_live_xxx"</span>
+
+<span class="cmt"># Download URL</span>
+curl -X POST <span class="str">"https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -H <span class="str">"X-API-Key: adas_live_xxx"</span> \
+  -d <span class="str">'{"action":"get_download_url","contentId":"honda-lkas"}'</span></pre></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ─── Sidebar toggle ─── */
+function toggleEndpoint(headerEl) {
+  const card = headerEl.closest('.endpoint-card');
+  card.classList.toggle('open');
+}
+
+/* ─── Auth tabs ─── */
+function showAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-tab-content').forEach(c => c.style.display = 'none');
+  event.target.classList.add('active');
+  if (tab === 'apikey') document.getElementById('authTabApikey').style.display = '';
+  else document.getElementById('authTabJwt').style.display = '';
+}
+
+/* ─── Copy code ─── */
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copiado!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar';
+    }, 2000);
+  });
+}
+
+/* ─── Sidebar navigation ─── */
+document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    const target = document.getElementById(link.dataset.section);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+/* ─── Mobile menu ─── */
+document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+/* ─── Try It Out ─── */
+const API_BASE = 'https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway';
+
+async function tryItOut(type) {
+  const apiKey = document.getElementById('tryApiKey').value;
+  if (!apiKey) { alert('Insira sua API Key'); return; }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando...';
+
+  const responseEl = document.getElementById('tryResponse-' + type);
+  const statusEl = document.getElementById('tryStatus-' + type);
+  const bodyEl = document.getElementById('tryBody-' + type);
+
+  try {
+    let url = API_BASE + '?action=list_content';
+    const category = document.getElementById('tryCategory')?.value;
+    if (category) url += '&category=' + encodeURIComponent(category);
+
+    const res = await fetch(url, { headers: { 'X-API-Key': apiKey } });
+    const data = await res.json();
+
+    responseEl.classList.add('visible');
+    statusEl.className = 'try-it-status ' + (res.ok ? 'success' : 'error');
+    statusEl.textContent = res.status + ' ' + (res.ok ? 'OK' : 'Error');
+    bodyEl.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    responseEl.classList.add('visible');
+    statusEl.className = 'try-it-status error';
+    statusEl.textContent = 'Network Error';
+    bodyEl.textContent = JSON.stringify({ ok: false, error: err.message, code: 'NETWORK_ERROR' }, null, 2);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Enviar Requisição';
+}
+
+/* ─── Scroll spy ─── */
+const sections = document.querySelectorAll('.docs-section');
+const sidebarLinks = document.querySelectorAll('.sidebar-link[data-section]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  sidebarLinks.forEach(l => {
+    l.classList.toggle('active', l.dataset.section === current);
+  });
+});
+</script>
+
+</body>
+</html>

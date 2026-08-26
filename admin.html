@@ -8,8 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://zqydyyticvtmirjzskly.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css?v=20260815"/>
-  <link rel="stylesheet" href="css/auth.css?v=20260815"/>
+  <link rel="stylesheet" href="css/style.css?v=20260815" integrity="sha384-AxgvIDyrJlL2nqpGzhXvkmYI7mA2WTAEUUpQn6t+rAAKczm1dqMH/6qTcH/mhCu8" />
+  <link rel="stylesheet" href="css/auth.css?v=20260815" integrity="sha384-ej7SvI5Zp6TDU+QfkaFsiSSG0xknpzNaXmQWhIb2dlQp7d0BL1cR+zVQNzM5xB12" />
+  <link rel="stylesheet" href="css/marketplace.css" integrity="sha384-7hUfuvGXAjtLT4VHb/WlM1ElwpD7HmtO1TGY3R53K1nxZ+WJMtcALM7NHhcgr0WH" />
+  <link rel="stylesheet" href="css/whatsapp.css" integrity="sha384-R5JE6Ik1NR+WOPYFgqrYH2UIv+CpaOBtM4Oi8w4bmTt/RgokVOu9qBCZTHe9Kv0Z" />
   <style>
     body{background:#0f1923;color:rgba(255,255,255,.85);font-family:var(--font-b);margin:0;}
 
@@ -198,6 +200,10 @@
   <!-- Vercel Analytics & Speed Insights -->
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+  <link rel="manifest" href="/manifest.json" integrity="sha384-13ljjGgvMl87cgEDu5SKXxARQDMu1+6e58mTYeRlx6pdngKw63Tj25Ty5G5I9/jG" />
+  <meta name="theme-color" content="#FF6B35" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
 <div class="dashboard">
@@ -704,10 +710,10 @@
 <div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:10px 24px;font-size:.85rem;color:#fff;transition:transform .3s ease;z-index:9999;opacity:0"></div>
 
 <!-- ─── Supabase SDK ─── -->
-<script src="js/supabase.min.js" integrity="sha256-byoloViQGqnpAXArMyrS+ska3dQFAv1kbgWERmVILKc=" crossorigin="anonymous"></script>
+<script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <!-- ─── ADAS PRO Scripts ─── -->
-<script src="js/supabase-config.js?v=20260815"></script>
-<script src="js/auth.js?v=20260815"></script>
+<script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-Rt6XccNd67acjrNfOpiaa1voyJ93W0YwLku8+ipPcTNM+Veg8oF3dz/aWrI9q1Ob"></script>
 
 <!-- Overlay de carregamento -->
 <div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
@@ -719,6 +725,37 @@
 
 <script>
 history.replaceState({}, document.title, window.location.pathname);
+/* ─── Delegation CSP — handlers dinâmicos (data-act) + listeners propriedade ─── */
+window.__acts = {
+  markNotif:      el => { AUTH.markNotifRead(el.dataset.id); renderNotifs(); updateBadges(); },
+  goSuporteTicket:el => { showPage('suporte'); selectTicket(el.dataset.id); },
+  userApprove:    el => adminAction('approve', el.dataset.id, el),
+  openPerm:       el => openPermModal(el.dataset.id),
+  blockUser:      el => confirmAction('Bloquear?', el.dataset.name + ' perderá acesso.', () => adminAction('block', el.dataset.id, el)),
+  unblockUser:    el => adminAction('unblock', el.dataset.id, el),
+  deleteUser:     el => confirmAction('Excluir usuário?', 'Esta ação é permanente e não pode ser desfeita.', () => adminAction('delete', el.dataset.id, null)),
+  refuseUser:     el => adminAction('block', el.dataset.id, el),
+  selectTicket:   el => selectTicket(el.dataset.id),
+  ticketStatus:   el => { AUTH.updateTicketStatus(el.dataset.id, el.value); selectTicket(el.dataset.id); renderTicketList(); showToast('Status atualizado!'); },
+  deleteTicket:   el => confirmAction('Excluir ticket?', 'Esta ação não pode ser desfeita.', () => { AUTH.deleteTicket(el.dataset.id); selectedTicketId = null; refresh(); showToast('Ticket excluído.'); }),
+  editContent:    el => openEditContentModal(el.dataset.id),
+  deleteContent:  el => confirmAction('Excluir material?', el.dataset.title + ' será removido.', () => { AUTH.deleteContent(el.dataset.id); refresh(); showToast('Material excluído.'); }),
+  togglePlanCat:  el => togglePlanCat(el, el.dataset.pid, el.dataset.cid),
+  demoteGestor:   el => confirmAction('Remover gestor?', el.dataset.name + ' voltará a ser membro.', async () => { await AUTH.updateUserRole(el.dataset.id, 'membro'); refresh(); showToast('Permissão removida.'); }),
+  applyPlan:      el => applyPlan(el.dataset.uid, el.dataset.pid),
+  toggleModule:   el => toggleModuleAccess(el.dataset.id, el.checked),
+  setModuleLevel: el => setModuleLevel(el.dataset.id, el.value),
+  toggleAccEdit:  el => toggleAccEdit(el.dataset.id),
+  saveAccEdit:    el => saveAccEdit(el.dataset.id),
+};
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
+document.addEventListener('change', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
 /* ─── Sanitização XSS — escapa HTML especial antes de inserir no innerHTML ─── */
 function esc(str) {
   if (str == null) return '';
@@ -829,7 +866,7 @@ function renderNotifs() {
     return;
   }
   el.innerHTML = notifs.slice(0,10).map(n => `
-    <div onclick="AUTH.markNotifRead('${esc(n.id)}');renderNotifs();updateBadges()" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;background:${n.read?'transparent':'rgba(255,107,53,.04)'}">
+    <div data-act="markNotif" data-id="${esc(n.id)}" style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;background:${n.read?'transparent':'rgba(255,107,53,.04)'}">
       <div style="font-size:.82rem;color:${n.read?'rgba(255,255,255,.45)':'#fff'};margin-bottom:2px">${esc(n.message)}</div>
       <div style="font-size:.7rem;color:rgba(255,255,255,.25)">${fmtDateTime(n.createdAt)}</div>
     </div>`).join('');
@@ -889,7 +926,7 @@ async function loadDashboard() {
   // Tickets no dash
   const openTkts = AUTH.getAllTickets().filter(t=>t.status==='open'||t.status==='in-progress').slice(0,4);
   document.getElementById('dashTickets').innerHTML = openTkts.length ?
-    openTkts.map(t=>`<div class="ticket-list-item" onclick="showPage('suporte');selectTicket('${t.id}')">
+    openTkts.map(t=>`<div class="ticket-list-item" data-act="goSuporteTicket" data-id="${t.id}">
       <div class="ticket-priority p-${t.priority}"></div>
       <div style="flex:1;min-width:0"><div class="ticket-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</div><div class="ticket-meta">${esc(t.userName)} · ${fmtDate(t.updatedAt)}</div></div>
       ${ticketStatusBadge(t.status)}
@@ -902,8 +939,8 @@ async function loadDashboard() {
     pend.map(u=>`<div style="padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between">
       <div><div style="font-size:.86rem;color:#fff;font-weight:500">${esc(u.name)}</div><div style="font-size:.75rem;color:rgba(255,255,255,.35)">${esc(u.email)}</div></div>
       <div style="display:flex;gap:6px">
-        <button class="action-btn action-btn-approve" onclick="adminAction('approve','${u.id}',this)" title="Aprovar">✓</button>
-        <button class="action-btn action-btn-edit" onclick="openPermModal('${u.id}')" title="Configurar">⚙</button>
+        <button class="action-btn action-btn-approve" data-act="userApprove" data-id="${u.id}" title="Aprovar">✓</button>
+        <button class="action-btn action-btn-edit" data-act="openPerm" data-id="${u.id}" title="Configurar">⚙</button>
       </div>
     </div>`).join('') :
     emptyState('✅', 'Nenhuma aprovação pendente', 'Todos os novos cadastros foram processados.');
@@ -959,10 +996,10 @@ function filterUsers() {
       <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${fmtDate(u.createdAt)}</td>
       <td>${perms}</td>
       <td><div class="action-btns">
-        <button class="action-btn action-btn-edit" title="Gerenciar acesso" onclick="openPermModal('${u.id}')">⚙</button>
-        ${u.status==='active'?`<button class="action-btn action-btn-block" title="Bloquear" onclick="confirmAction('Bloquear?','${jsStr(u.name)} perderá acesso.',()=>adminAction('block','${u.id}',this))">🚫</button>`:
-        `<button class="action-btn action-btn-approve" title="Ativar" onclick="adminAction('unblock','${u.id}',this)">✓</button>`}
-        ${u.role!=='admin'?`<button class="action-btn action-btn-delete" title="Excluir" onclick="confirmAction('Excluir usuário?','Esta ação é permanente e não pode ser desfeita.',()=>adminAction('delete','${u.id}',null))">🗑</button>`:''}
+        <button class="action-btn action-btn-edit" title="Gerenciar acesso" data-act="openPerm" data-id="${u.id}">⚙</button>
+        ${u.status==='active'?`<button class="action-btn action-btn-block" title="Bloquear" data-act="blockUser" data-id="${u.id}" data-name="${esc(u.name)}">🚫</button>`:
+        `<button class="action-btn action-btn-approve" title="Ativar" data-act="unblockUser" data-id="${u.id}">✓</button>`}
+        ${u.role!=='admin'?`<button class="action-btn action-btn-delete" title="Excluir" data-act="deleteUser" data-id="${u.id}">🗑</button>`:''}
       </div></td></tr>`;
   }).join('') : `<tr><td colspan="7">${emptyState('👥', 'Nenhum usuário encontrado', 'Tente ajustar os filtros de busca ou termo digitado.')}</td></tr>`;
 }
@@ -979,9 +1016,9 @@ function loadPendentes() {
         <td style="font-size:.82rem">${esc(u.level)||'—'}</td>
         <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${fmtDate(u.createdAt)}</td>
         <td><div class="action-btns">
-          <button class="action-btn action-btn-approve" onclick="adminAction('approve','${u.id}',this)" title="Aprovar">✓ Aprovar</button>
-          <button class="action-btn action-btn-edit" onclick="openPermModal('${u.id}')" title="Configurar e aprovar">⚙ Configurar</button>
-          <button class="action-btn action-btn-block" onclick="adminAction('block','${u.id}',this)" title="Recusar">✕ Recusar</button>
+          <button class="action-btn action-btn-approve" data-act="userApprove" data-id="${u.id}" title="Aprovar">✓ Aprovar</button>
+          <button class="action-btn action-btn-edit" data-act="openPerm" data-id="${u.id}" title="Configurar e aprovar">⚙ Configurar</button>
+          <button class="action-btn action-btn-block" data-act="refuseUser" data-id="${u.id}" title="Recusar">✕ Recusar</button>
         </div></td></tr>`).join('')}
     </tbody></table>` :
     emptyState('🎉', 'Nenhuma aprovação pendente!', 'Todos os novos cadastros foram processados.');
@@ -1002,7 +1039,7 @@ function renderTicketList() {
   const el      = document.getElementById('ticketListEl');
 
   el.innerHTML = tickets.length ? tickets.map(t => `
-    <div class="ticket-list-item ${selectedTicketId===t.id?'selected':''}" onclick="selectTicket('${t.id}')">
+    <div class="ticket-list-item ${selectedTicketId===t.id?'selected':''}" data-act="selectTicket" data-id="${t.id}">
       <div class="ticket-priority p-${t.priority}"></div>
       <div style="flex:1;min-width:0">
         <div class="ticket-title">${esc(t.title)}</div>
@@ -1029,13 +1066,13 @@ function selectTicket(id) {
   // Ações
   const catMap = {'duvida-tecnica':'Dúvida técnica','solicitacao-material':'Solicitar material','upgrade-plano':'Upgrade de plano','outro':'Outro'};
   document.getElementById('tvActions').innerHTML = `
-    <select onchange="AUTH.updateTicketStatus('${id}',this.value);selectTicket('${id}');renderTicketList();showToast('Status atualizado!')" style="padding:6px 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:.78rem;outline:none">
+    <select data-act="ticketStatus" data-id="${id}" style="padding:6px 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:.78rem;outline:none">
       <option value="open" ${ticket.status==='open'?'selected':''}>Aberto</option>
       <option value="in-progress" ${ticket.status==='in-progress'?'selected':''}>Em andamento</option>
       <option value="resolved" ${ticket.status==='resolved'?'selected':''}>Resolvido</option>
       <option value="closed" ${ticket.status==='closed'?'selected':''}>Fechado</option>
     </select>
-    <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir ticket?','Esta ação não pode ser desfeita.',()=>{AUTH.deleteTicket('${id}');selectedTicketId=null;refresh();showToast('Ticket excluído.')})" title="Excluir">🗑</button>`;
+    <button class="action-btn action-btn-delete" data-act="deleteTicket" data-id="${id}" title="Excluir">🗑</button>`;
 
   // Mensagens
   const chat = document.getElementById('tvMessages');
@@ -1098,8 +1135,8 @@ function filterContent() {
       <td style="font-size:.78rem;color:rgba(255,255,255,.45)">${esc((c.type||'PDF').toUpperCase())}</td>
       <td><span style="color:var(--success);font-weight:600">${cnt}</span><span style="font-size:.75rem;color:rgba(255,255,255,.35)"> usuário(s)</span></td>
       <td><div class="action-btns">
-        <button class="action-btn action-btn-edit" onclick="openEditContentModal('${c.id}')" title="Editar">✏️</button>
-        <button class="action-btn action-btn-delete" onclick="confirmAction('Excluir material?','${jsStr(c.title)} será removido.',()=>{AUTH.deleteContent('${c.id}');refresh();showToast('Material excluído.')})" title="Excluir">🗑</button>
+        <button class="action-btn action-btn-edit" data-act="editContent" data-id="${c.id}" title="Editar">✏️</button>
+        <button class="action-btn action-btn-delete" data-act="deleteContent" data-id="${c.id}" data-title="${esc(c.title)}" title="Excluir">🗑</button>
       </div></td></tr>`;
   }).join('');
 }
@@ -1233,7 +1270,7 @@ function loadConfiguracoes() {
       </div>
       <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-bottom:8px">Categorias padrão incluídas neste plano:</div>
       <div class="plan-config-cats" id="planCats_${p.id}">
-        ${CATS.map(c => `<div class="plan-cat-chip ${p.defaultCategories.includes(c.id)?'active':''}" onclick="togglePlanCat(this,'${p.id}','${c.id}')">${esc(c.icon)} ${esc(c.label)}</div>`).join('')}
+        ${CATS.map(c => `<div class="plan-cat-chip ${p.defaultCategories.includes(c.id)?'active':''}" data-act="togglePlanCat" data-pid="${p.id}" data-cid="${c.id}">${esc(c.icon)} ${esc(c.label)}</div>`).join('')}
       </div>
     </div>`).join('');
 
@@ -1259,7 +1296,7 @@ function loadGestores() {
     return `<div class="gestor-card">
       <div class="gestor-card-avatar">${init}</div>
       <div><div class="gestor-info-name">${esc(u.name)}</div><div class="gestor-info-role">${esc(u.role)}</div><div class="gestor-info-email">${esc(u.email)}</div></div>
-      ${u.role!=='admin'?`        <button class="action-btn action-btn-block" onclick="confirmAction('Remover gestor?','${jsStr(u.name)} voltará a ser membro.',async()=>{await AUTH.updateUserRole('${u.id}','membro');refresh();showToast('Permissão removida.')})" style="margin-left:auto" title="Remover">↓</button>`:''}
+      ${u.role!=='admin'?`        <button class="action-btn action-btn-block" data-act="demoteGestor" data-id="${u.id}" data-name="${esc(u.name)}" style="margin-left:auto" title="Remover">↓</button>`:''}
     </div>`;  }).join('') : emptyState('🛡️', 'Nenhum gestor cadastrado', 'Promova um membro abaixo para dar acesso ao painel.');
 
   // Select de promoção
@@ -1358,14 +1395,22 @@ function openPermModal(userId) {
   // Plano rápido
   const s = AUTH.getSettings();
   document.getElementById('planQuickBtns').innerHTML = s.plans.map(p =>
-    `<button onclick="applyPlan('${userId}','${esc(p.id)}')" style="padding:7px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.78rem;cursor:pointer;transition:var(--transition)">📋 ${esc(p.name)}</button>`
+    `<button data-act="applyPlan" data-uid="${userId}" data-pid="${esc(p.id)}" style="padding:7px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.78rem;cursor:pointer;transition:var(--transition)">📋 ${esc(p.name)}</button>`
   ).join('');
 
   document.getElementById('pStatus').value = user.status;
   const ae = user.accessExpires ? new Date(user.accessExpires).toISOString().slice(0,10) : '';
   document.getElementById('pAccessExpires').value = ae;
-  // Seletor hierárquico
-  selectRole(user.role || 'membro');
+  // Seletor hierárquico — oculta roles acima do nível do caller (BIZ-NEW-002)
+  const _ROLE_LV = { membro:1, gestor:2, admin:3, superadmin:4 };
+  const callerLv = _ROLE_LV[session.role] || 0;
+  document.querySelectorAll('.role-ladder-item').forEach(el => {
+    const rl = _ROLE_LV[el.dataset.role] || 0;
+    el.style.display = rl > callerLv ? 'none' : '';
+    el.onclick = rl > callerLv ? null : () => selectRole(el.dataset.role);
+  });
+  const targetRoleLv = _ROLE_LV[user.role] || 0;
+  selectRole(targetRoleLv > callerLv ? session.role : (user.role || 'membro'));
 
   document.getElementById('pPerms').innerHTML = CATS.map(c =>
     `<label class="permission-item"><input type="checkbox" value="${c.id}" ${(user.permissions||[]).includes(c.id)?'checked':''}/>${c.icon} ${c.label}</label>`
@@ -1394,6 +1439,8 @@ async function saveUserPerms() {
   if (!editingUserId) return;
   const status      = document.getElementById('pStatus').value;
   const role        = document.getElementById('pRole').value;
+  const _ROLE_LV = { membro:1, gestor:2, admin:3, superadmin:4 };
+  if ((_ROLE_LV[role]||0) > (_ROLE_LV[session.role]||0)) { showToast('⛔ Você não pode atribuir um nível superior ao seu.'); return; }
   const perms       = [...document.querySelectorAll('#pPerms input:checked')].map(i=>i.value);
   const expiresVal  = document.getElementById('pAccessExpires').value;
   const accessExpires = expiresVal ? new Date(expiresVal).getTime() : null;
@@ -1641,13 +1688,13 @@ function renderAccessModules() {
           </div>
         </div>
         <label class="toggle-sw">
-          <input type="checkbox" ${isEnabled?'checked':''} ${readOnly?'disabled':''} onchange="toggleModuleAccess('${cat.id}',this.checked)"/>
+          <input type="checkbox" ${isEnabled?'checked':''} ${readOnly?'disabled':''} data-act="toggleModule" data-id="${cat.id}"/>
           <span class="toggle-track"></span>
         </label>
       </div>
       <div class="module-acc-footer">
         <span style="font-size:.75rem;color:rgba(255,255,255,.35)">Nível mínimo</span>
-        <select class="module-level-select" ${readOnly?'disabled':''} onchange="setModuleLevel('${cat.id}',this.value)">
+        <select class="module-level-select" ${readOnly?'disabled':''} data-act="setModuleLevel" data-id="${cat.id}">
           <option value="1" ${level==1?'selected':''}>1 — Free</option>
           <option value="2" ${level==2?'selected':''}>2 — Módulo</option>
           <option value="3" ${level==3?'selected':''}>3 — Pro</option>
@@ -1695,7 +1742,7 @@ function renderAccessContent() {
       <td><span class="acc-level-badge acc-level-${al}">L${al}</span></td>
       <td><span class="acc-level-badge acc-level-${dl}">L${dl}</span></td>
       <td><span class="acc-file-path" title="${esc(fp)}">${esc(fp)}</span></td>
-      <td><button class="acc-edit-btn" onclick="toggleAccEdit('${item.id}')">Editar</button></td>
+      <td><button class="acc-edit-btn" data-act="toggleAccEdit" data-id="${item.id}">Editar</button></td>
     </tr>
     <tr id="edit-${item.id}" style="display:none">
       <td colspan="6">
@@ -1719,7 +1766,7 @@ function renderAccessContent() {
           <div><div class="acc-inline-label">Caminho do arquivo</div>
             <input class="acc-inline-input" id="fp-${item.id}" value="${esc(item.filePath||'')}" placeholder="assets/downloads/categoria/arquivo.pdf"/>
           </div>
-          <div><button class="acc-save-btn" onclick="saveAccEdit('${item.id}')">Salvar</button></div>
+          <div><button class="acc-save-btn" data-act="saveAccEdit" data-id="${item.id}">Salvar</button></div>
         </div>
       </td>
     </tr>`;
@@ -1783,6 +1830,23 @@ AUTH.init().then(() => {
   if (el) el.innerHTML = '⚠️ Erro ao conectar: ' + esc(err.message) +
     '<br><br><small>Verifique as credenciais em <code>js/supabase-config.js</code></small>';
 });
+</script>
+<script src="js/marketplace.js" integrity="sha384-OX2ADP7wfWFv9jMh/SCU68ThwHzR7RSq4IBtPqV6oKu6MSjJDkJfwqgi1okkKqfp"></script>
+<script src="js/enterprise.js" integrity="sha384-V3hEnj3OwekGp5Lpc2CVWYJH0g3IsppU3VrvnghcoVjHvmEnfRpHucn/NBoGJrjc"></script>
+<script src="js/whatsapp.js" integrity="sha384-++A3c1Sf7uvWuToTtrZTmv+wwVYQBzyyfqH9BKLWoSuT1mec5F6rZGonfZMugK6n"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'activated') {
+          if (typeof showToast === 'function') showToast('🔄 Plataforma atualizada! Recarregue para ver as novidades.');
+        }
+      });
+    });
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>

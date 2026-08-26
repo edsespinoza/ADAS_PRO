@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="description" content="ADAS PRO — Sistema de Certificações. Valide seus conhecimentos em sistemas ADAS com quizzes e certificados oficiais."/>
+  <title>Certificações — ADAS PRO</title>
+  <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/auth.css"/>
+  <link rel="stylesheet" href="css/certifications.css"/>
+</head>
+<body>
+
+  <!-- ═══ Header ═══ -->
+  <header id="mainHeader">
+    <div class="header-inner">
+      <a href="/" class="header-logo"><span class="logo-text">ADAS <span class="logo-pro">PRO</span></span></a>
+      <nav class="header-nav" id="headerNav">
+        <a href="/#sobre" class="nav-link">Sobre</a>
+        <a href="/#categorias" class="nav-link">Categorias</a>
+        <a href="/#planos" class="nav-link">Planos</a>
+        <a href="/#contato" class="nav-link">Contato</a>
+      </nav>
+      <div class="header-actions" id="headerActions"></div>
+    </div>
+  </header>
+
+  <!-- ═══ Main ═══ -->
+  <main class="auth-wrapper">
+    <div class="auth-card auth-card--wide" style="max-width:960px">
+
+      <!-- Sidebar -->
+      <aside class="auth-sidebar">
+        <div class="sidebar-brand">ADAS PRO</div>
+        <nav class="sidebar-nav">
+          <div class="sidebar-section">
+            <a href="#catalog" class="sidebar-link active" onclick="CERT_PAGE.nav('catalog',this)">🏆 Catálogo de Certificações</a>
+            <a href="#dashboard" class="sidebar-link" onclick="CERT_PAGE.nav('dashboard',this)">📊 Meu Painel</a>
+            <a href="#history" class="sidebar-link" onclick="CERT_PAGE.nav('history',this)">📜 Histórico</a>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-text">Certificações oficiais</div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <div class="auth-content">
+
+        <!-- ═══ Stats Row ═══ -->
+        <div class="cert-stats" id="certStats">
+          <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statCerts">0</div>
+              <div class="stat-label">Certificações</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statQuizzes">0</div>
+              <div class="stat-label">Quizzes Realizados</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statAvg">0%</div>
+              <div class="stat-label">Média Geral</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statLast">—</div>
+              <div class="stat-label">Último Quiz</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Catalog ═══ -->
+        <section id="sec-catalog" class="lgpd-section show">
+          <h1 class="lgpd-title">Catálogo de Certificações</h1>
+          <p class="lgpd-updated">Complete quizzes e obtenha certificações reconhecidas em ADAS</p>
+          <div class="cert-catalog" id="certCatalog"></div>
+        </section>
+
+        <!-- ═══ Dashboard ═══ -->
+        <section id="sec-dashboard" class="lgpd-section">
+          <h1 class="lgpd-title">Meu Painel de Certificações</h1>
+          <p class="lgpd-updated">Acompanhe suas conquistas e certificados</p>
+          <div class="cert-dashboard-grid" id="certDashboard"></div>
+        </section>
+
+        <!-- ═══ History ═══ -->
+        <section id="sec-history" class="lgpd-section">
+          <h1 class="lgpd-title">Histórico de Quizzes</h1>
+          <p class="lgpd-updated">Todas as tentativas realizadas</p>
+          <div id="certHistory"></div>
+        </section>
+
+      </div><!-- /auth-content -->
+    </div><!-- /auth-card -->
+  </main>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-brand">ADAS PRO</div>
+        <p class="footer-text">Plataforma de capacitação em sistemas avançados de assistência ao condutor.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Plataforma</div>
+        <a href="/membros" class="footer-link">Área de Membros</a>
+        <a href="/certifications" class="footer-link">Certificações</a>
+        <a href="/#planos" class="footer-link">Planos</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Legal</div>
+        <a href="/lgpd" class="footer-link">Política de Privacidade</a>
+        <a href="/lgpd#cookies" class="footer-link">Cookies</a>
+        <a href="/lgpd#contato-dpo" class="footer-link">DPO</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 ADAS PRO. Todos os direitos reservados.</span>
+    </div>
+  </footer>
+
+  <script src="https://www.googletagmanager.com/gtag/js?id=G-WZG3PQE3G1" defer></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WZG3PQE3G1');
+  </script>
+  <script src="/_vercel/insights/script.js" defer></script>
+
+  <script src="js/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/certifications.js"></script>
+
+  <script>
+  /* ================================================
+     Certifications Page Controller
+     ================================================ */
+  const CERT_PAGE = (function(){
+    'use strict';
+
+    function init(){
+      _updateStats();
+      _renderCatalog();
+      _renderDashboard();
+      _renderHistory();
+      CERTIFICATIONS.setQuizCallback(function(){
+        _updateStats();
+        _renderDashboard();
+        _renderHistory();
+        _renderCatalog();
+      });
+    }
+
+    function nav(id, el){
+      document.querySelectorAll('.lgpd-section').forEach(s => s.classList.remove('show'));
+      const sec = document.getElementById('sec-'+id);
+      if (sec) sec.classList.add('show');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    /* ─── Stats ─── */
+    function _updateStats(){
+      const myCerts = CERTIFICATIONS.getMyCerts();
+      const log     = CERTIFICATIONS.getQuizLog();
+      const certs   = Object.keys(myCerts).length;
+      const quizzes = log.length;
+      const avg     = quizzes ? Math.round(log.reduce((a,b)=>a+b.score,0)/quizzes) : 0;
+      const last    = quizzes ? log[log.length-1].date : null;
+
+      document.getElementById('statCerts').textContent  = certs;
+      document.getElementById('statQuizzes').textContent = quizzes;
+      document.getElementById('statAvg').textContent     = avg+'%';
+      document.getElementById('statLast').textContent    = last ? CERTIFICATIONS.formatDate(last) : '—';
+    }
+
+    /* ─── Catalog ─── */
+    function _renderCatalog(){
+      const el = document.getElementById('certCatalog');
+      if (!el) return;
+      el.innerHTML = CERTIFICATIONS.CATALOG.map(c => {
+        const lev = CERTIFICATIONS.LEVELS[c.level];
+        const status = CERTIFICATIONS.getCertStatus(c.id);
+        const myCerts = CERTIFICATIONS.getMyCerts();
+        const certData = myCerts[c.id];
+        return `
+          <div class="cert-card level-${c.level}">
+            <div class="cert-card-badge">${lev.name}</div>
+            <div class="cert-card-icon">${c.icon}</div>
+            <div class="cert-card-name">${c.name}</div>
+            <div class="cert-card-level">${lev.name} · ${lev.time} min · ${lev.pass}% mínimo</div>
+            <div class="cert-card-desc">${c.description}</div>
+            <ul class="cert-card-reqs">
+              ${c.requirements.map(r => `<li>${r}</li>`).join('')}
+            </ul>
+            <div class="cert-card-price">
+              ${c.price === 0
+                ? '<span class="cert-price-free">Incluso</span>'
+                : `<span class="cert-price-val">R$ ${c.price}</span><span class="cert-price-period">/certificação</span>`
+              }
+            </div>
+            ${status === 'active'
+              ? `<button class="cert-card-cta cert-cta-done" onclick="CERT_PAGE.viewCert('${certData.certId}')">✅ Concluído — Ver Certificado</button>`
+              : `<button class="cert-card-cta" onclick="CERT_PAGE.startQuiz('${c.id}')">Iniciar Quiz</button>`
+            }
+          </div>`;
+      }).join('');
+    }
+
+    /* ─── Dashboard ─── */
+    function _renderDashboard(){
+      const el = document.getElementById('certDashboard');
+      if (!el) return;
+      const myCerts = CERTIFICATIONS.getMyCerts();
+      const entries = Object.entries(myCerts);
+
+      if (!entries.length) {
+        el.innerHTML = `
+          <div class="cert-empty" style="grid-column:1/-1">
+            <div class="cert-empty-icon">🏆</div>
+            <div class="cert-empty-title">Nenhuma certificação ainda</div>
+            <div class="cert-empty-sub">Visite o catálogo para iniciar seu primeiro quiz e obter sua primeira certificação.</div>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = entries.map(([catId, cert]) => {
+        const cat   = CERTIFICATIONS.CATALOG.find(c=>c.id===catId);
+        const lev   = CERTIFICATIONS.LEVELS[cert.level || (cat&&cat.level) || 1];
+        const exp   = new Date(cert.expiresAt);
+        const now   = new Date();
+        const days  = Math.ceil((exp - now) / (1000*60*60*24));
+        const active = days > 0;
+        return `
+          <div class="cert-dash-card ${active?'active':'in-progress'}">
+            <div class="cert-dash-icon">${cat?cat.icon:'🏆'}</div>
+            <div class="cert-dash-name">${cert.name || (cat?cat.name:'Certificação')}</div>
+            <div class="cert-dash-status">${active?'Válida':'Expirada'}</div>
+            <div class="cert-dash-meta">
+              <strong>Pontuação:</strong> ${cert.score}%<br/>
+              <strong>Nível:</strong> ${lev.name}<br/>
+              <strong>Concluído:</strong> ${CERTIFICATIONS.formatDate(cert.earnedAt)}<br/>
+              <strong>Expira:</strong> ${CERTIFICATIONS.formatDate(cert.expiresAt)}${active?` (${days} dias)`:' (expirado)'}
+            </div>
+            <div class="cert-dash-actions">
+              <button class="cert-dash-btn cert-dash-btn-download" onclick="CERTIFICATIONS.downloadCert('${cert.certId}')">📥 Baixar</button>
+              <button class="cert-dash-btn cert-dash-btn-view" onclick="CERTIFICATIONS.viewCert('${cert.certId}')">👁️ Visualizar</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ─── History ─── */
+    function _renderHistory(){
+      const el = document.getElementById('certHistory');
+      if (!el) return;
+      const log = CERTIFICATIONS.getQuizLog();
+      if (!log.length) {
+        el.innerHTML = `
+          <div class="cert-empty">
+            <div class="cert-empty-icon">📜</div>
+            <div class="cert-empty-title">Nenhum quiz realizado</div>
+            <div class="cert-empty-sub">Seu histórico de tentativas aparecerá aqui.</div>
+          </div>`;
+        return;
+      }
+
+      const labels = {
+        access:'Confirmação/Acesso', correction:'Correção', deletion:'Eliminação',
+        portability:'Portabilidade', anonymization:'Anonimização/Bloqueio', revoke:'Revogação'
+      };
+
+      el.innerHTML = `
+        <div class="lgpd-request-list">
+          ${log.slice().reverse().map(entry => {
+            const cat = CERTIFICATIONS.CATALOG.find(c=>c.id===entry.certId);
+            return `
+              <div class="lgpd-request-row">
+                <div class="lgpd-request-head">
+                  <span class="lgpd-request-id">${entry.certId}</span>
+                  <span class="lgpd-request-type">${cat?cat.name:entry.certId}</span>
+                  <span class="lgpd-request-status">${entry.passed?'✅ Aprovado':'❌ Reprovado'}</span>
+                </div>
+                <div class="lgpd-request-date">${CERTIFICATIONS.formatDate(entry.date)}</div>
+                <div class="lgpd-request-detail">Pontuação: <strong>${entry.score}%</strong>${entry.passed?' — Certificado emitido':''}</div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function startQuiz(certId){
+      CERTIFICATIONS.startQuiz(certId);
+    }
+
+    function viewCert(certId){
+      CERTIFICATIONS.viewCert(certId);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    return { nav, startQuiz, viewCert };
+  })();
+  </script>
+
+</body>
+</html>

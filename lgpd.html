@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="description" content="ADAS PRO — Portal de conformidade LGPD. Política de Privacidade, Direitos dos Titulares e Gerenciamento de Cookies."/>
+  <title>LGPD — ADAS PRO</title>
+  <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/auth.css"/>
+</head>
+<body>
+
+  <!-- ═══ Header ═══ -->
+  <header id="mainHeader">
+    <div class="header-inner">
+      <a href="/" class="header-logo"><span class="logo-text">ADAS <span class="logo-pro">PRO</span></span></a>
+      <nav class="header-nav" id="headerNav">
+        <a href="/#sobre" class="nav-link">Sobre</a>
+        <a href="/#categorias" class="nav-link">Categorias</a>
+        <a href="/#planos" class="nav-link">Planos</a>
+        <a href="/#contato" class="nav-link">Contato</a>
+      </nav>
+      <div class="header-actions" id="headerActions"></div>
+    </div>
+  </header>
+
+  <!-- ═══ Main ═══ -->
+  <main class="auth-wrapper">
+    <div class="auth-card auth-card--wide" style="max-width:860px">
+
+      <!-- Sidebar (desktop) -->
+      <aside class="auth-sidebar auth-sidebar--lgpd">
+        <div class="sidebar-brand">ADAS PRO</div>
+        <nav class="sidebar-nav">
+          <a href="#politica"    class="sidebar-link active" onclick="LGPD_PAGE.nav('politica',this)">📜 Política de Privacidade</a>
+          <a href="#titulares"   class="sidebar-link"       onclick="LGPD_PAGE.nav('titulares',this)">👤 Direitos dos Titulares</a>
+          <a href="#cookies"     class="sidebar-link"       onclick="LGPD_PAGE.nav('cookies',this)">🍪 Cookies</a>
+          <a href="#contato-dpo" class="sidebar-link"       onclick="LGPD_PAGE.nav('contato-dpo',this)">✉️ Contato DPO</a>
+        </nav>
+        <div class="sidebar-footer">
+          <span class="badge-secure">🔒 Conformidade LGPD</span>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <div class="auth-content">
+
+        <!-- ═══ Política de Privacidade ═══ -->
+        <section id="sec-politica" class="lgpd-section show">
+          <h1 class="lgpd-title">Política de Privacidade</h1>
+          <p class="lgpd-updated">Última atualização: 25 de agosto de 2026</p>
+          <div class="lgpd-text">
+            <p>A <strong>ADAS PRO</strong> ("Plataforma"), operada por ADAS PRO Treinamentos e Tecnologia Ltda. ("Empresa"), é comprometida em proteger a privacidade e os dados pessoais dos seus usuários em conformidade com a <strong>Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD)</strong> e demais normas aplicáveis.</p>
+
+            <h2>1. Dados Pessoais Coletados</h2>
+            <p>Podemos coletar e processar os seguintes dados pessoais:</p>
+            <ul>
+              <li><strong>Dados de identificação:</strong> nome completo, e-mail, CPF, empresa/organização</li>
+              <li><strong>Dados de conta:</strong> endereço de e-mail, hash de senha, papel/função na plataforma, histórico de atividades</li>
+              <li><strong>Dados de pagamento:</strong> quando aplicável, dados de faturamento processados por parceiros de pagamento (não armazenamos números de cartão)</li>
+              <li><strong>Dados de uso:</strong> logs de acesso, endereço IP, tipo de navegador, páginas visitadas, tempo de permanência</li>
+              <li><strong>Dados de conclusão:</strong> progresso em trilhas, pontuações em quizzes, certificações emitidas</li>
+              <li><strong>Dados de suporte:</strong> conteúdo de tickets e comunicações enviadas ao suporte</li>
+            </ul>
+
+            <h2>2. Finalidades do Tratamento</h2>
+            <p>Os dados pessoais são tratados para as seguintes finalidades:</p>
+            <ul>
+              <li><strong>Fornecimento do serviço:</strong> cadastro, autenticação, acesso ao conteúdo educacional, emissão de certificados</li>
+              <li><strong>Comunicação:</strong> envio de notificações relacionadas ao serviço, respostas a solicitações de suporte</li>
+              <li><strong>Melhoria do serviço:</strong> análise estatística de uso (dados agregados), desenvolvimento de novos recursos</li>
+              <li><strong>Segurança:</strong> prevenção de fraudes, proteção contra acessos não autorizados, auditoria</li>
+              <li><strong>Obrigação legal:</strong> cumprimento de obrigações fiscais e regulatórias quando aplicável</li>
+            </ul>
+
+            <h2>3. Base Legal para o Tratamento</h2>
+            <p>O tratamento dos dados é fundamentado em:</p>
+            <ul>
+              <li><strong>Consentimento</strong> (Art. 7º, I): para cookies de rastreamento e comunicações de marketing</li>
+              <li><strong>Execução de contrato</strong> (Art. 7º, V): para prestação dos serviços contratados</li>
+              <li><strong>Legítimo interesse</strong> (Art. 7º, IX): para melhoria do serviço e segurança da plataforma</li>
+              <li><strong>Obrigação legal</strong> (Art. 7º, II): quando exigido por legislação aplicável</li>
+            </ul>
+
+            <h2>4. Compartilhamento de Dados</h2>
+            <p>Os dados pessoais podem ser compartilhados com:</p>
+            <ul>
+              <li><strong>Parceiros de infraestrutura:</strong> Supabase (hosting e banco de dados), Vercel (hospedagem estática)</li>
+              <li><strong>Parceiros de pagamento:</strong> para processamento de transações (quando aplicável)</li>
+              <li><strong>Autoridades competentes:</strong> quando exigido por lei ou determinação judicial</li>
+            </ul>
+            <p>Não vendemos ou alugamos dados pessoais a terceiros para fins comerciais.</p>
+
+            <h2>5. Retenção de Dados</h2>
+            <ul>
+              <li><strong>Dados de conta:</strong> mantidos enquanto a conta estiver ativa e por 24 meses após a última atividade</li>
+              <li><strong>Dados de certificação:</strong> mantidos por 5 anos após emissão para fins de verificação</li>
+              <li><strong>Logs de acesso:</strong> mantidos por 12 meses</li>
+              <li><strong>Dados de suporte:</strong> mantidos por 24 meses após resolução do ticket</li>
+            </ul>
+
+            <h2>6. Segurança dos Dados</h2>
+            <p>Adotamos medidas técnicas e administrativas para proteger os dados pessoais, incluindo:</p>
+            <ul>
+              <li>Criptografia em trânsito (TLS/HTTPS) e em repouso</li>
+              <li>Controle de acesso baseado em funções (RBAC) e políticas RLS no banco de dados</li>
+              <li>Logs de auditoria para ações administrativas</li>
+              <li>Autenticação multifator (MFA) disponível para contas privilegiadas</li>
+            </ul>
+
+            <h2>7. Transferência Internacional</h2>
+            <p>Alguns serviços de infraestrutura são hospedados fora do Brasil. Quando isso ocorrer, garantimos que a transferência seja feita com base em cláusulas contratuais padrão ou outras salvaguardas adequadas conforme a LGPD.</p>
+
+            <h2>8. Alterações nesta Política</h2>
+            <p>Esta política pode ser atualizada periodicamente. Notificaremos os usuários sobre alterações significativas por e-mail ou aviso na plataforma.</p>
+          </div>
+        </section>
+
+        <!-- ═══ Direitos dos Titulares ═══ -->
+        <section id="sec-titulares" class="lgpd-section">
+          <h1 class="lgpd-title">Direitos dos Titulares</h1>
+          <p class="lgpd-updated">Conforme os Arts. 17 a 22 da LGPD</p>
+          <div class="lgpd-text">
+            <p>De acordo com a LGPD, você, como titular dos dados pessoais, tem direito a:</p>
+
+            <div class="lgpd-rights-grid">
+              <div class="lgpd-right-card">
+                <div class="lgpd-right-icon">📋</div>
+                <div class="lgpd-right-title">Confirmação e Acesso</div>
+                <div class="lgpd-right-desc">Confirmar a existência de tratamento e acessar seus dados pessoais mantidos pela plataforma.</div>
+              </div>
+              <div class="lgpd-right-card">
+                <div class="lgpd-right-icon">✏️</div>
+                <div class="lgpd-right-title">Correção</div>
+                <div class="lgpd-right-desc">Solicitar a correção de dados incompletos, inexatos ou desatualizados.</div>
+              </div>
+              <div class="lgpd-right-card">
+                <div class="lgpd-right-icon">🔒</div>
+                <div class="lgpd-right-title">Anonimização, Bloqueio ou Eliminação</div>
+                <div class="lgpd-right-desc">Solicitar a anonimização, bloqueio ou eliminação de dados desnecessários ou excessivos.</div>
+              </div>
+              <div class="lgpd-right-card">
+                <div class="lgpd-right-icon">📦</div>
+                <div class="lgpd-right-title">Portabilidade</div>
+                <div class="lgpd-right-desc">Solicitar a portabilidade dos dados a outro fornecedor de serviço, mediante requisição expressa.</div>
+              </div>
+              <div class="lgpd-right-card">
+                <div class="lgpd-right-icon">🚫</div>
+                <div class="lgpd-right-title">Eliminação dos Dados Tratados com Consentimento</div>
+                <div class="lgpd-right-desc">Solicitar a eliminação dos dados tratados com base no consentimento, exceto quando houver obrigação legal de retenção.</div>
+              </div>
+              <div class="lgpd-right-card">
+                <div class="lgpd-right-icon">⏸️</div>
+                <div class="lgpd-right-title">Revogação do Consentimento</div>
+                <div class="lgpd-right-desc">Revogar o consentimento a qualquer momento, de forma simples e gratuita.</div>
+              </div>
+            </div>
+
+            <h2>Como Exercer seus Direitos</h2>
+            <p>Para exercer qualquer um dos direitos acima, você pode:</p>
+            <ul>
+              <li>Acessar o <strong>Portal de Requisições</strong> abaixo (se estiver logado)</li>
+              <li>Enviar um e-mail para <a href="mailto:privacidade@adaspro.com.br">privacidade@adaspro.com.br</a></li>
+              <li>Abrir um ticket de suporte na plataforma com o assunto "Solicitação LGPD"</li>
+            </ul>
+
+            <p>Responderemos a todas as solicitações dentro de <strong>15 dias úteis</strong>, conforme o Art. 18, §5º da LGPD.</p>
+
+            <h2>Portal de Requisições de Dados</h2>
+            <div id="lgpd-request-form" class="lgpd-request-form">
+              <div class="lgpd-form-group">
+                <label class="lgpd-label">Tipo de Solicitação</label>
+                <select id="lgpdReqType" class="lgpd-select">
+                  <option value="">Selecione...</option>
+                  <option value="access">📋 Confirmação e Acesso aos Dados</option>
+                  <option value="correction">✏️ Correção de Dados</option>
+                  <option value="deletion">🗑️ Eliminação de Dados</option>
+                  <option value="portability">📦 Portabilidade de Dados</option>
+                  <option value="anonymization">🔒 Anonimização / Bloqueio</option>
+                  <option value="revoke">🚫 Revogação de Consentimento</option>
+                </select>
+              </div>
+              <div class="lgpd-form-group">
+                <label class="lgpd-label">Seu Nome</label>
+                <input id="lgpdReqName" class="lgpd-input" type="text" placeholder="Nome completo"/>
+              </div>
+              <div class="lgpd-form-group">
+                <label class="lgpd-label">E-mail da Conta</label>
+                <input id="lgpdReqEmail" class="lgpd-input" type="email" placeholder="seu@email.com"/>
+              </div>
+              <div class="lgpd-form-group">
+                <label class="lgpd-label">Detalhes da Solicitação</label>
+                <textarea id="lgpdReqDetail" class="lgpd-textarea" rows="5" placeholder="Descreva sua solicitação..."></textarea>
+              </div>
+              <!-- Honeypot anti-bot -->
+              <div style="position:absolute;left:-9999px" aria-hidden="true">
+                <input type="text" id="lgpdHp" name="website" tabindex="-1" autocomplete="off"/>
+              </div>
+              <button id="lgpdReqBtn" class="lgpd-btn lgpd-btn-primary" onclick="LGPD_PAGE.submitRequest()">
+                <span id="lgpdReqBtnText">Enviar Solicitação</span>
+              </button>
+              <div id="lgpdReqStatus" class="lgpd-status" style="display:none"></div>
+            </div>
+
+            <div id="lgpd-request-list-section" style="display:none">
+              <h2>Minhas Solicitações</h2>
+              <div id="lgpd-request-list" class="lgpd-request-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ Cookies ═══ -->
+        <section id="sec-cookies" class="lgpd-section">
+          <h1 class="lgpd-title">Política de Cookies</h1>
+          <p class="lgpd-updated">Última atualização: 25 de agosto de 2026</p>
+          <div class="lgpd-text">
+            <p>Utilizamos cookies e tecnologias semelhantes para melhorar sua experiência na plataforma.</p>
+
+            <h2>Tipos de Cookies</h2>
+            <div class="lgpd-cookies-grid">
+              <div class="lgpd-cookie-card">
+                <div class="lgpd-cookie-header">
+                  <span class="lgpd-cookie-name">🔒 Cookies Essenciais</span>
+                  <span class="lgpd-cookie-status always">Sempre ativos</span>
+                </div>
+                <p class="lgpd-cookie-desc">Necessários para o funcionamento básico da plataforma. Não podem ser desativados.</p>
+                <div class="lgpd-cookie-detail">
+                  <code>adaspro_session</code> — Sessão do usuário<br/>
+                  <code>adaspro_*</code> — Dados de autenticação e preferências
+                </div>
+              </div>
+              <div class="lgpd-cookie-card">
+                <div class="lgpd-cookie-header">
+                  <span class="lgpd-cookie-name">📊 Cookies Analíticos</span>
+                  <span class="lgpd-cookie-status optional">Opcionais</span>
+                </div>
+                <p class="lgpd-cookie-desc">Coletam informações agregadas sobre uso da plataforma para melhorias.</p>
+                <div class="lgpd-cookie-detail">
+                  Vercel Analytics — Métricas de performance e uso<br/>
+                  <code>_vercel_insights</code> — Analytics da Vercel
+                </div>
+                <div class="lgpd-cookie-toggle">
+                  <label class="lgpd-switch">
+                    <input type="checkbox" id="cookieAnalytics" onchange="LGPD_PAGE.toggleCookie('analytics',this.checked)"/>
+                    <span class="lgpd-slider"></span>
+                  </label>
+                  <span class="lgpd-toggle-label">Ativar cookies analíticos</span>
+                </div>
+              </div>
+            </div>
+
+            <h2>Como Gerenciar Cookies no Navegador</h2>
+            <p>Você pode controlar cookies diretamente nas configurações do seu navegador:</p>
+            <ul>
+              <li><strong>Chrome:</strong> Configurações → Privacidade e Segurança → Cookies</li>
+              <li><strong>Firefox:</strong> Configurações → Privacidade e Segurança → Cookies e Dados</li>
+              <li><strong>Safari:</strong> Preferências → Privacidade → Gerenciar Cookies</li>
+              <li><strong>Edge:</strong> Configurações → Cookies e Permissões de Site</li>
+            </ul>
+
+            <h2>Cookie Consent Banner</h2>
+            <p id="lgpd-consent-status">Status atual: <strong id="lgpdConsentText">Não definido</strong></p>
+            <div class="lgpd-consent-actions">
+              <button class="lgpd-btn lgpd-btn-primary" onclick="LGPD_PAGE.showBannerManual()">Mostrar Banner de Consentimento</button>
+              <button class="lgpd-btn lgpd-btn-secondary" onclick="LGPD_PAGE.resetConsent()">Redefinir Preferências</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ Contato DPO ═══ -->
+        <section id="sec-contato-dpo" class="lgpd-section">
+          <h1 class="lgpd-title">Encarregado de Proteção de Dados (DPO)</h1>
+          <div class="lgpd-text">
+            <p>O Encarregado pelo Tratamento de Dados Pessoais (DPO) da ADAS PRO é responsável por:</p>
+            <ul>
+              <li>Receber reclamações e comunicações dos titulares</li>
+              <li>Receber comunizações da ANPD (Autoridade Nacional de Proteção de Dados)</li>
+              <li>Adotar providências sobre relatórios de impacto à proteção de dados</li>
+              <li>Orientar os funcionários sobre práticas de proteção de dados</li>
+            </ul>
+
+            <div class="lgpd-dpo-card">
+              <div class="lgpd-dpo-field">
+                <span class="lgpd-dpo-label">Nome:</span>
+                <span class="lgpd-dpo-value">Encarregado ADAS PRO</span>
+              </div>
+              <div class="lgpd-dpo-field">
+                <span class="lgpd-dpo-label">E-mail:</span>
+                <a href="mailto:dpo@adaspro.com.br" class="lgpd-dpo-value lgpd-dpo-link">dpo@adaspro.com.br</a>
+              </div>
+              <div class="lgpd-dpo-field">
+                <span class="lgpd-dpo-label">Privacidade:</span>
+                <a href="mailto:privacidade@adaspro.com.br" class="lgpd-dpo-value lgpd-dpo-link">privacidade@adaspro.com.br</a>
+              </div>
+              <div class="lgpd-dpo-field">
+                <span class="lgpd-dpo-label">Autoridade Nacional:</span>
+                <a href="https://www.gov.br/anpd" target="_blank" rel="noopener" class="lgpd-dpo-value lgpd-dpo-link">ANPD — gov.br/anpd</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /auth-content -->
+    </div><!-- /auth-card -->
+  </main>
+
+  <!-- ═══ Cookie Consent Banner ═══ -->
+  <div id="cookieConsentBanner" class="cookie-banner" style="display:none">
+    <div class="cookie-banner-inner">
+      <div class="cookie-banner-icon">🍪</div>
+      <div class="cookie-banner-content">
+        <div class="cookie-banner-title">Este site utiliza cookies</div>
+        <p class="cookie-banner-text">Utilizamos cookies essenciais para o funcionamento da plataforma e cookies analíticos opcionais para melhorar sua experiência. Ao continuar navegando, você concorda com o uso de cookies essenciais.</p>
+        <div class="cookie-banner-actions">
+          <button class="cookie-btn cookie-btn-accept" onclick="LGPD_PAGE.consentAll()">Aceitar Todos</button>
+          <button class="cookie-btn cookie-btn-essential" onclick="LGPD_PAGE.consentEssential()">Apenas Essenciais</button>
+          <a href="/lgpd#cookies" class="cookie-btn-link">Gerenciar Preferências</a>
+        </div>
+      </div>
+      <button class="cookie-banner-close" onclick="LGPD_PAGE.closeBanner()" title="Fechar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-brand">ADAS PRO</div>
+        <p class="footer-text">Plataforma de capacitação em sistemas avançados de assistência ao condutor.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Legal</div>
+        <a href="/lgpd" class="footer-link">Política de Privacidade</a>
+        <a href="/lgpd#titulares" class="footer-link">Direitos dos Titulares</a>
+        <a href="/lgpd#cookies" class="footer-link">Cookies</a>
+        <a href="/lgpd#contato-dpo" class="footer-link">DPO</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">Plataforma</div>
+        <a href="/login" class="footer-link">Entrar</a>
+        <a href="/#planos" class="footer-link">Planos</a>
+        <a href="/#categorias" class="footer-link">Categorias</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 ADAS PRO. Todos os direitos reservados.</span>
+    </div>
+  </footer>
+
+  <script src="https://www.googletagmanager.com/gtag/js?id=G-WZG3PQE3G1" defer></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WZG3PQE3G1');
+  </script>
+  <script src="/_vercel/insights/script.js" defer></script>
+
+  <script>
+  /* ================================================
+     LGPD Page Controller
+     ================================================ */
+  const LGPD_PAGE = (function(){
+    'use strict';
+
+    const K_CONSENT  = 'adaspro_cookie_consent';
+    const K_REQUESTS = 'adaspro_lgpd_requests';
+
+    /* ─── Init ─── */
+    function init(){
+      _updateConsentStatus();
+      _checkBanner();
+      _loadRequests();
+      _prefillForm();
+    }
+
+    /* ─── Navigation ─── */
+    function nav(id, linkEl){
+      document.querySelectorAll('.lgpd-section').forEach(s => s.classList.remove('show'));
+      const sec = document.getElementById('sec-'+id);
+      if (sec) sec.classList.add('show');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      if (linkEl) linkEl.classList.add('active');
+    }
+
+    /* ─── Cookie Consent Banner ─── */
+    function _checkBanner(){
+      const c = _getConsent();
+      if (!c || (!c.essential && !c.analytics)) _showBanner();
+    }
+    function _showBanner(){
+      const el = document.getElementById('cookieConsentBanner');
+      if (el) el.style.display = 'flex';
+    }
+    function showBannerManual(){ _showBanner(); }
+    function closeBanner(){
+      const el = document.getElementById('cookieConsentBanner');
+      if (el) el.style.display = 'none';
+    }
+    function _setConsent(v){ localStorage.setItem(K_CONSENT, JSON.stringify(v)); }
+    function _getConsent(){ try { return JSON.parse(localStorage.getItem(K_CONSENT)); } catch { return null; } }
+
+    function consentAll(){
+      _setConsent({ essential:true, analytics:true, ts:Date.now() });
+      closeBanner();
+      _updateConsentStatus();
+      _syncAnalyticsToggle(true);
+    }
+    function consentEssential(){
+      _setConsent({ essential:true, analytics:false, ts:Date.now() });
+      closeBanner();
+      _updateConsentStatus();
+      _syncAnalyticsToggle(false);
+    }
+    function toggleCookie(type, val){
+      const c = _getConsent() || { essential:true };
+      c[type] = val;
+      c.ts = Date.now();
+      _setConsent(c);
+      _updateConsentStatus();
+    }
+    function resetConsent(){
+      localStorage.removeItem(K_CONSENT);
+      _updateConsentStatus();
+      _showBanner();
+    }
+    function _syncAnalyticsToggle(on){
+      const el = document.getElementById('cookieAnalytics');
+      if (el) el.checked = on;
+    }
+    function _updateConsentStatus(){
+      const c = _getConsent();
+      const txt = document.getElementById('lgpdConsentText');
+      if (!txt) return;
+      if (!c) { txt.textContent = 'Não definido'; return; }
+      const parts = [];
+      if (c.essential) parts.push('Essenciais ✓');
+      if (c.analytics) parts.push('Analíticos ✓');
+      txt.textContent = parts.join(' · ') || 'Nenhum';
+      _syncAnalyticsToggle(!!c.analytics);
+    }
+
+    /* ─── LGPD Request Form ─── */
+    function _prefillForm(){
+      try {
+        const s = JSON.parse(localStorage.getItem('adaspro_session') || '{}');
+        const nameEl = document.getElementById('lgpdReqName');
+        const emailEl = document.getElementById('lgpdReqEmail');
+        if (s && s.email && emailEl) emailEl.value = s.email;
+        if (s && s.name && nameEl) nameEl.value = s.name;
+      } catch {}
+    }
+
+    function submitRequest(){
+      const hp = document.getElementById('lgpdHp');
+      if (hp && hp.value) return;
+
+      const type   = document.getElementById('lgpdReqType').value;
+      const name   = document.getElementById('lgpdReqName').value.trim();
+      const email  = document.getElementById('lgpdReqEmail').value.trim();
+      const detail = document.getElementById('lgpdReqDetail').value.trim();
+      const status = document.getElementById('lgpdReqStatus');
+
+      if (!type || !name || !email || !detail) {
+        _showStatus(status, 'Preencha todos os campos.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('lgpdReqBtn');
+      const btnText = document.getElementById('lgpdReqBtnText');
+      btn.disabled = true;
+      btnText.textContent = 'Enviando...';
+
+      setTimeout(() => {
+        const all = _get(K_REQUESTS, []);
+        all.push({
+          id: 'LGPD-' + Date.now().toString(36).toUpperCase(),
+          type, name, email, detail,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        });
+        _set(K_REQUESTS, all);
+
+        _showStatus(status, 'Solicitação registrada com sucesso! Você receberá uma resposta em até 15 dias úteis.', 'success');
+        btn.disabled = false;
+        btnText.textContent = 'Enviar Solicitação';
+        document.getElementById('lgpdReqType').value = '';
+        document.getElementById('lgpdReqDetail').value = '';
+        _loadRequests();
+      }, 1200);
+    }
+
+    function _loadRequests(){
+      const section = document.getElementById('lgpd-request-list-section');
+      const list    = document.getElementById('lgpd-request-list');
+      if (!section || !list) return;
+
+      let email = '';
+      try { email = (JSON.parse(localStorage.getItem('adaspro_session')||'{}')).email || ''; } catch {}
+
+      const all = _get(K_REQUESTS, []);
+      const mine = all.filter(r => r.email === email);
+      if (!mine.length) { section.style.display = 'none'; return; }
+
+      section.style.display = 'block';
+      const labels = {
+        access:'Confirmação/Acesso', correction:'Correção', deletion:'Eliminação',
+        portability:'Portabilidade', anonymization:'Anonimização/Bloqueio', revoke:'Revogação'
+      };
+      const statusLabels = { pending:'⏳ Pendente', processing:'🔧 Em análise', completed:'✅ Concluído', rejected:'❌ Indeferido' };
+
+      list.innerHTML = mine.reverse().map(r => `
+        <div class="lgpd-request-row">
+          <div class="lgpd-request-head">
+            <span class="lgpd-request-id">${r.id}</span>
+            <span class="lgpd-request-type">${labels[r.type]||r.type}</span>
+            <span class="lgpd-request-status">${statusLabels[r.status]||r.status}</span>
+          </div>
+          <div class="lgpd-request-date">${_fmtDate(r.createdAt)}</div>
+          <div class="lgpd-request-detail">${r.detail}</div>
+        </div>`).join('');
+    }
+
+    function _showStatus(el, msg, type){
+      if (!el) return;
+      el.style.display = 'block';
+      el.className = 'lgpd-status lgpd-status--' + type;
+      el.textContent = msg;
+    }
+
+    function _fmtDate(d){
+      try {
+        return new Date(d).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      } catch { return d; }
+    }
+
+    function _get(k,def){ try { return JSON.parse(localStorage.getItem(k))||def; } catch { return def; } }
+    function _set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    return {
+      nav,
+      submitRequest,
+      consentAll,
+      consentEssential,
+      toggleCookie,
+      resetConsent,
+      closeBanner,
+      showBannerManual
+    };
+  })();
+  </script>
+
+  <style>
+    /* ─── LGPD-specific styles ─── */
+    .auth-card--wide{max-width:860px}
+    .auth-sidebar--lgpd .sidebar-nav{flex:1}
+    .lgpd-section{display:none}
+    .lgpd-section.show{display:block}
+    .lgpd-title{font-family:var(--font-h);font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:4px}
+    .lgpd-updated{font-size:.78rem;color:rgba(255,255,255,.3);margin-bottom:24px}
+    .lgpd-text{font-size:.92rem;color:rgba(255,255,255,.6);line-height:1.75}
+    .lgpd-text h2{font-family:var(--font-h);font-size:1.05rem;font-weight:700;color:#fff;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.07)}
+    .lgpd-text p{margin-bottom:12px}
+    .lgpd-text ul{margin:0 0 16px 18px}
+    .lgpd-text li{margin-bottom:6px}
+    .lgpd-text a{color:var(--accent);text-decoration:none}
+    .lgpd-text a:hover{text-decoration:underline}
+    .lgpd-text strong{color:rgba(255,255,255,.85)}
+
+    .lgpd-rights-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+    .lgpd-right-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:18px 16px;transition:all .3s}
+    .lgpd-right-card:hover{border-color:rgba(255,107,53,.25);background:rgba(255,107,53,.03)}
+    .lgpd-right-icon{font-size:1.4rem;margin-bottom:8px}
+    .lgpd-right-title{font-family:var(--font-h);font-size:.88rem;font-weight:700;color:#fff;margin-bottom:4px}
+    .lgpd-right-desc{font-size:.78rem;color:rgba(255,255,255,.4);line-height:1.55}
+
+    .lgpd-request-form{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:24px;margin:20px 0;position:relative}
+    .lgpd-form-group{margin-bottom:14px}
+    .lgpd-label{display:block;font-family:var(--font-h);font-size:.78rem;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:5px}
+    .lgpd-input,.lgpd-select,.lgpd-textarea{width:100%;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-family:var(--font-b);font-size:.88rem;outline:none;transition:border .2s;box-sizing:border-box}
+    .lgpd-input:focus,.lgpd-select:focus,.lgpd-textarea:focus{border-color:var(--accent)}
+    .lgpd-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,.4)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+    .lgpd-select option{background:#0a1118;color:#fff}
+    .lgpd-textarea{resize:vertical;min-height:100px}
+    .lgpd-btn{padding:10px 24px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:.86rem;cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:6px}
+    .lgpd-btn-primary{background:linear-gradient(135deg,var(--accent),#e05820);color:#fff;box-shadow:0 4px 14px rgba(255,107,53,.25)}
+    .lgpd-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,53,.35)}
+    .lgpd-btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .lgpd-btn-secondary{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+    .lgpd-btn-secondary:hover{background:rgba(255,255,255,.1);color:#fff}
+    .lgpd-status{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.83rem}
+    .lgpd-status--success{background:rgba(6,167,125,.1);border:1px solid rgba(6,167,125,.25);color:#4dd9a8}
+    .lgpd-status--error{background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.25);color:#ff6b7a}
+
+    .lgpd-request-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .lgpd-request-row{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px}
+    .lgpd-request-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+    .lgpd-request-id{font-family:'Courier New',monospace;font-size:.72rem;color:rgba(255,255,255,.35)}
+    .lgpd-request-type{font-size:.75rem;font-weight:600;color:var(--accent);background:rgba(255,107,53,.08);padding:2px 10px;border-radius:20px}
+    .lgpd-request-status{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.5)}
+    .lgpd-request-date{font-size:.72rem;color:rgba(255,255,255,.25);margin-bottom:6px}
+    .lgpd-request-detail{font-size:.82rem;color:rgba(255,255,255,.45);line-height:1.55}
+
+    .lgpd-cookies-grid{display:flex;flex-direction:column;gap:12px;margin:16px 0}
+    .lgpd-cookie-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px}
+    .lgpd-cookie-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .lgpd-cookie-name{font-family:var(--font-h);font-size:.9rem;font-weight:700;color:#fff}
+    .lgpd-cookie-status{font-size:.68rem;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+    .lgpd-cookie-status.always{background:rgba(6,167,125,.1);color:#06A77D}
+    .lgpd-cookie-status.optional{background:rgba(255,107,53,.1);color:var(--accent)}
+    .lgpd-cookie-desc{font-size:.82rem;color:rgba(255,255,255,.45);line-height:1.55;margin-bottom:10px}
+    .lgpd-cookie-detail{font-size:.78rem;color:rgba(255,255,255,.35);line-height:1.6}
+    .lgpd-cookie-detail code{background:rgba(255,255,255,.05);padding:1px 6px;border-radius:4px;font-size:.73rem;color:rgba(255,255,255,.5)}
+    .lgpd-cookie-toggle{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
+    .lgpd-switch{position:relative;display:inline-block;width:42px;height:22px}
+    .lgpd-switch input{opacity:0;width:0;height:0}
+    .lgpd-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:22px;cursor:pointer;transition:.3s}
+    .lgpd-slider::before{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.3s}
+    .lgpd-switch input:checked+.lgpd-slider{background:var(--accent)}
+    .lgpd-switch input:checked+.lgpd-slider::before{transform:translateX(20px)}
+    .lgpd-toggle-label{font-size:.78rem;color:rgba(255,255,255,.45)}
+
+    .lgpd-consent-actions{display:flex;gap:10px;margin-top:16px}
+
+    .lgpd-dpo-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:24px;margin:20px 0}
+    .lgpd-dpo-field{display:flex;gap:8px;align-items:baseline;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .lgpd-dpo-field:last-child{border-bottom:none}
+    .lgpd-dpo-label{font-family:var(--font-h);font-size:.78rem;font-weight:600;color:rgba(255,255,255,.45);min-width:130px;flex-shrink:0}
+    .lgpd-dpo-value{font-size:.88rem;color:rgba(255,255,255,.7)}
+    .lgpd-dpo-link{color:var(--accent);text-decoration:none}
+    .lgpd-dpo-link:hover{text-decoration:underline}
+
+    /* ─── Cookie Banner ─── */
+    .cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:9000;padding:16px 20px;background:rgba(10,17,24,.95);border-top:1px solid rgba(255,107,53,.15);backdrop-filter:blur(12px);animation:slideUp .3s ease}
+    .cookie-banner-inner{max-width:900px;margin:0 auto;display:flex;align-items:flex-start;gap:16px}
+    .cookie-banner-icon{font-size:1.6rem;flex-shrink:0;margin-top:2px}
+    .cookie-banner-content{flex:1}
+    .cookie-banner-title{font-family:var(--font-h);font-size:.95rem;font-weight:700;color:#fff;margin-bottom:4px}
+    .cookie-banner-text{font-size:.82rem;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:12px}
+    .cookie-banner-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .cookie-btn{padding:9px 20px;border-radius:8px;font-family:var(--font-h);font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;border:none}
+    .cookie-btn-accept{background:linear-gradient(135deg,var(--accent),#e05820);color:#fff;box-shadow:0 4px 14px rgba(255,107,53,.25)}
+    .cookie-btn-accept:hover{transform:translateY(-1px)}
+    .cookie-btn-essential{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+    .cookie-btn-essential:hover{background:rgba(255,255,255,.1);color:#fff}
+    .cookie-btn-link{padding:9px 16px;font-size:.78rem;color:var(--accent);text-decoration:none;transition:color .2s}
+    .cookie-btn-link:hover{text-decoration:underline}
+    .cookie-banner-close{background:none;border:none;cursor:pointer;padding:6px;color:rgba(255,255,255,.35);transition:color .2s;flex-shrink:0;margin-top:2px}
+    .cookie-banner-close:hover{color:#ff3b3b}
+
+    @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+
+    @media(max-width:640px){
+      .lgpd-rights-grid{grid-template-columns:1fr}
+      .cookie-banner-inner{flex-direction:column}
+      .lgpd-dpo-field{flex-direction:column;gap:2px}
+      .lgpd-dpo-label{min-width:0}
+    }
+  </style>
+
+</body>
+</html>

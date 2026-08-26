@@ -1,0 +1,566 @@
+/* ================================================
+   ADAS PRO — Adaptive Quiz System Styles
+   ================================================
+   Versão:   1.0.0  build 20260825
+   Copyright: © 2024-2026 AutoTech Service
+   ================================================ */
+
+/* ─── Diagnostic Quiz ─── */
+.aq-diagnostic {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.aq-diagnostic-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.aq-diagnostic-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f0f4f8;
+  margin-bottom: 8px;
+}
+
+.aq-diagnostic-header p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.aq-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.aq-category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #f0f4f8;
+  text-align: center;
+}
+
+.aq-category-btn:hover {
+  background: rgba(255, 107, 53, 0.1);
+  border-color: rgba(255, 107, 53, 0.3);
+  transform: translateY(-2px);
+}
+
+.aq-cat-name {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.aq-cat-count {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* ─── Learning Path ─── */
+.aq-learning-path {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.aq-path-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.aq-path-header h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f0f4f8;
+}
+
+.aq-path-level {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aq-level-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aq-path-score {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.aq-path-steps {
+  position: relative;
+  padding-left: 32px;
+}
+
+.aq-path-steps::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.aq-step {
+  position: relative;
+  padding: 16px 0 24px 24px;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.aq-step.aq-step-done {
+  opacity: 0.6;
+}
+
+.aq-step.aq-step-current {
+  opacity: 1;
+}
+
+.aq-step-marker {
+  position: absolute;
+  left: -24px;
+  top: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  z-index: 1;
+}
+
+.aq-step-done .aq-step-marker {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.aq-step-current .aq-step-marker {
+  background: #FF6B35;
+  border-color: #FF6B35;
+  color: #fff;
+}
+
+.aq-step-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f0f4f8;
+  margin-bottom: 4px;
+}
+
+.aq-step-content p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.aq-step-action {
+  padding: 8px 16px;
+  background: rgba(255, 107, 53, 0.15);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 8px;
+  color: #FF6B35;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aq-step-action:hover {
+  background: rgba(255, 107, 53, 0.25);
+}
+
+/* ─── Quiz Interface ─── */
+.aq-quiz {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.aq-quiz-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.aq-quiz-progress {
+  flex: 1;
+  min-width: 200px;
+}
+
+.aq-quiz-progress span {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.aq-progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.aq-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B35, #f59e0b);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.aq-quiz-timer {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f0f4f8;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.aq-pause-btn {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aq-pause-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f4f8;
+}
+
+/* ─── Question Card ─── */
+.aq-question-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 20px;
+}
+
+.aq-question-category {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #FF6B35;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.aq-question-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #f0f4f8;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* ─── Options ─── */
+.aq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aq-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #f0f4f8;
+  text-align: left;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.aq-option-btn:hover:not(:disabled) {
+  background: rgba(255, 107, 53, 0.08);
+  border-color: rgba(255, 107, 53, 0.25);
+}
+
+.aq-option-btn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.aq-option-btn.aq-correct {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #22c55e;
+}
+
+.aq-option-btn.aq-wrong {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.aq-option-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.aq-option-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* ─── Explanation ─── */
+.aq-explanation {
+  padding: 16px 20px;
+  background: rgba(0, 180, 216, 0.06);
+  border: 1px solid rgba(0, 180, 216, 0.15);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: 16px;
+  animation: aqFadeIn 0.3s ease;
+}
+
+.aq-explanation strong {
+  color: #f0f4f8;
+}
+
+/* ─── Results ─── */
+.aq-results {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.aq-results-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.aq-results-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f0f4f8;
+  margin-bottom: 20px;
+}
+
+.aq-results-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.aq-score-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.aq-score-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #f0f4f8;
+}
+
+.aq-results-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.aq-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+}
+
+.aq-stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aq-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f0f4f8;
+}
+
+/* ─── Result Items ─── */
+.aq-results-questions h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f0f4f8;
+  margin-bottom: 16px;
+}
+
+.aq-result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.aq-result-item.aq-correct {
+  background: rgba(34, 197, 94, 0.05);
+  border-color: rgba(34, 197, 94, 0.12);
+}
+
+.aq-result-item.aq-wrong {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+.aq-result-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.aq-result-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.aq-result-text {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.aq-result-explanation {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.aq-result-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.aq-result-item.aq-correct .aq-result-icon {
+  color: #22c55e;
+}
+
+.aq-result-item.aq-wrong .aq-result-icon {
+  color: #ef4444;
+}
+
+/* ─── Error State ─── */
+.aq-error {
+  text-align: center;
+  padding: 32px;
+  color: #ef4444;
+  font-size: 0.95rem;
+}
+
+/* ─── Animation ─── */
+@keyframes aqFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  .aq-diagnostic,
+  .aq-learning-path,
+  .aq-quiz,
+  .aq-results {
+    padding: 16px;
+  }
+
+  .aq-category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .aq-results-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .aq-quiz-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .aq-quiz-timer {
+    text-align: center;
+  }
+
+  .aq-question-card {
+    padding: 20px 16px;
+  }
+}

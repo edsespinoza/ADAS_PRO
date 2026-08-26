@@ -22,7 +22,7 @@ DROP POLICY IF EXISTS "settings_delete" ON public.settings;
 -- para que a UI reflita módulos desativados / nível mínimo)
 CREATE POLICY "settings_select" ON public.settings
   FOR SELECT
-  USING (auth.role() = 'authenticated');
+  USING ((select auth.jwt()->> 'role') = 'authenticated');
 
 -- INSERT/UPDATE/DELETE: apenas admin+ (gestor não gerencia configurações)
 CREATE POLICY "settings_insert" ON public.settings

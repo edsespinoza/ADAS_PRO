@@ -15,6 +15,10 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  if (req.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+  const cl = parseInt(req.headers.get('content-length') || '0');
+  if (cl > 65536) return json({ error: 'Payload muito grande.' }, 413);
+
   const RESEND_KEY  = Deno.env.get('RESEND_API_KEY');
   const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'superadmin@adaspro.com.br';
   const SITE_URL    = Deno.env.get('SITE_URL')    || 'https://adaspro.com.br';
@@ -43,7 +47,9 @@ serve(async (req) => {
     const { data: callerData } = await supabaseAdmin
       .from('users').select('role, status').eq('id', user.id).single();
 
-    if (!['admin', 'gestor', 'superadmin'].includes(callerData?.role || '')) {
+    // SECURITY: admin/gestor/superadmin can trigger email notifications
+    const allowedRoles = ['gestor', 'admin', 'superadmin'];
+    if (!allowedRoles.includes(callerData?.role || '')) {
       return json({ error: 'Permissão insuficiente.' }, 403);
     }
     // Conta suspensa/pendente nunca dispara emails administrativos
@@ -52,8 +58,10 @@ serve(async (req) => {
     }
     // MFA: se a conta possui fator configurado mas a sessão ainda é aal1,
     // a 2ª etapa é obrigatória (usuários sem MFA têm nextLevel aal1 — passam)
-    const { data: aalData } = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+    const { data: aalData, error: aalErr } = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalErr) return json({ error: 'Falha ao verificar MFA.' }, 403);
+    if (!aalData) return json({ error: 'Não foi possível determinar o nível de autenticação.' }, 403);
+    if (aalData.nextLevel === 'aal2' && aalData.currentLevel !== 'aal2') {
       return json({ error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' }, 403);
     }
 
@@ -86,6 +94,7 @@ serve(async (req) => {
 
   try {
     const { event, data } = await req.json();
+    if (!event || !data || typeof data !== 'object') return json({ error: 'Payload inválido: event e data obrigatórios.' }, 400);
     let to: string, subject: string, html: string;
 
     if (event === 'new_user') {
@@ -132,7 +141,8 @@ serve(async (req) => {
 
     if (!res.ok) {
       const err = await res.text();
-      return json({ error: `Resend erro: ${err}` }, 500);
+      console.error('[notify] resend error:', err);
+      return json({ error: 'Falha ao enviar email.' }, 500);
     }
 
     // Auditoria para rate limiting
@@ -151,8 +161,8 @@ serve(async (req) => {
 
     return json({ ok: true });
   } catch(e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return json({ error: msg }, 500);
+    console.error('[notify] unhandled:', e);
+    return json({ error: 'Erro interno do servidor.' }, 500);
   }
 });
 

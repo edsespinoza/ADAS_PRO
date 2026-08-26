@@ -97,21 +97,30 @@ serve(async (req) => {
     if (!event || !data || typeof data !== 'object') return json({ error: 'Payload inválido: event e data obrigatórios.' }, 400);
     let to: string, subject: string, html: string;
 
+    // SECURITY: Validate data fields per event type
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (event === 'new_user') {
-      // Admin alerta: novo cadastro aguardando aprovação
+      if (!data.userName || typeof data.userName !== 'string') return json({ error: 'userName obrigatório.' }, 400);
+      if (data.userName.length > 120) return json({ error: 'userName excede 120 caracteres.' }, 400);
       to      = ADMIN_EMAIL;
       subject = `[ADAS PRO] Novo cadastro pendente — ${esc(data.userName)}`;
       html    = templateNewUser(data, SITE_URL);
 
     } else if (event === 'user_approved') {
-      // Usuário: acesso aprovado
-      to      = data.userEmail;
+      if (!data.userEmail || typeof data.userEmail !== 'string') return json({ error: 'userEmail obrigatório.' }, 400);
+      if (!emailRegex.test(data.userEmail.trim())) return json({ error: 'Formato de e-mail inválido.' }, 400);
+      if (!data.userName || typeof data.userName !== 'string') return json({ error: 'userName obrigatório.' }, 400);
+      to      = data.userEmail.trim().toLowerCase();
       subject = `[ADAS PRO] Acesso liberado — bem-vindo à plataforma`;
       html    = templateUserApproved(data, SITE_URL);
 
     } else if (event === 'ticket_reply') {
-      // Usuário: resposta no ticket
-      to      = data.userEmail;
+      if (!data.userEmail || typeof data.userEmail !== 'string') return json({ error: 'userEmail obrigatório.' }, 400);
+      if (!emailRegex.test(data.userEmail.trim())) return json({ error: 'Formato de e-mail inválido.' }, 400);
+      if (!data.ticketTitle || typeof data.ticketTitle !== 'string') return json({ error: 'ticketTitle obrigatório.' }, 400);
+      if (!data.message || typeof data.message !== 'string') return json({ error: 'message obrigatório.' }, 400);
+      to      = data.userEmail.trim().toLowerCase();
       subject = `[ADAS PRO] Resposta no suporte — ${esc(data.ticketTitle)}`;
       html    = templateTicketReply(data, SITE_URL);
 
@@ -161,7 +170,7 @@ serve(async (req) => {
 
     return json({ ok: true });
   } catch(e) {
-    console.error('[notify] unhandled:', e);
+    console.error('[notify] unhandled:', e instanceof Error ? e.message : 'unknown');
     return json({ error: 'Erro interno do servidor.' }, 500);
   }
 });
@@ -179,7 +188,7 @@ function esc(s: string) {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 

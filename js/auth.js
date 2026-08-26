@@ -323,9 +323,14 @@ const AUTH = (function () {
   }
 
   function _hitRateLimit(email, rate) {
-    rate.count++;
-    if (rate.count >= RATE_MAX) rate.blocked = true;
-    try { localStorage.setItem('adaspro_rl_' + email.toLowerCase().trim(), JSON.stringify(rate)); } catch {}
+    try {
+      const key = 'adaspro_rl_' + email.toLowerCase().trim();
+      const d = JSON.parse(localStorage.getItem(key));
+      const latest = d && (Date.now() - d.since) < RATE_WINDOW ? d : rate;
+      latest.count = (latest.count || 0) + 1;
+      if (latest.count >= RATE_MAX) latest.blocked = true;
+      localStorage.setItem(key, JSON.stringify(latest));
+    } catch {}
   }
 
   function _clearRateLimit(email) {
@@ -487,7 +492,8 @@ const AUTH = (function () {
   function _validateSessionRole(session) {
     if (!session) return false;
     const user = _users[session.userId];
-    if (user && user.role !== session.role) {
+    if (!user) { localStorage.removeItem(SESSION_KEY); return false; }
+    if (user.role !== session.role) {
       localStorage.removeItem(SESSION_KEY);
       return false;
     }
@@ -908,8 +914,10 @@ const AUTH = (function () {
   function getUserByEmail(em) { return Object.values(_users).find(u => u.email.toLowerCase() === em.toLowerCase()) || null; }
 
   async function _sbDirectUpdate(table, id, updates) {
+    const session = getSession();
+    console.info('[AUTH] _sbDirectUpdate:', { table, id, actor: session?.userId, fields: Object.keys(updates) });
     const { error } = await _sb.from(table).update(updates).eq('id', id);
-    if (error) { console.error('[AUTH] _sbDirectUpdate:', error.message); return false; }
+    if (error) { console.error('[AUTH] _sbDirectUpdate FAILED:', { table, id, msg: error.message }); return false; }
     return true;
   }
 
@@ -968,14 +976,15 @@ const AUTH = (function () {
   }
 
   async function updateUserRole(id, role) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'admin')) return false;
+    if (session.userId === id) return false;
+    if (!_users[id]) return false;
+    if (hasRole(role, _users[session.userId]?.role || session.role)) return false;
     if (_mode === 'supabase' && _sb && !_demo) {
       const r = await callEdgeFunction('approve-user', { action:'update', targetId:id, updates:{ role } });
       if (!r.ok) { console.error('[AUTH] updateUserRole Edge Function falhou:', r.msg); return false; }
-      if (_users[id]) _users[id].role=role;
-      await logAudit('update_role', id, { role });
-      return true;
     }
-    if (!_users[id]) return false;
     _users[id].role=role; _sbUpsertUser(_users[id]); await logAudit('update_role', id, { role }); return true;
   }
 

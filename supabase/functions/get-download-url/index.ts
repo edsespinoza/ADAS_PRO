@@ -84,7 +84,9 @@ serve(async (req) => {
 
     // 3. Verificar permissão para o conteúdo solicitado
     const { contentId } = await req.json();
-    if (!contentId) return json({ error: 'contentId obrigatório.' }, 400);
+    if (!contentId || typeof contentId !== 'string') return json({ error: 'contentId obrigatório.' }, 400);
+    if (contentId.length > 64) return json({ error: 'contentId inválido.' }, 400);
+    if (!/^[a-z0-9_-]+$/.test(contentId)) return json({ error: 'contentId contém caracteres inválidos.' }, 400);
 
     const content = CONTENT_MAP[contentId];
     if (!content) return json({ error: 'Conteúdo não encontrado.' }, 404);
@@ -150,13 +152,13 @@ serve(async (req) => {
     return json({ ok: true, url: signedData.signedUrl, expiresIn: 3600 });
 
   } catch (e) {
-    console.error('[get-download-url] unhandled:', e);
+    console.error('[get-download-url] unhandled:', e instanceof Error ? e.message : 'unknown');
     return json({ error: 'Erro interno do servidor.' }, 500);
   }
 });
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/json; charset=utf-8' },
   });
 }

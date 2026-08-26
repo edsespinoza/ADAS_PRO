@@ -101,6 +101,18 @@ serve(async (req) => {
       if (!email || !password || !name) return json({ error: 'email, password e name são obrigatórios.' }, 400);
       if (password.length < 8) return json({ error: 'A senha deve ter no mínimo 8 caracteres.' }, 400);
 
+      // SECURITY: Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) return json({ error: 'Formato de e-mail inválido.' }, 400);
+
+      // SECURITY: Validate name (not empty after trim, max 120 chars)
+      const trimmedName = name.trim();
+      if (!trimmedName || trimmedName.length > 120) return json({ error: 'Nome inválido (máx. 120 caracteres).' }, 400);
+
+      // SECURITY: Validate password strength
+      if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password))
+        return json({ error: 'A senha deve conter ao menos uma maiúscula, uma minúscula e um número.' }, 400);
+
       // SECURITY: Validate create action fields (same as update)
       const VALID_PLANS_C = ['free', 'modulo', 'pro', 'premium'];
       const VALID_LEVELS = ['tecnico', 'intermediario', 'avancado'];
@@ -215,11 +227,26 @@ serve(async (req) => {
         if (!Array.isArray(safe.permissions) || safe.permissions.some((p: unknown) => typeof p !== 'string')) {
           return json({ error: 'permissions deve ser uma lista de strings.' }, 400);
         }
+        if (safe.permissions.length > 50) return json({ error: 'permissions excede o limite de 50 itens.' }, 400);
       }
-      if (safe.level !== undefined && safe.level !== null && safe.level !== '') {
-        const VALID_LEVELS_UPD = ['tecnico', 'intermediario', 'avancado'];
-        if (!VALID_LEVELS_UPD.includes(safe.level as string))
-          return json({ error: 'Level inválido.' }, 400);
+      if (safe.level !== undefined) {
+        if (safe.level === null || safe.level === '') {
+          delete safe.level;
+        } else {
+          const VALID_LEVELS_UPD = ['tecnico', 'intermediario', 'avancado'];
+          if (!VALID_LEVELS_UPD.includes(safe.level as string))
+            return json({ error: 'Level inválido.' }, 400);
+        }
+      }
+      if (safe.name !== undefined) {
+        const trimmed = String(safe.name).trim();
+        if (!trimmed || trimmed.length > 120) return json({ error: 'Nome inválido (máx. 120 caracteres).' }, 400);
+        safe.name = trimmed;
+      }
+      if (safe.role !== undefined) {
+        const trimmed = String(safe.role).trim();
+        if (!trimmed) return json({ error: 'Role inválido.' }, 400);
+        safe.role = trimmed;
       }
       result = await supabaseAdmin.from('users').update(safe).eq('id', targetId);
     } else {
@@ -238,13 +265,13 @@ serve(async (req) => {
     return json({ ok: true });
 
   } catch (e) {
-    console.error('[approve-user] unhandled:', e);
+    console.error('[approve-user] unhandled:', e instanceof Error ? e.message : 'unknown');
     return json({ error: 'Erro interno do servidor.' }, 500);
   }
 });
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/json; charset=utf-8' }
   });
 }

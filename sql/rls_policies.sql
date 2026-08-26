@@ -200,6 +200,7 @@ CREATE POLICY "tickets_insert" ON public.tickets
 
 -- UPDATE: admin+ pode atualizar (responder, mudar status)
 --         membro pode atualizar apenas seus próprios tickets
+-- SECURITY: WITH CHECK impede que membro reatribue ticket para outro userId
 CREATE POLICY "tickets_update" ON public.tickets
   FOR UPDATE
   USING (
@@ -210,6 +211,27 @@ CREATE POLICY "tickets_update" ON public.tickets
     auth.uid()::text = "userId"
     OR public.is_admin()
   );
+
+-- SECURITY: Trigger impede alteração do userId em updates existentes
+-- (apenas admin+ pode reatribuir tickets via Service Role)
+CREATE OR REPLACE FUNCTION public.prevent_ticket_reassign()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
+BEGIN
+  IF NEW."userId" <> OLD."userId" THEN
+    RAISE EXCEPTION 'Não é permitido reatribuar o ticket para outro usuário.';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_ticket_reassign ON public.tickets;
+CREATE TRIGGER trg_prevent_ticket_reassign
+  BEFORE UPDATE ON public.tickets
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_ticket_reassign();
 
 -- DELETE: apenas admin+
 CREATE POLICY "tickets_delete" ON public.tickets

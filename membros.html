@@ -1142,6 +1142,7 @@ window.__acts = {
   openTicketViewer:el => openTicketViewer(el.dataset.id),
   requestPlan:     el => requestPlan(el.dataset.pid, el.dataset.cat),
   scrollToBltSec:  el => scrollToBltSec(Number(el.dataset.i)),
+  scrollNlSection: el => { const s = document.getElementById('nl-sec-' + el.dataset.section); if (s) s.scrollIntoView({ behavior: 'smooth' }); },
 };
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
@@ -2219,7 +2220,7 @@ function _renderNewsletterBulletin(b) {
     });
   }
 
-  const toc = sections.map((s,i) => `<button class="nl-toc-chip" onclick="document.getElementById('nl-sec-${i}')?.scrollIntoView({behavior:'smooth'})">${esc(s.t)}</button>`).join('');
+  const toc = sections.map((s,i) => `<button class="nl-toc-chip" data-act="scrollNlSection" data-section="${i}">${esc(s.t)}</button>`).join('');
   const html = `<div class="nl-toc">${toc}</div>${sections.map((s,i) => `<div class="nl-section" id="nl-sec-${i}">${s.h}</div>`).join('')}`;
 
   document.getElementById('bltModalContent').innerHTML = html + `<div class="blt-actions">

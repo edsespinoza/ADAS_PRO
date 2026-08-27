@@ -348,7 +348,7 @@ const CHATBOT = (function () {
     const widget = document.createElement('div');
     widget.id = 'chatbotWidget';
     widget.innerHTML = `
-      <div class="chatbot-fab" id="chatFab" onclick="CHATBOT.toggle()">
+      <div class="chatbot-fab" id="chatFab" data-act="chatbot-toggle">
         <svg class="chatbot-fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
@@ -366,7 +366,7 @@ const CHATBOT = (function () {
               <div class="chatbot-header-status"><span class="chatbot-status-dot"></span>Online</div>
             </div>
           </div>
-          <button class="chatbot-header-close" onclick="CHATBOT.toggle()">
+          <button class="chatbot-header-close" data-act="chatbot-toggle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -374,7 +374,7 @@ const CHATBOT = (function () {
         <div class="chatbot-quick" id="chatQuick"></div>
         <div class="chatbot-input-area">
           <input class="chatbot-input" id="chatInput" type="text" placeholder="Pergunte sobre calibração, DTCs, targets..." maxlength="500" autocomplete="off"/>
-          <button class="chatbot-send" id="chatSend" onclick="CHATBOT._onSend()">
+          <button class="chatbot-send" id="chatSend" data-act="chatbot-send">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -386,6 +386,15 @@ const CHATBOT = (function () {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); CHATBOT._onSend(); }
     });
 
+    widget.addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      if (act === 'chatbot-toggle') toggle();
+      else if (act === 'chatbot-send') _onSend();
+      else if (act === 'chatbot-quick') askQuick(btn.dataset.query);
+    });
+
     _renderQuickQuestions();
     _addAssistantMessage(GREETING_RESPONSE, false);
   }
@@ -394,7 +403,7 @@ const CHATBOT = (function () {
     const container = document.getElementById('chatQuick');
     if (!container) return;
     container.innerHTML = QUICK_QUESTIONS.map(q =>
-      `<button class="chatbot-quick-btn" onclick="CHATBOT.askQuick('${q.query.replace(/'/g, "\\'")}')">${q.label}</button>`
+      `<button class="chatbot-quick-btn" data-act="chatbot-quick" data-query="${q.query.replace(/"/g, '&quot;')}">${q.label}</button>`
     ).join('');
   }
 

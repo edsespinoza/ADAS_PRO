@@ -578,10 +578,18 @@ const RECOMMENDATIONS = (function () {
         </div>
         <div class="rec-card-footer">
           <span class="rec-card-meta">${rec.fileSize || ''} · ${rec.pages || 0} págs</span>
-          <button class="rec-card-btn" onclick="RECOMMENDATIONS._onRecClick('${rec.id}')">Ver material</button>
+          <button class="rec-card-btn" data-act="rec-click" data-recid="${rec.id}">Ver material</button>
         </div>
       </div>
     `).join('');
+
+    if (!container._delegated) {
+      container._delegated = true;
+      container.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (btn && btn.dataset.act === 'rec-click') _onRecClick(btn.dataset.recid);
+      });
+    }
   }
 
   function renderLearningPath(containerId, userId, category) {
@@ -719,10 +727,17 @@ const RECOMMENDATIONS = (function () {
           <p class="ns-progress-text">${pct}% concluído — ${next.reason || 'Próximo passo'}</p>
         </div>
         <div class="ns-card-action">
-          <button class="ns-btn" onclick="RECOMMENDATIONS._onRecClick('${next.id}')">Continuar trilha →</button>
+          <button class="ns-btn" data-act="rec-click" data-recid="${next.id}">Continuar trilha →</button>
         </div>
       </div>
     `;
+    if (!container._delegated) {
+      container._delegated = true;
+      container.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (btn && btn.dataset.act === 'rec-click') _onRecClick(btn.dataset.recid);
+      });
+    }
   }
 
   /* ════════════════════════════════════════════

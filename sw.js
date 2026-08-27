@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
-   ADAS PRO — Service Worker v1.0.0
-   Cache-first static assets · Network-first API · Offline PDFs
+   ADAS PRO — Service Worker v1.1.0
+   Stale-while-revalidate static · Network-only API · Offline PDFs
    ═══════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.1.0';
 const CACHE_PREFIX = 'adaspro';
 
 const APP_SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
@@ -61,17 +61,17 @@ self.addEventListener('fetch', e => {
   const { request } = e;
   const url = new URL(request.url);
 
-  /* Skip non-GET and cross-origin (except Supabase) */
+  /* Skip non-GET and cross-origin (except Supabase) — POST/PUT/DELETE never cached */
   if (request.method !== 'GET') {
     if (url.origin === SUPABASE_URL) {
-      e.respondWith(networkFirst(request));
+      e.respondWith(fetch(request));
     }
     return;
   }
 
-  /* PDFs → cache-first with background update */
+  /* PDFs → stale-while-revalidate with dedicated cache */
   if (url.pathname.endsWith('.pdf')) {
-    e.respondWith(cacheFirstWithUpdate(request, PDF_CACHE));
+    e.respondWith(staleWhileRevalidate(request, PDF_CACHE));
     return;
   }
 
@@ -87,9 +87,9 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  /* Static assets (CSS/JS/images) → cache-first */
+  /* Static assets (CSS/JS/images) → stale-while-revalidate (always fetch fresh, serve cache instantly) */
   if (/\.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|eot)$/i.test(url.pathname)) {
-    e.respondWith(cacheFirstWithUpdate(request, STATIC_CACHE));
+    e.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
     return;
   }
 
@@ -106,7 +106,7 @@ self.addEventListener('fetch', e => {
 /* ─── Cache strategies ─── */
 
 function cacheFirst(request, cacheName) {
-  return caches.match(request).then(cached => {
+  return caches.open(cacheName).then(c => c.match(request)).then(cached => {
     if (cached) return cached;
     return fetch(request).then(resp => {
       if (resp.ok) {
@@ -118,29 +118,22 @@ function cacheFirst(request, cacheName) {
   });
 }
 
-function cacheFirstWithUpdate(request, cacheName) {
-  return caches.match(request).then(cached => {
-    const fetchPromise = fetch(request).then(resp => {
-      if (resp.ok) {
-        const clone = resp.clone();
-        caches.open(cacheName).then(c => c.put(request, clone));
-      }
-      return resp;
-    }).catch(() => cached);
+function staleWhileRevalidate(request, cacheName) {
+  return caches.open(cacheName).then(c => {
+    return c.match(request).then(cached => {
+      const fetchPromise = fetch(request).then(resp => {
+        if (resp.ok) c.put(request, resp.clone());
+        return resp;
+      }).catch(() => cached);
 
-    return cached || fetchPromise;
+      return cached || fetchPromise;
+    });
   });
 }
 
 function networkFirst(request) {
-  return fetch(request).then(resp => {
-    if (resp.ok) {
-      const clone = resp.clone();
-      caches.open(API_CACHE).then(c => c.put(request, clone));
-    }
-    return resp;
-  }).catch(() =>
-    caches.match(request).then(cached => cached || new Response('Offline', { status: 503 }))
+  return fetch(request).catch(() =>
+    caches.open(API_CACHE).then(c => c.match(request)).then(cached => cached || new Response('Offline', { status: 503 }))
   );
 }
 
@@ -152,7 +145,7 @@ function networkFirstWithFallback(request) {
     }
     return resp;
   }).catch(() =>
-    caches.match(request).then(cached => cached || caches.match('/login.html'))
+    caches.open(STATIC_CACHE).then(c => c.match(request)).then(cached => cached || caches.open(APP_SHELL_CACHE).then(c2 => c2.match('/login.html')))
   );
 }
 

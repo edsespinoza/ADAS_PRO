@@ -672,6 +672,15 @@ const SIMULATORS = (function () {
       <div class="sim-active" id="simActive" style="display:none"></div>
     `;
 
+    if (!container._delegated) {
+      container._delegated = true;
+      container.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        if (btn.dataset.act === 'sim-start') start(btn.dataset.simid);
+      });
+    }
+
     _renderHeroStats();
     _renderSimCards();
   }
@@ -697,7 +706,7 @@ const SIMULATORS = (function () {
     const grid = document.getElementById('simGrid');
     if (!grid) return;
     grid.innerHTML = SIMULATORS.map(sim => `
-      <div class="sim-card" data-sim="${sim.id}" onclick="SIMULATORS.start('${sim.id}')">
+      <div class="sim-card" data-sim="${sim.id}" data-act="sim-start" data-simid="${sim.id}">
         <div class="sim-card-icon" style="background:${sim.color}">${sim.icon}</div>
         <div class="sim-card-body">
           <div class="sim-card-title">${sim.name}</div>
@@ -729,9 +738,22 @@ const SIMULATORS = (function () {
     if (!active) return;
     active.style.display = 'block';
 
+    if (!active._delegated) {
+      active._delegated = true;
+      active.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        if (act === 'sim-start') start(btn.dataset.simid);
+        else if (act === 'sim-back') backToList();
+        else if (act === 'sim-answer') answer(parseInt(btn.dataset.qidx), parseInt(btn.dataset.oi));
+        else if (act === 'sim-next') nextQuestion(parseInt(btn.dataset.nextidx));
+      });
+    }
+
     active.innerHTML = `
       <div class="sim-active-header">
-        <button class="sim-back" onclick="SIMULATORS.backToList()">← Voltar</button>
+        <button class="sim-back" data-act="sim-back">← Voltar</button>
         <div class="sim-active-title">${sim.icon} ${sim.name}</div>
         <div class="sim-score-display" id="simScoreDisplay">0 pts</div>
       </div>
@@ -789,7 +811,7 @@ const SIMULATORS = (function () {
         <div class="sim-question-text">${q.question}</div>
         <div class="sim-options" id="simOptions">
           ${q.options.map((opt, i) => `
-            <button class="sim-option" data-idx="${i}" onclick="SIMULATORS.answer(${index}, ${i})">
+            <button class="sim-option" data-idx="${i}" data-act="sim-answer" data-qidx="${index}" data-oi="${i}">
               <span class="sim-option-letter">${String.fromCharCode(65 + i)}</span>
               <span class="sim-option-text">${opt}</span>
             </button>
@@ -797,7 +819,7 @@ const SIMULATORS = (function () {
         </div>
         <div class="sim-explanation" id="simExplanation" style="display:none"></div>
         <div class="sim-nav" id="simNav" style="display:none">
-          <button class="sim-next-btn" onclick="SIMULATORS.nextQuestion(${index + 1})">Próxima →</button>
+          <button class="sim-next-btn" data-act="sim-next" data-nextidx="${index + 1}">Próxima →</button>
         </div>
       </div>
     `;
@@ -868,8 +890,8 @@ const SIMULATORS = (function () {
         </div>
         <div class="sim-results-achievements" id="simResultsAchievements"></div>
         <div class="sim-results-actions">
-          <button class="sim-btn-retry" onclick="SIMULATORS.start('${_activeSim.id}')">🔄 Tentar Novamente</button>
-          <button class="sim-btn-back" onclick="SIMULATORS.backToList()">← Outros Simuladores</button>
+          <button class="sim-btn-retry" data-act="sim-start" data-simid="${_activeSim.id}">🔄 Tentar Novamente</button>
+          <button class="sim-btn-back" data-act="sim-back">← Outros Simuladores</button>
         </div>
       </div>
     `;

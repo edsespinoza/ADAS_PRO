@@ -256,7 +256,21 @@ const CERTIFICATIONS = (function () {
 
   function _renderQuizOverlay(cert, questions, levelInfo) {
     let overlay = document.getElementById('certQuizOverlay');
-    if (!overlay) { overlay = document.createElement('div'); overlay.id = 'certQuizOverlay'; document.body.appendChild(overlay); }
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'certQuizOverlay';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        if (act === 'cert-close-quiz') closeQuiz();
+        else if (act === 'cert-quiz-nav') quizNav(parseInt(btn.dataset.dir));
+        else if (act === 'cert-submit-quiz') _submitQuiz();
+        else if (act === 'cert-select-answer') _selectAnswer(parseInt(btn.dataset.qidx), parseInt(btn.dataset.oi));
+        else if (act === 'cert-download') downloadCert(btn.dataset.certid);
+      });
+    }
 
     overlay.className = 'quiz-overlay';
     overlay.style.display = 'flex';
@@ -274,7 +288,7 @@ const CERTIFICATIONS = (function () {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span class="quiz-timer-time" id="quizTimerTime">${_formatTime(_timerSec)}</span>
           </div>
-          <button class="quiz-close" onclick="CERTIFICATIONS.closeQuiz()" title="Sair do quiz">
+          <button class="quiz-close" data-act="cert-close-quiz" title="Sair do quiz">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -285,10 +299,10 @@ const CERTIFICATIONS = (function () {
         <div class="quiz-body" id="quizBody"></div>
         <div class="quiz-footer" id="quizFooter">
           <div class="quiz-nav-btns">
-            <button class="quiz-btn quiz-btn-prev" id="quizPrevBtn" onclick="CERTIFICATIONS.quizNav(-1)" disabled>← Anterior</button>
-            <button class="quiz-btn quiz-btn-next" id="quizNextBtn" onclick="CERTIFICATIONS.quizNav(1)">Próxima →</button>
+            <button class="quiz-btn quiz-btn-prev" id="quizPrevBtn" data-act="cert-quiz-nav" data-dir="-1" disabled>← Anterior</button>
+            <button class="quiz-btn quiz-btn-next" id="quizNextBtn" data-act="cert-quiz-nav" data-dir="1">Próxima →</button>
           </div>
-          <button class="quiz-btn quiz-btn-submit" id="quizSubmitBtn" onclick="CERTIFICATIONS._submitQuiz()" style="display:none">Finalizar</button>
+          <button class="quiz-btn quiz-btn-submit" id="quizSubmitBtn" data-act="cert-submit-quiz" style="display:none">Finalizar</button>
         </div>
         <div class="quiz-results" id="quizResults"></div>
       </div>`;
@@ -308,7 +322,7 @@ const CERTIFICATIONS = (function () {
       <div class="quiz-question-text">${q.q}</div>
       <div class="quiz-options">
         ${q.opts.map((opt, i) => `
-          <div class="quiz-option ${selected===i?'selected':''}" onclick="CERTIFICATIONS._selectAnswer(${idx},${i})">
+          <div class="quiz-option ${selected===i?'selected':''}" data-act="cert-select-answer" data-qidx="${idx}" data-oi="${i}">
             <div class="quiz-option-letter">${letters[i]}</div>
             <div>${opt}</div>
           </div>`).join('')}
@@ -393,8 +407,8 @@ const CERTIFICATIONS = (function () {
       <div class="quiz-results-sub">${passed?`Sua certificação <strong>${cert.name}</strong> foi emitida com validade de 1 ano.`:`Você acertou <strong>${correct} de ${total}</strong> questões. Requer ${levelInfo.pass}% para aprovação. Revise o conteúdo e tente novamente.`}</div>
       <div class="quiz-results-score"><span class="quiz-score-val">${pct}%</span><span class="quiz-score-pct">${correct}/${total}</span></div>
       <div class="quiz-results-actions">
-        ${passed?`<button class="quiz-btn quiz-btn-submit" onclick="CERTIFICATIONS.downloadCert('${cert.id}')">Baixar Certificado</button>`:''}
-        <button class="quiz-btn quiz-btn-prev" onclick="CERTIFICATIONS.closeQuiz()">Fechar</button>
+        ${passed?`<button class="quiz-btn quiz-btn-submit" data-act="cert-download" data-certid="${cert.id}">Baixar Certificado</button>`:''}
+        <button class="quiz-btn quiz-btn-prev" data-act="cert-close-quiz">Fechar</button>
       </div>`;
   }
 
@@ -539,14 +553,22 @@ const CERTIFICATIONS = (function () {
     });
 
     let overlay = document.getElementById('certPreviewOverlay');
-    if (!overlay) { overlay = document.createElement('div'); overlay.id = 'certPreviewOverlay'; document.body.appendChild(overlay); }
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'certPreviewOverlay';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (btn && btn.dataset.act === 'cert-close-preview') overlay.style.display = 'none';
+      });
+    }
     overlay.className = 'cert-preview-overlay';
     overlay.style.display = 'flex';
     overlay.innerHTML = `
       <div class="cert-preview-box">
         <div class="cert-preview-header">
           <div class="cert-preview-title">Certificado ${certData.certId}</div>
-          <button class="quiz-close" onclick="document.getElementById('certPreviewOverlay').style.display='none'">
+          <button class="quiz-close" data-act="cert-close-preview">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>

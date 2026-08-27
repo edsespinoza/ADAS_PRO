@@ -375,8 +375,9 @@ const AUTH = (function () {
         // _cancelled impede que a IIFE sobrescreva estado após o timeout disparar.
         // 15s: rede lenta não deve derrubar uma sessão já validada.
         let _cancelled = false;
+        let _sbTimer;
         const _sbTimeout = new Promise((_, rej) =>
-          setTimeout(() => { _cancelled = true; rej(new Error('supabase_timeout')); }, 15000)
+          _sbTimer = setTimeout(() => { _cancelled = true; rej(new Error('supabase_timeout')); }, 15000)
         );
 
         await Promise.race([
@@ -431,6 +432,7 @@ const AUTH = (function () {
                 localStorage.removeItem(SESSION_KEY);
               }
             }
+            clearTimeout(_sbTimer);
           })(),
           _sbTimeout,
         ]);
@@ -1172,7 +1174,7 @@ const AUTH = (function () {
     if (filters.status)   items = items.filter(b => b.status   === filters.status);
     if (filters.cat)      items = items.filter(b => b.cat      === filters.cat);
     if (filters.severity) items = items.filter(b => b.severity === filters.severity);
-    return items.sort((a,b) => b.updatedAt - a.updatedAt);
+    return items.sort((a,b) => ts(b.updatedAt) - ts(a.updatedAt));
   }
   function getBulletinById(id) { return _getItems(BULLETINS_KEY).find(b => b.id === id) || null; }
   function addBulletin(item) {

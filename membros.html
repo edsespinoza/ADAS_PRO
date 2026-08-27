@@ -465,6 +465,63 @@
   .blt-callout.warn b { color:#FFAA00; }
   .blt-body-p { font-size:.8rem;color:rgba(255,255,255,.66);line-height:1.8;margin:0; }
 
+  /* ─── Newsletter layout ─── */
+  .nl-hero { background:linear-gradient(135deg,rgba(0,180,216,.08),rgba(255,107,53,.06));border:1px solid rgba(0,180,216,.15);border-radius:12px;padding:22px 24px;margin-bottom:18px; }
+  .nl-hero h2 { font-family:var(--font-h);font-size:1.15rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:10px; }
+  .nl-hero p { font-size:.82rem;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:10px; }
+  .nl-hero-tags { display:flex;flex-wrap:wrap;gap:6px;margin-top:12px; }
+  .nl-hero-tag { font-size:.6rem;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.25);color:rgba(0,180,216,.85); }
+  .nl-hero-tag.brand { background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.25);color:var(--accent); }
+  .nl-hero-tag.system { background:rgba(6,167,125,.1);border-color:rgba(6,167,125,.25);color:#06A77D; }
+
+  .nl-features { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px; }
+  .nl-feat-card { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;border-left:3px solid var(--tech);transition:transform .15s; }
+  .nl-feat-card:hover { transform:translateY(-2px); }
+  .nl-feat-icon { font-size:1.6rem;margin-bottom:8px; }
+  .nl-feat-title { font-family:var(--font-h);font-size:.78rem;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:5px; }
+  .nl-feat-desc { font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.6; }
+
+  .nl-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px; }
+  .nl-stat-card { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;text-align:center; }
+  .nl-stat-num { font-family:var(--font-h);font-size:1.6rem;font-weight:900;color:var(--accent);line-height:1.2; }
+  .nl-stat-label { font-size:.65rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-top:4px; }
+  .nl-stat-note { font-size:.6rem;color:rgba(255,255,255,.3);margin-top:3px; }
+
+  .nl-callout { background:rgba(255,59,59,.06);border:1px solid rgba(255,59,59,.2);border-left:3px solid #FF3B3B;border-radius:10px;padding:16px 18px;margin-bottom:18px; }
+  .nl-callout.warn { background:rgba(255,170,0,.06);border-color:rgba(255,170,0,.2);border-left-color:#FFAA00; }
+  .nl-callout-title { font-family:var(--font-h);font-size:.8rem;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:8px; }
+  .nl-callout-text { font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.7; }
+
+  .nl-articles { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px; }
+  .nl-article-card { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;transition:transform .15s; }
+  .nl-article-card:hover { transform:translateY(-2px); }
+  .nl-article-icon { font-size:1.4rem;margin-bottom:8px; }
+  .nl-article-title { font-family:var(--font-h);font-size:.76rem;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:5px;line-height:1.4; }
+  .nl-article-desc { font-size:.7rem;color:rgba(255,255,255,.5);line-height:1.6; }
+
+  .nl-table { width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:.74rem; }
+  .nl-table th { text-align:left;font-family:var(--font-h);font-size:.6rem;font-weight:700;letter-spacing:.06em;color:rgba(0,180,216,.8);text-transform:uppercase;padding:10px 12px;border-bottom:2px solid rgba(0,180,216,.25);background:rgba(0,180,216,.05); }
+  .nl-table td { padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.65); }
+  .nl-table tr:hover td { background:rgba(0,180,216,.03); }
+
+  .nl-events { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px; }
+  .nl-event-card { background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;display:flex;gap:14px; }
+  .nl-event-date { min-width:56px;text-align:center;flex-shrink:0; }
+  .nl-event-day { font-family:var(--font-h);font-size:1.8rem;font-weight:900;color:var(--accent);line-height:1; }
+  .nl-event-month { font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4); }
+  .nl-event-info h4 { font-family:var(--font-h);font-size:.78rem;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:4px; }
+  .nl-event-info p { font-size:.7rem;color:rgba(255,255,255,.5);line-height:1.5; }
+
+  .nl-footer { background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.06);border-radius:0 0 12px 12px;padding:18px 22px;margin-top:18px; }
+  .nl-footer-title { font-family:var(--font-h);font-size:.7rem;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px; }
+  .nl-footer-text { font-size:.72rem;color:rgba(255,255,255,.4);line-height:1.7; }
+  .nl-footer-text strong { color:rgba(255,255,255,.6); }
+
+  .nl-toc { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px; }
+  .nl-toc-chip { font-family:var(--font-h);font-size:.6rem;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.45);cursor:pointer;transition:all .2s; }
+  .nl-toc-chip:hover { border-color:rgba(0,180,216,.35);color:var(--tech);background:rgba(0,180,216,.05); }
+  .nl-section { scroll-margin-top:14px; }
+
   @media(max-width:640px) {
     .blt-grid { grid-template-columns:1fr; }
     .blt-modal-header,.blt-modal-body,.blt-modal-footer { padding-left:18px;padding-right:18px; }
@@ -1062,7 +1119,8 @@
 <script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <!-- ─── ADAS PRO Scripts ─── -->
 <script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
-<script src="js/auth.js?v=20260815" integrity="sha384-Rt6XccNd67acjrNfOpiaa1voyJ93W0YwLku8+ipPcTNM+Veg8oF3dz/aWrI9q1Ob"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-utc5Sg9vHyGXEhwBTvKkQuoDKhiRiarO8LTHxz4ZAbuRRNlcog2XArio0IHXwEFC"></script>
+<script src="js/purify.min.js?v=20260815" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"></script>
 
 <!-- Overlay de carregamento -->
 <div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
@@ -1871,7 +1929,7 @@ function openBulletin(btn) {
   // Boletim dinâmico (publicado no painel editorial) → render completo
   if (bltId && AUTH.getBulletinById) {
     const b = AUTH.getBulletinById(bltId);
-    if (b) return _renderBulletin(b);
+    if (b) return _renderNewsletterBulletin(b);
   }
 
   // Fallback: boletim estático (lido direto do DOM do card)
@@ -2057,6 +2115,120 @@ function _renderBulletin(b) {
   document.getElementById('bltModalContent').innerHTML = htmlX;
   document.getElementById('bltModalAffected').style.display = 'none';
   document.getElementById('bltModalDate').textContent = 'Publicado em ' + (b.publishedAt || b.createdAt ? fmtDate(b.publishedAt || b.createdAt) : '—');
+  const markBtn = document.getElementById('bltMarkReadBtn');
+  markBtn.className = 'blt-mark-read-btn';
+  markBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Marcar como lido`;
+
+  const modal = document.getElementById('bltModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function _renderNewsletterBulletin(b) {
+  if (b.layout !== 'newsletter') return _renderBulletin(b);
+  const type = b.type || 'novidade';
+  document.getElementById('bltModalHeader').className = `blt-modal-header type-${type}`;
+  document.getElementById('bltModalTag').textContent = _bltTypeLabel(type);
+  document.getElementById('bltModalTitle').textContent = b.title || 'Boletim técnico';
+  document.getElementById('bltModalNew').style.display = b.createdAt && (Date.now() - b.createdAt) < 7*24*3600*1000 ? '' : 'none';
+
+  const sections = [];
+
+  // 1. Hero
+  const tags = (b.tags || []).map(t => `<span class="nl-hero-tag">${esc(t)}</span>`).join('');
+  const brandTags = (b.brands || []).map(t => `<span class="nl-hero-tag brand">${esc(t)}</span>`).join('');
+  const sysTags = (b.appliedSystems || []).map(t => `<span class="nl-hero-tag system">${esc(t)}</span>`).join('');
+  const summary = b.summary || _stripHtml(b.content).slice(0, 300);
+  sections.push({
+    t: 'Resumo',
+    h: `<div class="nl-hero">
+      <h2>${esc(b.title || 'Boletim técnico')}</h2>
+      <p>${esc(summary)}</p>
+      ${(tags||brandTags||sysTags) ? `<div class="nl-hero-tags">${brandTags}${sysTags}${tags}</div>` : ''}
+    </div>`
+  });
+
+  // 2. Feature boxes
+  if (b.appliedSystems && b.appliedSystems.length) {
+    const icons = ['🔧','⚡','🛡️','🎯','📊','🔬'];
+    const boxes = b.appliedSystems.map((sys, i) =>
+      `<div class="nl-feat-card"><div class="nl-feat-icon">${icons[i % icons.length]}</div><div class="nl-feat-title">${esc(sys)}</div></div>`
+    ).join('');
+    sections.push({ t: 'Sistemas', h: `<div class="nl-features">${boxes}</div>` });
+  }
+
+  // 3. Stats
+  if (b.stats && b.stats.length) {
+    const cards = b.stats.map(s =>
+      `<div class="nl-stat-card"><div class="nl-stat-num">${esc(s.value||'—')}</div><div class="nl-stat-label">${esc(s.label||'')}</div>${s.note ? `<div class="nl-stat-note">${esc(s.note)}</div>` : ''}</div>`
+    ).join('');
+    sections.push({ t: 'Números', h: `<div class="nl-stats">${cards}</div>` });
+  }
+
+  // 4. Callout
+  if (b.severity === 'critical' || b.severity === 'moderate') {
+    const isCrit = b.severity === 'critical';
+    sections.push({
+      t: 'Atenção',
+      h: `<div class="nl-callout${isCrit ? '' : ' warn'}">
+        <div class="nl-callout-title">${isCrit ? '⚠ Atenção — Severidade Crítica' : '⚡ Atenção — Severidade Moderada'}</div>
+        <div class="nl-callout-text">${esc(b.summary || 'Verifique os procedimentos antes de prosseguir.')}</div>
+      </div>`
+    });
+  }
+
+  // 5. Secondary articles
+  if (b.steps && b.steps.length) {
+    const arts = b.steps.slice(0, 4).map((s, i) => {
+      const txt = typeof s === 'string' ? s : (s.desc || s.title || '');
+      return `<div class="nl-article-card"><div class="nl-article-icon">${['📋','🔍','✅','📝'][i % 4]}</div><div class="nl-article-title">Passo ${i + 1}</div><div class="nl-article-desc">${esc(txt)}</div></div>`;
+    }).join('');
+    sections.push({ t: 'Procedimento', h: `<div class="nl-articles">${arts}</div>` });
+  }
+
+  // 6. Table
+  if (b.specsTable && b.specsTable.length) {
+    const rows = b.specsTable.map(r => `<tr><td>${esc(r.param||'')}</td><td>${esc(r.value||'')}</td><td>${esc(r.note||'')}</td></tr>`).join('');
+    sections.push({
+      t: 'Especificações',
+      h: `<table class="nl-table"><thead><tr><th>Parâmetro</th><th>Valor</th><th>Nota</th></tr></thead><tbody>${rows}</tbody></table>`
+    });
+  }
+
+  // 7. Events
+  if (b.events && b.events.length) {
+    const evts = b.events.map(e => {
+      const d = e.date ? new Date(e.date) : null;
+      const day = d ? d.getDate() : '—';
+      const mon = d ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][d.getMonth()] : '';
+      return `<div class="nl-event-card"><div class="nl-event-date"><div class="nl-event-day">${day}</div><div class="nl-event-month">${mon}</div></div><div class="nl-event-info"><h4>${esc(e.title||'')}</h4><p>${esc(e.desc||'')}</p></div></div>`;
+    }).join('');
+    sections.push({ t: 'Eventos', h: `<div class="nl-events">${evts}</div>` });
+  }
+
+  // 8. Additional content (WYSIWYG body)
+  const body = (b.content || '').trim();
+  if (body && _stripHtml(body) !== _stripHtml(summary))
+    sections.push({ t: 'Informações adicionais', h: DOMPurify ? DOMPurify.sanitize(body) : body });
+
+  // 9. Footer / credits
+  if (b.referenceDocs && b.referenceDocs.length) {
+    sections.push({
+      t: 'Créditos',
+      h: `<div class="nl-footer"><div class="nl-footer-title">Referências</div><div class="nl-footer-text">${b.referenceDocs.map(r => `<div>📎 ${esc(r)}</div>`).join('')}</div></div>`
+    });
+  }
+
+  const toc = sections.map((s,i) => `<button class="nl-toc-chip" onclick="document.getElementById('nl-sec-${i}')?.scrollIntoView({behavior:'smooth'})">${esc(s.t)}</button>`).join('');
+  const html = `<div class="nl-toc">${toc}</div>${sections.map((s,i) => `<div class="nl-section" id="nl-sec-${i}">${s.h}</div>`).join('')}`;
+
+  document.getElementById('bltModalContent').innerHTML = html + `<div class="blt-actions">
+    <button class="blt-act-btn" onclick="copyBulletinSummary(this)">📋 Copiar resumo</button>
+    <button class="blt-act-btn" onclick="printBulletin()">🖨️ Imprimir</button>
+  </div>`;
+  document.getElementById('bltModalAffected').style.display = 'none';
+  document.getElementById('bltModalDate').textContent = 'Publicado em ' + (b.publishedAt || b.createdAt ? fmtDate(b.publishedAt || b.createdAt) : '—');
+
   const markBtn = document.getElementById('bltMarkReadBtn');
   markBtn.className = 'blt-mark-read-btn';
   markBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Marcar como lido`;

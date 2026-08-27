@@ -1181,8 +1181,9 @@ const AUTH = (function () {
     const bulletin = {
       icon:'📋', accessLevel:1, tags:[], cat:'', severity:'info',
       vehicleModels:[], systemsAffected:[], expiresAt:null,
+      type:'bulletin',
       ...item,
-      id, type:'bulletin',
+      id,
       bulletinNumber: item.bulletinNumber || _nextBulletinNumber(),
       author: item.author || sess?.name || 'Admin',
       authorId: item.authorId || sess?.userId || '',

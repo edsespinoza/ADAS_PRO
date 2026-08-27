@@ -2529,6 +2529,14 @@
           </select>
         </div>
 
+        <div class="ed-meta-group" id="edLayoutGroup">
+          <label class="ed-meta-label">Layout</label>
+          <select class="ed-meta-input ed-meta-select" id="edMetaLayout" onchange="onEdLayoutChange()">
+            <option value="technical">Técnico / Científico</option>
+            <option value="newsletter">Newsletter</option>
+          </select>
+        </div>
+
         <details class="ed-meta-details">
           <summary>📋 Ficha técnica</summary>
           <div class="ed-meta-group">
@@ -2692,6 +2700,20 @@
             <label class="ed-meta-label">Anexos</label>
             <textarea class="ed-meta-input ed-meta-area" id="edMetaAttachments" rows="2" placeholder="Diagrama de posicionamento do alvo (PDF)"></textarea>
             <div class="ed-meta-hint">Uma por linha (nomes/links de anexos).</div>
+          </div>
+        </details>
+
+        <details class="ed-meta-details" id="edNewsletterGroup">
+          <summary>📰 Newsletter</summary>
+          <div class="ed-meta-group" id="edMetaStatsGroup">
+            <label class="ed-meta-label">Estatísticas</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaStats" rows="3" placeholder="150+ | Modelos cobertos | Honda, Toyota, Nissan, Ford&#10;45 min | Tempo médio de calibração | Procedimento estático&#10;99.7% | Taxa de sucesso | Após seguir o procedimento"></textarea>
+            <div class="ed-meta-hint">Formato: <code>Valor | Rótulo | Observação</code> — um por linha.</div>
+          </div>
+          <div class="ed-meta-group" id="edMetaEventsGroup">
+            <label class="ed-meta-label">Eventos</label>
+            <textarea class="ed-meta-input ed-meta-area" id="edMetaEvents" rows="3" placeholder="2026-09-15 | Workshop Calibração ADAS | Treinamento prático em São Paulo&#10;2026-10-01 | Lançamento Scanner v9.0 | Nova versão com suporte a ADAS AD1"></textarea>
+            <div class="ed-meta-hint">Formato: <code>AAAA-MM-DD | Título | Descrição</code> — um por linha.</div>
           </div>
         </details>
 
@@ -3059,7 +3081,7 @@
 
 <script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
-<script src="js/auth.js?v=20260815" integrity="sha384-Rt6XccNd67acjrNfOpiaa1voyJ93W0YwLku8+ipPcTNM+Veg8oF3dz/aWrI9q1Ob"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-utc5Sg9vHyGXEhwBTvKkQuoDKhiRiarO8LTHxz4ZAbuRRNlcog2XArio0IHXwEFC"></script>
 <script src="js/purify.min.js?v=20260815" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"></script>
 <script>
 /* ─── Delegation CSP — handlers dinâmicos (data-act) + listeners propriedade ─── */
@@ -3967,7 +3989,7 @@ function seedEditorialDemo() {
     if (AUTH.addBulletin) {
       AUTH.addBulletin({
         _seed: _SEED_VERSION, title: 'Calibração de Câmera Frontal ADAS — Procedimento Estático Completo',
-        type: 'procedimento', status: 'published',
+        type: 'procedimento', status: 'published', layout: 'newsletter',
         brands: ['honda', 'toyota', 'nissan', 'ford'],
         tags: ['calibração estática', 'câmera frontal', 'para-brisa', 'alvo de calibração'],
         classification: 'CA24-112', reference: 'NTP-ADAS-011', severity: 'moderate',
@@ -4062,6 +4084,15 @@ function seedEditorialDemo() {
           'ASE L4 — Advanced Driver Assistance Systems (calibração estática/dinâmica)',
         ],
         attachments: ['Diagrama de posicionamento do alvo (PDF)', 'Checklist de calibração (DOCX)'],
+        stats: [
+          { value: '150+', label: 'Modelos cobertos', note: 'Honda, Toyota, Nissan, Ford' },
+          { value: '45–60 min', label: 'Tempo de calibração', note: 'Procedimento estático' },
+          { value: '99,7%', label: 'Taxa de sucesso', note: 'Após seguir o procedimento' },
+        ],
+        events: [
+          { date: '2026-09-15', title: 'Workshop Calibração ADAS', desc: 'Treinamento prático em São Paulo — vagas limitadas' },
+          { date: '2026-10-01', title: 'Lançamento Scanner v9.0', desc: 'Nova versão com suporte completo a ADAS AD1' },
+        ],
         content: '<h2>Quando a calibração é obrigatória</h2><ul><li>Substituição do para-brisa;</li><li>Substituição da câmera ou do módulo ADAS;</li><li>Reparo de colisão na frente do veículo;</li><li>Alinhamento de suspensão ou elevação de altura da carroceria;</li><li>Desconexão da bateria por período prolongado.</li></ul><h2>Risco técnico</h2><p>1° de desalinhamento desloca o campo de visão em dezenas de metros. O sistema pode apresentar falso negativo no AEB, comprometendo a segurança do condutor.</p>'
       });
       AUTH.addBulletin({
@@ -4462,6 +4493,10 @@ function openEditor(id=null, type='boletim') {
       _edSet('edMetaSymptomAction', (item.symptomAction||[]).map(r=>[r.symptom,r.cause,r.action].filter(Boolean).join(' | ')).join('\n'));
       // Anexos
       _edSetArr('edMetaAttachments', item.attachments);
+      // Newsletter
+      _edSet('edMetaLayout', item.layout || 'technical');
+      _edSet('edMetaStats', (item.stats||[]).map(s=>[s.value,s.label,s.note||''].filter(Boolean).join(' | ')).join('\n'));
+      _edSet('edMetaEvents', (item.events||[]).map(e=>[e.date||'',e.title||'',e.desc||''].join(' | ')).join('\n'));
     }
   } else {
     document.getElementById('edMetaTitle').value = '';
@@ -4470,6 +4505,7 @@ function openEditor(id=null, type='boletim') {
     document.getElementById('edMetaBulletinType').value = 'novidade';
     document.getElementById('edMetaTags').value = '';
     document.getElementById('edMetaStatus').value = 'draft';
+    _edSet('edMetaLayout','technical');
     _edSet('edMetaClassification',''); _edSet('edMetaReference','');
     _edSet('edMetaSeverity','info');   _edSet('edMetaSummary','');
     _edSetArr('edMetaVehicles',[]);    _edSetArr('edMetaSystems',[]);
@@ -4485,6 +4521,7 @@ function openEditor(id=null, type='boletim') {
     _edSet('edMetaLaborTime','');      _edSet('edMetaLaborNote','');
     _edSet('edMetaWarranty','');       _edSetArr('edMetaApplicability',[]);
     _edSet('edMetaSymptomAction','');  _edSetArr('edMetaAttachments',[]);
+    _edSet('edMetaStats','');          _edSet('edMetaEvents','');
   }
 
   _buildBrandsGrid(selBrands);
@@ -4492,6 +4529,7 @@ function openEditor(id=null, type='boletim') {
   document.getElementById('editorAutosave').textContent = 'rascunho';
   document.getElementById('editorAutosave').className = 'editor-autosave';
   onEdMetaTypeChange();
+  onEdLayoutChange();
   _updateWordCount();
   document.getElementById('modalEditor').classList.add('open');
   document.getElementById('editorArea').focus();
@@ -4509,6 +4547,12 @@ function onEdMetaTypeChange() {
   const type = document.getElementById('edMetaContentType').value;
   const btGroup = document.getElementById('edBulletinTypeGroup');
   if (btGroup) btGroup.style.display = type === 'boletim' ? '' : 'none';
+}
+
+function onEdLayoutChange() {
+  const layout = document.getElementById('edMetaLayout')?.value || 'technical';
+  const nlFields = ['edMetaStatsGroup','edMetaEventsGroup'];
+  nlFields.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = layout==='newsletter' ? '' : 'none'; });
 }
 
 function toggleEditorPreview() {
@@ -4625,6 +4669,10 @@ function saveEditorDraft() {
       },
       warranty:        document.getElementById('edMetaWarranty')?.value.trim() || '',
       attachments:     _lines('edMetaAttachments'),
+      // Newsletter
+      layout:          document.getElementById('edMetaLayout')?.value || 'technical',
+      stats:           _rows('edMetaStats', 3).map(([value,label,note])=>({ value, label, note })),
+      events:          _rows('edMetaEvents', 3).map(([date,title,desc])=>({ date, title, desc })),
     };
     if (type === 'boletim') {
       if (_edEditingId) AUTH.editBulletin(_edEditingId, payload);

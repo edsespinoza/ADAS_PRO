@@ -1,0 +1,90 @@
+# ADAS PRO Security MCP Servers
+# Uso:
+#   docker compose -f docker-compose.security.yml build    # Build images
+#   docker compose -f docker-compose.security.yml up -d    # Start all
+#   docker compose -f docker-compose.security.yml down     # Stop all
+#
+# Teste rápido (stdio via terminal):
+#   echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | docker run -i --rm adas-nmap-mcp
+
+version: '3.8'
+
+services:
+  nmap-mcp:
+    build: { context: ./mcp-servers/nmap-mcp, dockerfile: Dockerfile }
+    image: adas-nmap-mcp:latest
+    container_name: adas-nmap-mcp
+    stdin_open: true
+    networks: [security-net]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [NET_RAW, NET_ADMIN]
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 512M }
+        reservations: { cpus: '0.25', memory: 128M }
+
+  nuclei-mcp:
+    build: { context: ./mcp-servers/nuclei-mcp, dockerfile: Dockerfile }
+    image: adas-nuclei-mcp:latest
+    container_name: adas-nuclei-mcp
+    stdin_open: true
+    networks: [security-net]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    volumes: [nuclei-templates:/home/mcpuser/nuclei-templates]
+    deploy:
+      resources:
+        limits: { cpus: '2', memory: 2G }
+        reservations: { cpus: '0.5', memory: 512M }
+
+  gitleaks-mcp:
+    build: { context: ./mcp-servers/gitleaks-mcp, dockerfile: Dockerfile }
+    image: adas-gitleaks-mcp:latest
+    container_name: adas-gitleaks-mcp
+    stdin_open: true
+    volumes: ["${PROJECT_ROOT:-.}:/scan:ro"]
+    networks: [security-net]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 512M }
+
+  semgrep-mcp:
+    build: { context: ./mcp-servers/semgrep-mcp, dockerfile: Dockerfile }
+    image: adas-semgrep-mcp:latest
+    container_name: adas-semgrep-mcp
+    stdin_open: true
+    networks: [security-net]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 1G }
+
+  trivy-mcp:
+    build: { context: ./mcp-servers/trivy-mcp, dockerfile: Dockerfile }
+    image: adas-trivy-mcp:latest
+    container_name: adas-trivy-mcp
+    stdin_open: true
+    networks: [security-net]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    volumes: [trivy-cache:/root/.cache/trivy]
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 1G }
+
+networks:
+  security-net:
+    driver: bridge
+
+volumes:
+  nuclei-templates:
+  trivy-cache:

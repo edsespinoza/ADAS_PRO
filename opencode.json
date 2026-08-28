@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "security-nmap": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "--cap-add=NET_RAW", "--cap-add=NET_ADMIN", "adas-nmap-mcp:latest"],
+      "enabled": false,
+      "description": "Nmap MCP — scan de portas, detecção de serviços e OS fingerprinting"
+    },
+    "security-nuclei": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "adas-nuclei-mcp:latest"],
+      "enabled": false,
+      "description": "Nuclei MCP — scan de vulnerabilidades com 8000+ templates"
+    },
+    "security-gitleaks": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "-v", "/home/edson-espinoza/Área de trabalho/Projetos IA/Projetos/ADAS_PRO/landing-page:/scan:ro", "adas-gitleaks-mcp:latest"],
+      "enabled": false,
+      "description": "Gitleaks MCP — detecção de secrets e credenciais no git"
+    },
+    "security-semgrep": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "adas-semgrep-mcp:latest"],
+      "enabled": false,
+      "description": "Semgrep MCP — análise estática de segurança (SAST)"
+    },
+    "security-trivy": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "adas-trivy-mcp:latest"],
+      "enabled": false,
+      "description": "Trivy MCP — scan de vulnerabilidades em containers e filesystem"
+    }
+  }
+}

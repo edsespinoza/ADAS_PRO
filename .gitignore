@@ -22,6 +22,10 @@ Thumbs.db
 *.swp
 *.tmp
 
+# LibreOffice lock artifacts
+.~lock.*#
+link boletin_.txt
+
 # Internal / dev artifacts
 link mcp_*.txt
 memory/

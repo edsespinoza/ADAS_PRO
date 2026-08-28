@@ -1,0 +1,122 @@
+-- ================================================
+-- ADAS PRO — Teste do WITH CHECK da política users_update
+-- ---------------------------------------------------------------
+-- Valida que NÃO existem vetores de escalada de privilégio (privilege
+-- escalation) na política UPDATE da tabela public.users.
+--
+-- COMO USAR:
+--   1. Execute em um banco de testes (NUNCA em produção com dados reais).
+--   2. Crie papéis de teste com auth.uid() distintos (uma conta por role:
+--      superadmin, admin, gestor, membro).
+--   3. Execute cada bloco abaixo trocando NEW_USER_ID pelo UUID da conta
+--      autenticada que representa o papel em teste.
+--
+-- O arquivo é uma BATÉRIA DE ASSERTIVAS, não uma "única query". Cada bloco
+-- documenta, em comentário, o resultado ESPERADO e o comportamento seguro.
+-- ================================================
+
+------------------------------------------------
+-- CENÁRIO A — membro tenta escalar para admin
+-- Comportamento esperado: UPDATE BLOQUEADO (linha 0 afetada)
+-- A combinação USING + WITH CHECK impede que um membro se promova.
+------------------------------------------------
+-- UPDATE public.users
+-- SET role = 'admin', status = 'active'
+-- WHERE id = NEW_USER_ID;      -- NEW_USER_ID = membro autenticado
+--
+-- Esperado:
+--   → USING:  auth.uid() = id TRUE (é a própria linha) → passa
+--   → WITH CHECK: auth.uid() = id TRUE, mas role IS NOT DISTINCT FROM atual
+--     FALSO (membro→admin) → bloqueia
+--   → UPDATE afeta 0 linhas ✓ (sem escalada)
+
+------------------------------------------------
+-- CENÁRIO B — membro tenta ativar a própria conta (status)
+-- Comportamento esperado: UPDATE BLOQUEADO (0 linhas)
+-- status 'pending' → 'active' viola a regra "não toca em privilégio"
+------------------------------------------------
+-- UPDATE public.users
+-- SET status = 'active'
+-- WHERE id = NEW_USER_ID;
+--
+-- Esperado: WITH CHECK falha (status != atual) → 0 linhas ✓
+
+------------------------------------------------
+-- CENÁRIO C — membro edita apenas o próprio nome
+-- Comportamento esperado: UPDATE PERMITIDO (1 linha)
+-- Campos de privilégio inalterados → WITH CHECK passa
+------------------------------------------------
+-- UPDATE public.users
+-- SET name = 'Novo Nome'
+-- WHERE id = NEW_USER_ID;
+--
+-- Esperado: 1 linha afetada ✓
+
+------------------------------------------------
+-- CENÁRIO D — admin tenta promover membro para admin
+-- Comportamento esperado: UPDATE BLOQUEADO (0 linhas)
+-- admin (level 3) não atinge role >= sua (admin no WITH CHECK)
+------------------------------------------------
+-- UPDATE public.users
+-- SET role = 'admin'
+-- WHERE id = TARGET_MEMBRO_ID;   -- alvo é membro (level 1)
+--
+-- Esperado:
+--   → USING:  is_admin() TRUE, can_manage_role('membro') TRUE → linha alcançável
+--   → WITH CHECK: is_admin() TRUE, mas can_manage_role('admin') FALSO
+--     (admin não gerencia admin) → bloqueia promoção ✓
+
+------------------------------------------------
+-- CENÁRIO E — admin rebaixa um gestor para membro
+-- Comportamento esperado: UPDATE PERMITIDO (1 linha)
+-- admin (level 3) pode gerenciar gestor (level 2) → role final membro (level 1)
+------------------------------------------------
+-- UPDATE public.users
+-- SET role = 'membro'
+-- WHERE id = TARGET_GESTOR_ID;   -- alvo é gestor (level 2)
+--
+-- Esperado:
+--   → USING:  can_manage_role('gestor') TRUE (2 < 3) → alcançável
+--   → WITH CHECK: can_manage_role('membro') TRUE (1 < 3) → passa
+--   → 1 linha afetada ✓
+
+------------------------------------------------
+-- CENÁRIO F — admin NÃO alcança outro admin (mesmo para rebaixar)
+-- Comportamento esperado: UPDATE BLOQUEADO (0 linhas)
+-- admin (level 3) não "alcança" linha cuja role atual >= a sua
+------------------------------------------------
+-- UPDATE public.users
+-- SET role = 'membro'
+-- WHERE id = TARGET_ADMIN_ID;    -- alvo é admin (level 3)
+--
+-- Esperado: USING can_manage_role('admin') FALSO (3 < 3 é falso)
+--   → linha nem é selecionada → 0 linhas ✓ (defesa em profundidade)
+
+------------------------------------------------
+-- CENÁRIO G — superadmin altera qualquer conta
+-- Comportamento esperado: UPDATE PERMITIDO (1 linha)
+-- superadmin (level 4) ignora can_manage_role
+------------------------------------------------
+-- UPDATE public.users
+-- SET role = 'superadmin', status = 'active'
+-- WHERE id = ANY_TARGET_ID;
+--
+-- Esperado: WITH CHECK is_superadmin() TRUE → 1 linha ✓
+
+------------------------------------------------
+-- RESUMO (grade de segurança)
+------------------------------------------------
+-- +--------------------+----------------------+----------------------+
+-- | Ação               | Esperado             | Resultado           |
+-- +--------------------+----------------------+----------------------+
+-- | A: membro→admin    | BLOQUEADO (0)        | [   ] concluir      |
+-- | B: membro ativa    | BLOQUEADO (0)        | [   ] concluir      |
+-- | C: membro nome     | PERMITIDO (1)        | [   ] concluir      |
+-- | D: admin promove   | BLOQUEADO (0)        | [   ] concluir      |
+-- | E: admin rebaixa   | PERMITIDO (1)        | [   ] concluir      |
+-- | F: admin toca admin| BLOQUEADO (0)        | [   ] concluir      |
+-- | G: superadmin      | PERMITIDO (1)        | [   ] concluir      |
+-- +--------------------+----------------------+----------------------+
+--
+-- Nenhum cenário deve resultar em escalada de privilégio.
+-- Se A, B, D ou F afetar > 0 linhas → VULNERABILIDADE (corrigir RLS).

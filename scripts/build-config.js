@@ -20,7 +20,10 @@ if (isDev || process.env.NODE_ENV !== 'production') {
 
 const url         = process.env.SUPABASE_URL      || '';
 const anonKey     = process.env.SUPABASE_ANON_KEY  || '';
-const demoEnabled = (process.env.DEMO_ENABLED || '').toLowerCase() !== 'false'; // padrão: true; desativa com DEMO_ENABLED=false
+// Fail-closed: por padrão o modo demo está DESLIGADO (false).
+// Só é habilitado explicitamente com DEMO_ENABLED=true em produção.
+// Evita que a versão demo (senhas offline/seeds) vaze por omissão de config.
+const demoEnabled = (process.env.DEMO_ENABLED || '').toLowerCase() === 'true';
 const siteUrl     = process.env.SITE_URL           || 'https://adaspro.com.br';
 
 if (!url || !anonKey) {

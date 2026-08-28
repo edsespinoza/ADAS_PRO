@@ -5,32 +5,73 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-api-key',
-};
+const ALLOWED_ORIGINS = ['https://adaspro.com.br'];
 
-/* ─── Rate Limiting (in-memory) ─── */
+let currentOrigin: string | null = null;
+
+function corsHeadersFor(origin: string | null) {
+  return {
+    'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.includes(origin) ? origin : 'https://adaspro.com.br',
+    'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, content-type, x-api-key',
+    'Cache-Control': 'private, no-store',
+  };
+}
+
+/* ─── Rate Limiting (shared via rate_limits table) ─── */
 const RATE_LIMIT = 100;
-const RATE_WINDOW = 60_000; // 1 minuto
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const RATE_WINDOW_MS = 60_000; // 1 minuto
 
-function checkRateLimit(key: string): { allowed: boolean; remaining: number; resetAt: number } {
+let rateLimitAdmin: ReturnType<typeof createClient> | null = null;
+
+function getRateLimitAdmin() {
+  if (!rateLimitAdmin) {
+    rateLimitAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+  }
+  return rateLimitAdmin;
+}
+
+function windowStart(nowMs: number): string {
+  return new Date(Math.floor(nowMs / RATE_WINDOW_MS) * RATE_WINDOW_MS).toISOString();
+}
+
+async function checkRateLimit(key: string): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
   const now = Date.now();
-  const entry = rateLimitStore.get(key);
+  const bucket = key;
+  const window = windowStart(now);
 
-  if (!entry || now > entry.resetAt) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + RATE_WINDOW });
-    return { allowed: true, remaining: RATE_LIMIT - 1, resetAt: now + RATE_WINDOW };
+  try {
+    const admin = getRateLimitAdmin();
+
+    // Incrementa (upsert) o contador da janela atual no banco compartilhado.
+    // Retorna a contagem pós-incremento para computarmos remaining/reset.
+    const { data, error } = await admin.rpc('increment_rate_limit', {
+      p_bucket: bucket,
+      p_window: window,
+      p_limit: RATE_LIMIT,
+      p_window_ms: RATE_WINDOW_MS,
+    });
+
+    if (error) {
+      console.error('rate_limits rpc error:', error);
+      throw error;
+    }
+
+    const count = (data as number) ?? 0;
+    const allowed = count <= RATE_LIMIT;
+    const resetAt = (Math.floor(now / RATE_WINDOW_MS) + 1) * RATE_WINDOW_MS;
+
+    return { allowed, remaining: Math.max(RATE_LIMIT - count, 0), resetAt };
+  } catch {
+    // Fail-open: se o banco de rate limit falhar, não bloqueia o tráfego
+    // público. Em produção isso é aceitável porque a autenticação e RLS já
+    // protegem os endpoints; o rate limit é uma camada adicional.
+    return { allowed: true, remaining: RATE_LIMIT, resetAt: now + RATE_WINDOW_MS };
   }
-
-  if (entry.count >= RATE_LIMIT) {
-    return { allowed: false, remaining: 0, resetAt: entry.resetAt };
-  }
-
-  entry.count++;
-  return { allowed: true, remaining: RATE_LIMIT - entry.count, resetAt: entry.resetAt };
 }
 
 /* ─── API Key validation ─── */
@@ -123,7 +164,7 @@ const CONTENT_MAP: Record<string, { cat: string; title: string; desc: string; ac
 function json(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    headers: { 'Content-Type': 'application/json', ...corsHeadersFor(currentOrigin) },
   });
 }
 
@@ -138,12 +179,14 @@ function paginate<T>(items: T[], page: number, perPage: number) {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  currentOrigin = req.headers.get('origin');
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeadersFor(currentOrigin) });
 
   try {
-    // 1. Rate limit
+    // 1. Rate limit (shared via rate_limits table)
     const rateKey = req.headers.get('x-api-key') || req.headers.get('authorization') || 'anonymous';
-    const rateLimit = checkRateLimit(rateKey);
+    const rateLimit = await checkRateLimit(rateKey);
     const rateHeaders = {
       'X-RateLimit-Limit': String(RATE_LIMIT),
       'X-RateLimit-Remaining': String(rateLimit.remaining),
@@ -339,35 +382,62 @@ serve(async (req) => {
           return json({ ok: false, error: 'Parâmetros "certificationId" e "moduleId" obrigatórios.', code: 'MISSING_PARAMS' }, 400);
         }
 
-        // Score calculation (simplified)
-        const answersParam = url.searchParams.get('answers');
-        let score = 0;
-        let passed = false;
-
-        if (answersParam) {
-          try {
-            const answers = JSON.parse(answersParam);
-            score = Math.round((answers.filter((a: any) => a.correct).length / Math.max(answers.length, 1)) * 100);
-            passed = score >= 70;
-          } catch { /* no answers = start quiz */ }
-        }
-
-        // Save result
         const supabaseAdmin = createClient(
           Deno.env.get('SUPABASE_URL')!,
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         );
 
-        if (answersParam) {
-          await supabaseAdmin.from('quiz_results').insert({
-            user_id: userId,
-            certification_id: certId,
-            module_id: moduleId,
-            score,
-            passed,
-            completed_at: new Date().toISOString(),
-          });
+        // Busca o gabarito server-side. Sem gabarito (ou gabarito vazio), a
+        // certificação não pode ser calculada com segurança no servidor, então
+        // rejeitamos a submissão para evitar que o cliente controle o resultado.
+        const { data: quizQuestions } = await supabaseAdmin
+          .from('quiz_questions')
+          .select('id, correct_answer')
+          .eq('module_id', moduleId)
+          .eq('certification_id', certId);
+
+        if (!quizQuestions || quizQuestions.length === 0) {
+          return json({
+            ok: false,
+            error: 'Quiz indisponível para certificação neste momento.',
+            code: 'QUIZ_UNAVAILABLE',
+          }, 409);
         }
+
+        const answersParam = url.searchParams.get('answers');
+        let score = 0;
+        let passed = false;
+        let correctCount = 0;
+
+        if (answersParam) {
+          try {
+            const answers = JSON.parse(answersParam);
+            const answerMap = new Map<string, string>(
+              (Array.isArray(answers) ? answers : []).map((a: any) => [String(a?.questionId ?? a?.id), String(a?.givenAnswer ?? a?.answer)])
+            );
+
+            correctCount = quizQuestions.filter((q: any) =>
+              answerMap.get(String(q.id)) === String(q.correct_answer)
+            ).length;
+
+            score = Math.round((correctCount / quizQuestions.length) * 100);
+            passed = score >= 70;
+          } catch {
+            // answers inválidos: mantém score 0 / passed false
+            correctCount = 0;
+            score = 0;
+            passed = false;
+          }
+        }
+
+        await supabaseAdmin.from('quiz_results').insert({
+          user_id: userId,
+          certification_id: certId,
+          module_id: moduleId,
+          score,
+          passed,
+          completed_at: new Date().toISOString(),
+        });
 
         return json({
           ok: true,
@@ -376,8 +446,8 @@ serve(async (req) => {
             moduleId,
             score,
             passed,
-            correctCount: Math.round(score / 5),
-            totalCount: 20,
+            correctCount,
+            totalCount: quizQuestions.length,
             completedAt: new Date().toISOString(),
           },
           ...rateHeaders,

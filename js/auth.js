@@ -104,6 +104,7 @@ const AUTH = (function () {
   let _tickets       = {};
   let _notifications = [];
   let _currentSession = null;
+  let _bootComplete  = false; // true somente após _doInit() terminar (users carregados)
   let _pendingMfaUser = null;       // usuário aguardando MFA
   let _pendingMfaUid  = null;       // UUID Supabase do usuário aguardando MFA
   let _pendingMfaTimestamp = null;  // Date.now() quando MFA foi iniciado
@@ -352,7 +353,8 @@ const AUTH = (function () {
       await seedDemoData();
       _currentSession = _readSessionCache();
       if (!_currentSession) { localStorage.removeItem('adaspro_demo'); }
-      console.info('[AUTH] v4 — Demo Mode ✓');
+      else { console.info('[AUTH] v4 — Demo Mode ✓'); }
+      _bootComplete = true;
       return;
     }
 
@@ -438,6 +440,7 @@ const AUTH = (function () {
         ]);
 
         console.info('[AUTH] v4 — Supabase Auth + PostgreSQL ✓');
+        _bootComplete = true;
         return;
       } catch(e) {
         const isTimeout = e.message === 'supabase_timeout';
@@ -463,6 +466,7 @@ const AUTH = (function () {
             _currentSession = _cached;
           }
         }
+        _bootComplete = true;
         return;
       }
     }
@@ -480,6 +484,7 @@ const AUTH = (function () {
       }
     }
     console.info('[AUTH] v4 — localStorage (local) ✓');
+    _bootComplete = true;
   }
 
   function init() {
@@ -491,10 +496,17 @@ const AUTH = (function () {
     return _sessionMac(role, ts);
   }
 
-  function _validateSessionRole(session) {
+  function _validateSessionRole(session, noDelete) {
     if (!session) return false;
     const user = _users[session.userId];
-    if (!user) { localStorage.removeItem(SESSION_KEY); return false; }
+    // SECURITY NOTE: a checagem `!user` depende de `_users` estar populado.
+    // Antes de _doInit() terminar (noDelete=true), `_users` ainda pode estar vazio
+    // e um getSession() pré-init apagaria destrutivamente uma sessão válida.
+    // Role mismatch e MAC mismatch são seguros pré-init (operam só na sessão).
+    if (!user) {
+      if (!noDelete) localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
     if (user.role !== session.role) {
       localStorage.removeItem(SESSION_KEY);
       return false;
@@ -523,14 +535,14 @@ const AUTH = (function () {
     };
   }
 
-  function _readSessionCache() {
+  function _readSessionCache(noDelete) {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
       if (!s||!s.userId||!s.role||!s.token||!s.expiresAt) return null;
-      if (Date.now() > s.expiresAt) { localStorage.removeItem(SESSION_KEY); return null; }
-      if (!_validateSessionRole(s)) return null;
+      if (Date.now() > s.expiresAt) { if (!noDelete) localStorage.removeItem(SESSION_KEY); return null; }
+      if (!_validateSessionRole(s, noDelete)) return null;
       return s;
     } catch { return null; }
   }
@@ -810,7 +822,11 @@ const AUTH = (function () {
     }
     // Supabase configurado: nunca aceitar sessão do localStorage (evita bypass de role)
     if (_mode === 'supabase' || (_sbConfigured && !_demo)) return null;
-    const s = _readSessionCache();
+    // Pré-boot: leitura não-destrutiva. Se _users ainda não foi populado, não
+    // devemos apagar uma sessão válida só porque o usuário ainda não foi carregado
+    // (was a bug: whatsapp.js chamava getSession() no DOMContentLoaded, antes de
+    // init() terminar, e _validateSessionRole apagava adaspro_session).
+    const s = _readSessionCache(!_bootComplete);
     if (!s) return null;
     const u = _users[s.userId];
     if (u && u.status === 'blocked') { logout(); return null; }

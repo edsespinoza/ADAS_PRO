@@ -17,6 +17,20 @@
 
 ---
 
+## ⚡ LSP — Ativação e configuração 2026-08-29
+
+> **Solicitação:** "vamos ativar e fazer funcionar o LSP, procure na internet e use agentes e skill para instalar e configurar."
+
+- [x] **#97 — LSP habilitado no `opencode.json`** ✅ 2026-08-29
+  - **Antes:** `lsp` ausente → LSP **desabilitado por padrão** (todos os servidores off). Adicionado `"lsp": true` ao `opencode.json` do projeto, que habilita todos os built-ins do opencode quando o arquivo (extensão) e os **requisitos** de cada servidor são atendidos.
+  - **Pesquisa (docs oficiais):** `opencode.ai/docs/lsp` — built-ins ativam por extensão + requisitos. Para um projeto JS/HTML/CSS puro como este: `typescript` (requer `typescript` no projeto), `bash` (auto-instala bash-language-server), `yaml-ls` (docker-compose), `pyright` (requer dep pyright).
+  - **TS7 n/a:** instalar `typescript@7` (compilador nativo) **não** traz `tsserver` — quebra a integração. Fix: pinado para **`typescript@^5.9.3`** (linha 5.x, entrega `bin/tsserver` funcionando — verificado via spawn).
+  - **`tsconfig.json` criado:** `allowJs`, `checkJs:false` (evita enxurrada de diagnostics no JS legado; mantém syntax/import/navegação), `noEmit`, inclui `js/**/*.js` e `supabase/**/*.ts`.
+  - **Importante:** config é carregada **só no startup** — **reiniciar o opencode** para o LSP começar a funcionar.
+  - **Opcional (não ativado p/ evitar ruído, conforme best practice dos docs):** eslint LSP (precisa de dep eslint no projeto + config; código legado com browser-globals geraria muito `no-undef`), pyright (requer instalar `pyright`), deno LSP (requer binário `deno` — não instalado; edge functions são deployadas via Supabase, não rodadas localmente).
+
+---
+
 ## 🧰 SÍNCRONIZAÇÃO — Banco de dados + Edge Functions + ferramentas MCP + skills 2026-08-29
 
 > **Solicitação:** "atualize o banco de dados e as ferramentas todas nessa plataforma" — navegar o sistema e atualizar tudo que for pertinente ao projeto.

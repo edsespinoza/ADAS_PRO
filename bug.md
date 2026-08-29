@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-15 (Pacote de Segurança #86–90)  
+**Última atualização:** 2026-08-29  
 **Responsável:** AutoTech Service
 
 ---
@@ -17,6 +17,25 @@
 
 ---
 
+## 🧰 SÍNCRONIZAÇÃO — Banco de dados + Edge Functions + ferramentas MCP + skills 2026-08-29
+
+> **Solicitação:** "atualize o banco de dados e as ferramentas todas nessa plataforma" — navegar o sistema e atualizar tudo que for pertinente ao projeto.
+
+- [x] **#92 — Banco: 5 tabelas de conteúdo do api-gateway criadas (estavam ausentes)** ✅ 2026-08-29
+  - **Gap encontrado:** a Edge Function `api-gateway` (deployada em 28/08) referenciava as tabelas `user_progress`, `bulletins`, `articles`, `quiz_questions` e `quiz_results`, mas **nenhuma existia** no Supabase live nem havia migration no repo — as ações `update_progress`, `list_bulletins`, `list_articles` e `submit_quiz` falhariam em runtime com 500 (tabela inexistente).
+  - **Fix:** novo `sql/content_tables.sql` criando as 5 tabelas com shapes compatíveis com os dados dos painéis (artigos/boletins espelham `adaspro_articles`/`adaspro_bulletins` do localStorage em `auth.js`), índices e RLS no padrão de `rls_policies.sql` (politicas `SELECT published OU is_admin()`, `_own` para dados do usuário, `quiz_questions` SELECT autenticado). **Aplicado no live** via `supabase db query --linked -f`. Verificado: 10 tabelas presentes (users, tickets, notifications, settings, audit_logs, api_keys, rate_limits + 5 novas).
+  - **Invariantes:** api-gateway usa service_role (ignora RLS); `rate_limits` segue com `FOR ALL USING (false)`.
+- [x] **#93 — Security MCPs habilitados no `opencode.json`** ✅ 2026-08-29
+  - `security-nmap`, `security-nuclei`, `security-gitleaks`, `security-semgrep`, `security-trivy` estavam definidos mas `enabled:false` — não carregavam ao abrir o projeto. Imagens Docker (`adas-*-mcp:latest`) já construídas. Alterado para `enabled:true`.
+- [x] **#94 — `mcp-manager.sh` agora gerencia o projeto ADAS_PRO** ✅ 2026-08-29
+  - Script só conhecia `SGW_PRO` e `sgw_pro_saas`. Adicionado `ADAS_DIR` (`.../ADAS_PRO/landing-page`), projeto `adas`/`ADAS_PRO` em `PROJECTS`, `get_config_path`, `get_projects` e `project_name`, além do help. `mcp-manager.sh list adas` ✅ lista os 5 security MCPs como ATIVO.
+- [x] **#95 — Skills atualizadas para o estado atual** ✅ 2026-08-29
+  - `adas-edge-functions`: passou de 3 → 4 funções, documentando a `api-gateway` (auth via `X-API-Key`/JWT, rate limit compartilhado via tabela `rate_limits`, tabelas de dependência, ações, `submit_quiz` server-side, teste rápido).
+  - `adas-rules`: matriz RLS (seção 7) ganhou `articles`, `bulletins`, `user_progress`, `quiz_questions`, `quiz_results`, `rate_limits` + nota sobre consumo via service_role.
+- [x] **#96 — Verificação de estado (já estava atual):** Edge Functions todas deployadas (approve-user, get-download-url, notify, api-gateway — ACTIVE) e migrations anteriores (`api_keys`, `rate_limits`, users/settings/audit_logs) já aplicadas — nenhuma reaplicação necessária.
+
+---
+
 ## 🔴 CRÍTICO — Resolver antes de qualquer uso em produção
 
 - [x] **#01 — RLS Supabase: bloquear acesso direto ao banco via anonKey** ✅ 2026-04-27
@@ -25,6 +44,13 @@
   - RLS ativo nas 3 tabelas: `users`, `tickets`, `notifications` — 12 políticas no total
   - Regra geral: usuário acessa apenas seus próprios dados; admin+ acessa tudo; DELETE em users só para superadmin
   - Arquivo: `sql/rls_policies.sql`, `js/auth.js`
+
+- [x] **#91 — Criar superadmin@adaspro.com.br online no Supabase Auth** ✅ 2026-08-29
+  - **Problema relatado:** login online (senha/credenciais) parou de funcionar após atualizações — os mesmos acessos de teste que funcionavam antes deixaram de dar acesso.
+  - **Diagnóstico (via Management API + service_role):** o Supabase Auth tinha apenas 3 usuários (`admin@adaspro.com.br`=superadmin — logou em 28/08, `testesa@adaspro.com.br`=superadmin, `teste_admin@adaspro.com.br`=admin). **`superadmin@adaspro.com.br` NÃO existia no Auth** — só existia como seed local/offline. Como `_sbConfigured` força rota `signInWithPassword`, qualquer tentativa de `superadmin@adaspro.com.br` online falhava com "user not found" → mapeado para "E-mail ou senha incorretos". MFA não está ativo (nenhum fator nos 3 usuários), então não era o bloqueio.
+  - **Fix:** criado usuário no Supabase Auth (`email_confirm=true`) com senha forte distinta do seed offline, e feito upsert em `public.users` (role=superadmin, status=active, plan=premium, permissions=[]) com o mesmo UUID do Auth. Login validado de ponta a ponta via `token?grant_type=password` (como o app faz).
+  - **Invariante preservado:** senha online ≠ `ADAS_OFFLINE_SA_2026` (seed offline).
+  - **Pendência:** usuário deve trocar a senha após o 1º login (Recomendado). Ver pendência F (senhas de produção expostas no histórico) e G (DEMO_ENABLED em produção).
 
 - [x] **#02 — Remover senhas hardcoded do auth.js** ✅ 2026-04-25
   - Senhas de produção removidas. Seed local usa `_DEMO_AD_PASS` / `_DEMO_SA_PASS` com valores claramente diferentes dos de produção.

@@ -138,6 +138,14 @@ Funções `SECURITY DEFINER` (executam como owner, ignoram RLS):
 | `users` | próprio OU admin+ | próprio (role=membro, status=pending) OU admin+ | próprio (sem mudar role/status) OU admin+ | só superadmin |
 | `tickets` | dono OU admin+ | dono (`userId=auth.uid`) | dono OU admin+ | admin+ |
 | `notifications` | dono OU admin+ | dono OU admin+ | dono OU admin+ | admin+ |
+| `articles` | published OU admin+ | admin+ | admin+ | admin+ |
+| `bulletins` | published OU admin+ | admin+ | admin+ | admin+ |
+| `user_progress` | próprio OU admin+ | próprio | próprio | próprio |
+| `quiz_questions` | autenticado | admin+ | admin+ | admin+ |
+| `quiz_results` | próprio OU admin+ | próprio | — | — |
+| `rate_limits` | nenhum (só service_role via `increment_rate_limit`) | — | — | — |
+
+> Tabelas `articles`, `bulletins`, `user_progress`, `quiz_questions`, `quiz_results` são consumidas pela **api-gateway** (via service_role, ignora RLS) e criadas em `sql/content_tables.sql`.
 
 **Regra crítica em `users` UPDATE:** `WITH CHECK` compara os novos valores com os valores atuais no banco — impede que membro se promova para admin via UPDATE direto.
 

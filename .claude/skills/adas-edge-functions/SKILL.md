@@ -1,16 +1,16 @@
 ---
 name: adas-edge-functions
-description: Resumo compactado das 3 Edge Functions Supabase do ADAS PRO — approve-user, get-download-url e notify. Cobre API, autenticação, lógica de negócio, env vars, CORS e padrões de erro. Usar antes de qualquer tarefa que toque nas funções ou no deploy delas.
+description: Resumo compactado das 4 Edge Functions Supabase do ADAS PRO — approve-user, get-download-url, notify e api-gateway. Cobre API, autenticação, lógica de negócio, env vars, CORS e padrões de erro. Usar antes de qualquer tarefa que toque nas funções ou no deploy delas.
 type: reference
 ---
 
 # ADAS PRO — Edge Functions (Deno + Supabase)
 
 Deploy: `supabase functions deploy <nome>`  
-Runtime: Deno · `deno.land/std@0.177.0` · `esm.sh/@supabase/supabase-js@2`  
-CORS geral: `approve-user` e `get-download-url` hardcodam `https://adaspro.com.br`. `notify` lê do env `SITE_URL`.
+Runtime: Deno · `deno.land/std@0.224.0` (api-gateway) / `std@0.177.0` (demais) · `esm.sh/@supabase/supabase-js@2`  
+CORS geral: `approve-user` e `get-download-url` hardcodam `https://adaspro.com.br`. `notify` lê do env `SITE_URL`. `api-gateway` lê o `Origin` do request e valida contra `['https://adaspro.com.br']`.
 
-**Padrão de autenticação comum às 3 funções:**
+**Padrão de autenticação comum às 3 funções internas:**
 ```ts
 // 1. Valida JWT do chamador via anonKey
 const supabaseUser = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
@@ -168,9 +168,66 @@ function json(data: unknown, status = 200) {
 }
 ```
 
+---
+
+## 4. `api-gateway` (API pública)
+
+**Env vars:** `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `SUPABASE_ANON_KEY`  
+**Auth:** `verify_jwt=False` — a função valida ela mesma (API Key OU JWT)  
+**Método:** GET/POST · ação via `?action=` ou body `{ action }`  
+**Rate limit:** compartilhado via tabela `public.rate_limits` (janela de 1 min, limite 100) — substitui o Map in-memory.
+
+### Autenticação (2 vias)
+- **`X-API-Key: adas_live_...`** → hash SHA-256, lookup em `api_keys` (`key_hash`, `active=true`)
+- **`Authorization: Bearer <JWT>`** → `auth.getUser()` + `users.status='active'`
+- Ausência de ambos → 401 `NO_AUTH`
+
+### Rate limiting (tabela `rate_limits`)
+```ts
+admin.rpc('increment_rate_limit', { p_bucket, p_window, p_limit:100, p_window_ms:60000 })
+```
+- Retorna contagem pós-incremento; `count <= 100` → allowed.
+- Cabeçalhos de resposta: `X-RateLimit-Limit/Remaining/Reset`.
+- **Fail-open:** se o RPC falhar, não bloqueia tráfego (autenticação+RLS já protegem).
+
+### Ações (`action`)
+| action | params | Depende da tabela |
+|---|---|---|
+| `list_content` | `category?`, `page?`, `per_page?` | CONTENT_MAP (in-code) |
+| `get_content` | `id` | CONTENT_MAP |
+| `get_download_url` | `contentId`/`id` | `materiais` storage + `users.plan` |
+| `list_categories` | — | CATEGORIES (in-code) |
+| `get_user` | — | `users` |
+| `update_progress` | `contentId`, `progress`, `completed` | **`user_progress`** |
+| `list_bulletins` | `type?` | **`bulletins`** (status=published) |
+| `list_articles` | — | **`articles`** (status=published) |
+| `list_certifications` | — | in-code (3 níveis) |
+| `submit_quiz` | `certificationId`, `moduleId`, `answers` | **`quiz_questions`** + **`quiz_results`** |
+
+### `submit_quiz` — regras
+- Gabarito buscado **server-side** em `quiz_questions` (correção nunca no cliente).
+- Sem perguntas → 409 `QUIZ_UNAVAILABLE`.
+- Nota = % de acertos; `passed = score >= 70`. Insere em `quiz_results`.
+
+### Dependências de tabela (criadas em `sql/content_tables.sql`)
+> ⚠️ `api-gateway` usa **service_role**, logo ignora RLS. As tabelas abaixo precisam **existir** no banco (agora criadas): `api_keys`, `rate_limits`, `user_progress`, `bulletins`, `articles`, `quiz_questions`, `quiz_results`.
+
+### CORS / Preflight
+- `ALLOWED_ORIGINS = ['https://adaspro.com.br']`; OPTIONS retorna capitações.
+- Headers permitidos: `authorization, content-type, x-api-key`.
+
+### Teste rápido
+```bash
+curl -s "https://zqydyyticvtmirjzskly.supabase.co/functions/v1/api-gateway?action=list_categories" \
+  -H "Authorization: Bearer <JWT ou x-api-key>"
+```
+
+---
+
 ## Checklist antes de deploy
 
 - [ ] Env vars configuradas no Supabase Dashboard para a função específica
-- [ ] CORS correto (`approve-user`/`get-download-url`: hardcoded; `notify`: via `SITE_URL`)
-- [ ] `CONTENT_MAP` sincronizado com `DEFAULT_CONTENT` (apenas `get-download-url`)
+- [ ] CORS correto (`approve-user`/`get-download-url`: hardcoded; `notify`: via `SITE_URL`; `api-gateway`: lista `ALLOWED_ORIGINS`)
+- [ ] `CONTENT_MAP` sincronizado com `DEFAULT_CONTENT` (apenas `get-download-url` e `api-gateway`)
+- [ ] Tabelas usadas por `api-gateway` existem (`user_progress`, `bulletins`, `articles`, `quiz_questions`, `quiz_results` — ver `sql/content_tables.sql`)
 - [ ] `supabase functions deploy <nome>`

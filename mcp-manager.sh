@@ -4,9 +4,10 @@ set -euo pipefail
 SCRIPTS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 SGW_PRO_DIR="/home/edson-espinoza/Área de trabalho/Projetos IA/Projetos/SGW_PRO"
 SAAS_DIR="/home/edson-espinoza/Área de trabalho/Projetos IA/Projetos/sgw_pro_saas"
+ADAS_DIR="/home/edson-espinoza/Área de trabalho/Projetos IA/Projetos/ADAS_PRO/landing-page"
 
 PROJECTS=(
-  "$SGW_PRO_DIR:$SAAS_DIR"
+  "$SGW_PRO_DIR:$SAAS_DIR:$ADAS_DIR"
 )
 
 usage() {
@@ -32,7 +33,8 @@ Comandos:
 Projetos:
   sgw    = SGW_PRO (atual)
   saas   = sgw_pro_saas
-  all    = ambos (padrão)
+  adas   = ADAS_PRO/landing-page
+  all    = todos (padrão)
 
 Exemplos:
   mcp-manager.sh list
@@ -47,16 +49,18 @@ get_config_path() {
   case "$1" in
     sgw|SGw|SGW_PRO)  echo "$SGW_PRO_DIR/opencode.json" ;;
     saas|SAAS|sgw_pro_saas)  echo "$SAAS_DIR/opencode.json" ;;
-    *)  echo "Projeto inválido: $1 (use sgw, saas ou all)"; exit 1 ;;
+    adas|ADAS|ADAS_PRO|adaspro)  echo "$ADAS_DIR/opencode.json" ;;
+    *)  echo "Projeto inválido: $1 (use sgw, saas, adas ou all)"; exit 1 ;;
   esac
 }
 
 get_projects() {
   local filter="$1"
   case "$filter" in
-    all|"")  echo "$SGW_PRO_DIR/opencode.json"; echo "$SAAS_DIR/opencode.json" ;;
+    all|"")  echo "$SGW_PRO_DIR/opencode.json"; echo "$SAAS_DIR/opencode.json"; echo "$ADAS_DIR/opencode.json" ;;
     sgw|SGW_PRO)  echo "$SGW_PRO_DIR/opencode.json" ;;
     saas|sgw_pro_saas)  echo "$SAAS_DIR/opencode.json" ;;
+    adas|ADAS|ADAS_PRO|adaspro)  echo "$ADAS_DIR/opencode.json" ;;
     *)
       if [[ -f "$filter" ]]; then
         echo "$filter"
@@ -69,7 +73,9 @@ get_projects() {
 
 project_name() {
   local path="$1"
-  if [[ "$path" == *"SGW_PRO"* ]]; then echo "SGW_PRO"; else echo "sgw_pro_saas"; fi
+  if [[ "$path" == *"SGW_PRO"* ]]; then echo "SGW_PRO";
+  elif [[ "$path" == *"ADAS_PRO"* ]]; then echo "ADAS_PRO";
+  else echo "sgw_pro_saas"; fi
 }
 
 cmd_list() {

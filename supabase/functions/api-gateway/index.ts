@@ -184,9 +184,24 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeadersFor(currentOrigin) });
 
   try {
-    // 1. Rate limit (shared via rate_limits table)
-    const rateKey = req.headers.get('x-api-key') || req.headers.get('authorization') || 'anonymous';
-    const rateLimit = await checkRateLimit(rateKey);
+    // 1. Rate limit (shared via rate_limits table) — duas dimensões:
+    //    por credencial (x-api-key/token) e por IP, impedindo tanto o
+    //    vazamento/rotação de token quanto o flood a partir de um host.
+    const clientIp = req.headers.get('x-real-ip')
+      || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+      || 'unknown';
+    const cred = req.headers.get('x-api-key') || req.headers.get('authorization') || 'anonymous';
+
+    let allowed = true;
+    let remaining = RATE_LIMIT;
+    let resetAt = 0;
+    for (const bucket of [`cred:${cred}`, `ip:${clientIp}`]) {
+      const r = await checkRateLimit(bucket);
+      if (!r.allowed) allowed = false;
+      remaining = Math.min(remaining, r.remaining);
+      resetAt = Math.max(resetAt, r.resetAt);
+    }
+    const rateLimit = { allowed, remaining, resetAt };
     const rateHeaders = {
       'X-RateLimit-Limit': String(RATE_LIMIT),
       'X-RateLimit-Remaining': String(rateLimit.remaining),
@@ -203,6 +218,7 @@ serve(async (req) => {
 
     let userId: string | undefined;
     let userRole: string | undefined;
+    let apiKeyPlan: string | undefined;
 
     if (apiKey) {
       const keyResult = await validateApiKey(apiKey);
@@ -210,6 +226,7 @@ serve(async (req) => {
         return json({ ok: false, error: 'API Key inválida ou inativa.', code: 'INVALID_API_KEY' }, 401);
       }
       userId = keyResult.userId;
+      apiKeyPlan = keyResult.plan;
     } else if (authHeader) {
       const jwtResult = await validateJwt(authHeader);
       if (!jwtResult.valid) {
@@ -225,12 +242,14 @@ serve(async (req) => {
     const url = new URL(req.url);
     let action = url.searchParams.get('action') || '';
 
+    let body: Record<string, unknown> = {};
     if (req.method === 'POST') {
-      const body = await req.json().catch(() => ({}));
-      action = body.action || action;
-      // Merge body into params for handlers
+      body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+      action = typeof body.action === 'string' ? body.action : action;
+      // Merge body into params for handlers (arrays são preservados no body —
+      // String(Array) os destruiria, ex.: submit_quiz answers)
       for (const [k, v] of Object.entries(body)) {
-        if (k !== 'action') url.searchParams.set(k, String(v));
+        if (k !== 'action' && !Array.isArray(v)) url.searchParams.set(k, String(v));
       }
     }
 
@@ -264,30 +283,74 @@ serve(async (req) => {
         const item = CONTENT_MAP[id];
         if (!item) return json({ ok: false, error: 'Material não encontrado.', code: 'NOT_FOUND' }, 404);
 
-        // Check user permissions
         const supabaseAdmin = createClient(
           Deno.env.get('SUPABASE_URL')!,
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         );
 
-        const { data: userData } = await supabaseAdmin
-          .from('users').select('role, permissions, plan').eq('id', userId).single();
-
-        if (!userData) return json({ ok: false, error: 'Usuário não encontrado.', code: 'USER_NOT_FOUND' }, 404);
-
         const planLevels: Record<string, number> = { free: 1, modulo: 2, pro: 3, premium: 4 };
-        const userLevel = planLevels[userData.plan] || 1;
 
-        if (userLevel < item.downloadLevel) {
-          return json({ ok: false, error: 'Nível de acesso insuficiente para este material.', code: 'INSUFFICIENT_ACCESS' }, 403);
+        // Permissões do dono (JWT ou chave com user_id) — nunca confiar em dados do cliente
+        let userData: { role?: string; status?: string; permissions?: string[]; plan?: string } | null = null;
+        if (userId) {
+          const { data } = await supabaseAdmin
+            .from('users').select('role, status, permissions, plan').eq('id', userId).maybeSingle();
+          userData = data ?? null;
+          if (!userData) return json({ ok: false, error: 'Usuário não encontrado.', code: 'USER_NOT_FOUND' }, 404);
+          if (userData.status !== 'active') {
+            return json({ ok: false, error: 'Conta inativa ou pendente de aprovação.', code: 'INACTIVE' }, 403);
+          }
         }
 
-        // Generate signed URL
+        // Staff (gestor/admin/superadmin) sempre passa — espelha get-download-url/auth.js
+        const staffRoles = ['admin', 'gestor', 'superadmin'];
+        const isStaff = (!!userData && !!userData.role && staffRoles.includes(userData.role))
+          || (!!userRole && staffRoles.includes(userRole));
+
+        const hasPermission = isStaff || (userData?.permissions || []).includes(item.cat);
+        if (!hasPermission) {
+          return json({ ok: false, error: 'Sem permissão para este material.', code: 'NO_PERMISSION' }, 403);
+        }
+
+        // Nível do plano — staff = nível 4; chave sem dono usa o plano da própria chave
+        const userLevel = isStaff
+          ? 4
+          : (planLevels[userData?.plan || apiKeyPlan || 'free'] || 1);
+
+        if (userLevel < (item.accessLevel || 1)) {
+          return json({ ok: false, error: 'Seu plano não permite visualizar este material.', code: 'PLAN_LEVEL' }, 403);
+        }
+        if (userLevel < (item.downloadLevel || 2)) {
+          return json({ ok: false, error: 'Seu plano não permite baixar este material.', code: 'INSUFFICIENT_ACCESS' }, 403);
+        }
+
+        // Configuração do módulo (moduleAccess) — staff passa
+        const { data: settingsData } = await supabaseAdmin
+          .from('settings').select('value').eq('key', 'app').maybeSingle();
+        const mod = settingsData?.value?.moduleAccess?.[item.cat];
+        if (mod && mod.enabled === false && !isStaff) {
+          return json({ ok: false, error: 'Este módulo está desativado.', code: 'MODULE_DISABLED' }, 403);
+        }
+        if (mod && mod.minLevel && !isStaff && userLevel < mod.minLevel) {
+          return json({ ok: false, error: 'Seu plano não permite acesso a este módulo.', code: 'MODULE_LEVEL' }, 403);
+        }
+
+        // Generate signed URL (1h)
         const { data: signedUrl, error } = await supabaseAdmin.storage
           .from('materiais')
           .createSignedUrl(`${item.cat}/${id}.pdf`, 3600);
 
         if (error) return json({ ok: false, error: 'Erro ao gerar URL de download.', code: 'STORAGE_ERROR' }, 500);
+
+        // Auditoria (fail-safe: apenas loga, não bloqueia o download)
+        const { error: logErr } = await supabaseAdmin.from('audit_logs').insert({
+          action: 'download_content',
+          ...(userId ? { actor_id: userId } : {}),
+          target_id: id,
+          details: { cat: item.cat, filePath: `${item.cat}/${id}.pdf` },
+          created_at: new Date().toISOString(),
+        });
+        if (logErr) console.error('[api-gateway] audit_logs falhou:', logErr.message);
 
         return json({
           ok: true,
@@ -404,31 +467,36 @@ serve(async (req) => {
           }, 409);
         }
 
-        const answersParam = url.searchParams.get('answers');
         let score = 0;
         let passed = false;
         let correctCount = 0;
 
-        if (answersParam) {
+        // Respostas vêm no body como array (ex.: [{questionId, selected}]) —
+        // aceitamos também a forma string JSON (query string / legado)
+        const rawAnswers = body.answers ?? url.searchParams.get('answers');
+        let answersList: unknown[] = [];
+        if (Array.isArray(rawAnswers)) {
+          answersList = rawAnswers as unknown[];
+        } else if (typeof rawAnswers === 'string') {
           try {
-            const answers = JSON.parse(answersParam);
-            const answerMap = new Map<string, string>(
-              (Array.isArray(answers) ? answers : []).map((a: any) => [String(a?.questionId ?? a?.id), String(a?.givenAnswer ?? a?.answer)])
-            );
-
-            correctCount = quizQuestions.filter((q: any) =>
-              answerMap.get(String(q.id)) === String(q.correct_answer)
-            ).length;
-
-            score = Math.round((correctCount / quizQuestions.length) * 100);
-            passed = score >= 70;
-          } catch {
-            // answers inválidos: mantém score 0 / passed false
-            correctCount = 0;
-            score = 0;
-            passed = false;
-          }
+            const parsed = JSON.parse(rawAnswers);
+            if (Array.isArray(parsed)) answersList = parsed;
+          } catch { /* respostas inválidas: mantém score 0 */ }
         }
+
+        const answerMap = new Map<string, string>(
+          answersList.map((a: any) => [
+            String(a?.questionId ?? a?.id),
+            String(a?.givenAnswer ?? a?.answer ?? a?.selected),
+          ])
+        );
+
+        correctCount = quizQuestions.filter((q: any) =>
+          answerMap.get(String(q.id)) === String(q.correct_answer)
+        ).length;
+
+        score = Math.round((correctCount / quizQuestions.length) * 100);
+        passed = score >= 70;
 
         await supabaseAdmin.from('quiz_results').insert({
           user_id: userId,

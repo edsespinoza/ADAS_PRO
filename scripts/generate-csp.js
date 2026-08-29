@@ -35,7 +35,7 @@ const BASE_DIRECTIVES = {
   'base-uri':    `'self'`,
   'form-action': `'self'`,
   'frame-ancestors': `'none'`,
-  'worker-src':  `'none'`,
+  'worker-src':  `'self'`,
   'manifest-src': `'self'`,
   'media-src':   `'self'`,
   'upgrade-insecure-requests': '',

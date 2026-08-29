@@ -315,7 +315,8 @@ CREATE POLICY "settings_insert" ON public.settings
 
 CREATE POLICY "settings_update" ON public.settings
   FOR UPDATE
-  USING (public.is_admin_staff());
+  USING (public.is_admin_staff())
+  WITH CHECK (public.is_admin_staff());
 
 CREATE POLICY "settings_delete" ON public.settings
   FOR DELETE

@@ -17,6 +17,32 @@
 
 ---
 
+## 🔐 SEGURANÇA — Correções da auditoria profunda + deploy api-gateway 2026-08-29
+
+> **Solicitação:** aplicar em sequência os ajustes necessários do relatório de vulnerabilidades/improvements e entregar resultados verificados.
+
+- [x] **#98 — CRÍTICO: criação de chave premium via RPC anônimo (PoC abusada)** ✅ 2026-08-29
+  - **Prova:** anon conseguia chamar `rpc/adas_create_api_key` e gerar uma chave `plan=premium` de graça (PoC `adas_live_testabuse123` criada e **deletada** do banco). Causa: `SECURITY DEFINER` sem checagem de role + `search_path=public`.
+  - **Fix (código + live):** `supabase/migrations/20260828_api_keys.sql` — guarda in-corpo `IF auth.uid() IS NOT NULL AND NOT public.is_admin_staff() THEN RAISE EXCEPTION ... 42501`; `SET search_path=''`; `REVOKE EXECUTE FROM anon, authenticated, public` + `GRANT EXECUTE TO service_role` em `adas_create_api_key`/`adas_deactivate_api_key` e `increment_rate_limit`. **Verificado live:** anon agora recebe `42501 permission denied for function` (HTTP 401) nas 3 funções.
+- [x] **#99 — ALTO: api-gateway `get_download_url` validava apenas o bucket (IDOR)** ✅ 2026-08-29
+  - **Antes:** retornava URL assinada para qualquer `{categoria}/{arquivo}` do bucket `materiais` sem checar se o usuário tinha o módulo/plano (burlando o `get-download-url` oficial).
+  - **Fix (`supabase/functions/api-gateway/index.ts`):** autorização espelhando `get-download-url` — userData (`role, status, permissions, plan`), requere `status='active'`, staff (`admin|gestor|superadmin`, nível 4) passa, `hasPermission` (permissions contém a categoria OU staff), checagens `accessLevel`/`downloadLevel` por `planLevels {free:1,modulo:2,pro:3,premium:4}` e `moduleAccess` da `settings(key='app')` (enabled/minLevel), URL assinada 1h do bucket `materiais`, log em `audit_logs` (actor_id só quando há userId). Deploy executado ✅.
+- [x] **#100 — ALTO: `quiz_questions` vazava `correct_answer` a qualquer autenticado** ✅ 2026-08-29
+  - **Fix:** privilégio de coluna — `REVOKE SELECT ... FROM anon, authenticated` + grant seletivo `(id, certification_id, module_id, question, options, points, sort_order)` a `authenticated` (service_role mantém a tabela completa para o api-gateway corrigir server-side). **Verificado live:** `has_column_privilege` → `authenticated` NÃO vê `correct_answer` (vê `question`); `anon` não vê nada.
+  - **Relacionado:** `submit_quiz` corrigido para ler `answers` do corpo (array de `{questionId, selected}`) — antes lia apenas `url.searchParams` e não parseava arrays (`a?.givenAnswer ?? a?.answer ?? a?.selected`).
+- [x] **#101 — ALTO: articles/bulletins legíveis por anon (paywall vazada) + rate limit só credencial** ✅ 2026-08-29
+  - **Fix RLS (código + live):** policies `articles_select_published`/`bulletins_select_published`/`*_write_admin` agora `TO authenticated` — `anon` bloqueado. `settings_update` ganhou `WITH CHECK (public.is_admin_staff())`.
+  - **Fix api-gateway:** rate limit por **2 buckets** `cred:<chave|jwt|anon>` e `ip:<x-real-ip|primeiro x-forwarded-for|unknown>` (loop, `remaining`=menor, `resetAt`=maior) — IP não pode mais contornar criando chave nova.
+- [x] **#102 — MÉDIO: CSP/headers deprecados + containers rodando como root** ✅ 2026-08-29
+  - `worker-src 'none'` → `'self'` em `scripts/generate-csp.js` (service worker existe: `membros`/`admin`/`superadmin`) — CSP regenerada no `vercel.json`; `X-XSS-Protection` removido (header deprecado).
+  - Root `Dockerfile`: nginx pinado `1.27-alpine` + **`USER nginx`** (master/worker não-root, cache/pid chowned). Verificado: imagem sobe, HTTP 200 em `/` e `/membros`.
+  - MCP containers: `semgrep/mcp` pinado `0.2.0` (imagem já roda como `app`/uid 1000); `trivy` pinado `0.57.1` + usuário 10001 com plugin instalado sob `/home/trivy` e cache gravável. Builds testados ✅.
+- [x] **Auditorias pós-fix:** `npm run security` ✅ "OK — tudo coberto" (0 erros, 0 warnings — X-XSS-Protection some do warning); `security:db` ✅ 02 (`no_search_path`) e 03 (`default_search_path`) **limpas**; 04 lista apenas as funções helper de role (anon/authenticated) que são **intencionais** e usadas nas políticas RLS (não expõem dados). DB: 12 tabelas, 0 buckets públicos.
+- **Pendência documentada (código já pronto):** ativar `TOTP obrigatório` p/ admin/superadmin no Dashboard (4 contas com 0 fatores — ver pendência D). `DEMO_ENABLED=true` segue ativo em produção (ver pendência G).
+  - **Melhoria futura (não aplicada):** flag `hasAccess` em `list_content` do api-gateway — metadados são públicos por design (marketing); enforcement está em `get_download_url`/`get_download_url` do gateway. Só faria sentido expor "bloqueado" na API.
+
+---
+
 ## ⚡ LSP — Ativação e configuração 2026-08-29
 
 > **Solicitação:** "vamos ativar e fazer funcionar o LSP, procure na internet e use agentes e skill para instalar e configurar."
@@ -190,10 +216,10 @@
 | A | 🔴 Alta | Revogar token Supabase CLI usado em 2026-04-27 | supabase.com/dashboard/account/tokens |
 | B | 🟠 Alta | Revogar chaves Firebase antigas | console.firebase.google.com |
 | C | 🟠 Alta | Configurar env vars da função `notify`: `RESEND_API_KEY`, `ADMIN_EMAIL`, `SITE_URL` | Supabase Dashboard → Edge Functions → notify |
-| D | 🟡 Médio | Ativar TOTP obrigatório para admin/superadmin no Supabase Dashboard — código pronto, só falta ativar | Supabase Dashboard → Auth → MFA Policy → Enforce for roles |
+| D | 🟡 Médio | Ativar TOTP obrigatório para admin/superadmin no Supabase Dashboard — código já pronto. **Estado 2026-08-29:** 4 contas de staff com 0 fatores TOTP (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` — todas `@adaspro.com.br`); config MFA não é automatizável via código | Supabase Dashboard → Auth → MFA Policy → Enforce for roles |
 | F | 🟠 Alta | Trocar senhas de produção no Supabase Auth (AutoTech@ADAS2026! e Admin@ADAS2026! foram expostas no histórico do código) | Supabase Dashboard → Authentication → Users |
 | E | 🟡 Médio | Implementar UI de upload de PDFs no `admin.html` | Código — próxima sessão |
-| G | 🟠 Alta | Definir `DEMO_ENABLED=false` para desligar o modo demo no login de produção (verificado ativo em 2026-08-15) | Vercel Dashboard → Project → Settings → Environment Variables |
+| G | 🟠 Alta | Definir `DEMO_ENABLED=false` para desligar o modo demo no login de produção (verificado ativo em 2026-08-15 e 2026-08-29) | Vercel Dashboard → Project → Settings → Environment Variables |
 
 ---
 

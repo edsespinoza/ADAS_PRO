@@ -45,6 +45,10 @@ COMMENT ON COLUMN public.api_keys.active IS 'Se a chave está ativa (false revog
 -- Helper: criar chave. Recebe o TEXTO PURO da chave (ex.: adas_live_xxx),
 -- armazena apenas o hash e retorna a linha criada.
 -- Uso: SELECT * FROM public.adas_create_api_key('adas_live_minhachave', 'produção', '70b71d1e-...');
+--
+-- SEGURANÇA: checagem de role no corpo (porque SECURITY DEFINER ignora RLS)
+-- + EXECUTE apenas para service_role/autenticados admin. search_path fixo
+-- impede hijack de função via schema malicioso.
 CREATE OR REPLACE FUNCTION public.adas_create_api_key(
   p_key    text,
   p_name   text,
@@ -54,11 +58,17 @@ CREATE OR REPLACE FUNCTION public.adas_create_api_key(
 RETURNS public.api_keys
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   new_row public.api_keys;
 BEGIN
+  -- Autorização: admins autenticados; service_role (auth.uid() NULL) passa sem checagem.
+  IF auth.uid() IS NOT NULL AND NOT public.is_admin_staff() THEN
+    RAISE EXCEPTION USING ERRCODE = '42501',
+      MESSAGE = 'Acesso negado: requer superadmin ou admin';
+  END IF;
+
   IF p_key IS NULL OR length(p_key) < 12 THEN
     RAISE EXCEPTION 'Chave inválida (mínimo 12 caracteres)';
   END IF;
@@ -76,14 +86,26 @@ CREATE OR REPLACE FUNCTION public.adas_deactivate_api_key(p_key text)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 BEGIN
+  IF auth.uid() IS NOT NULL AND NOT public.is_admin_staff() THEN
+    RAISE EXCEPTION USING ERRCODE = '42501',
+      MESSAGE = 'Acesso negado: requer superadmin ou admin';
+  END IF;
+
   UPDATE public.api_keys
   SET active = false
   WHERE key_hash = encode(sha256(p_key::bytea), 'hex');
 END;
 $$;
+
+-- EXECUTE apenas para service_role (Edge Functions). Anon e usuários
+-- autenticados em geral não podem mais invocar estas funções (CRÍTICO #1).
+REVOKE EXECUTE ON FUNCTION public.adas_create_api_key(text, text, uuid, text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.adas_deactivate_api_key(text) FROM anon, authenticated, public;
+GRANT  EXECUTE ON FUNCTION public.adas_create_api_key(text, text, uuid, text) TO service_role;
+GRANT  EXECUTE ON FUNCTION public.adas_deactivate_api_key(text) TO service_role;
 
 -- Verificação
 SELECT 'api_keys configurado com sucesso' AS status;

@@ -61,11 +61,11 @@ ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "articles_select_published" ON public.articles;
 CREATE POLICY "articles_select_published" ON public.articles
-  FOR SELECT USING (status = 'published' OR public.is_admin());
+  FOR SELECT TO authenticated USING (status = 'published' OR public.is_admin());
 
 DROP POLICY IF EXISTS "articles_write_admin" ON public.articles;
 CREATE POLICY "articles_write_admin" ON public.articles
-  FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 COMMENT ON TABLE public.articles IS 'Artigos editoriais públicos (status: draft|published|archived)';
 
@@ -102,11 +102,11 @@ ALTER TABLE public.bulletins ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "bulletins_select_published" ON public.bulletins;
 CREATE POLICY "bulletins_select_published" ON public.bulletins
-  FOR SELECT USING (status = 'published' OR public.is_admin());
+  FOR SELECT TO authenticated USING (status = 'published' OR public.is_admin());
 
 DROP POLICY IF EXISTS "bulletins_write_admin" ON public.bulletins;
 CREATE POLICY "bulletins_write_admin" ON public.bulletins
-  FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 COMMENT ON TABLE public.bulletins IS 'Boletins técnicos (type: novidade|atualizacao|alerta|procedimento; severity: info|moderate|critical)';
 
@@ -132,11 +132,19 @@ ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "quiz_questions_select_auth" ON public.quiz_questions;
 CREATE POLICY "quiz_questions_select_auth" ON public.quiz_questions
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+  FOR SELECT TO authenticated USING (auth.uid() IS NOT NULL);
+
+-- Não expor o gabarito (correct_answer) a usuários autenticados:
+-- privilégio de coluna de SELECT cobre a tabela inteira, mantendo
+-- apenas as colunas de renderização. service_role mantém a tabela
+-- completa (api-gateway corrige server-side).
+REVOKE SELECT ON public.quiz_questions FROM anon, authenticated;
+GRANT SELECT (id, certification_id, module_id, question, options, points, sort_order)
+  ON public.quiz_questions TO authenticated;
 
 DROP POLICY IF EXISTS "quiz_questions_write_admin" ON public.quiz_questions;
 CREATE POLICY "quiz_questions_write_admin" ON public.quiz_questions
-  FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 COMMENT ON TABLE public.quiz_questions IS 'Perguntas e gabarito das certificações';
 

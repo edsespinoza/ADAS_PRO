@@ -1154,3 +1154,74 @@ confirmado por nova consulta de baseline depois.
 ### Pendência conhecida (não bloqueia)
 
 - [ ] **Boletins continuam locais ao navegador.** O seed é compartilhado por estar no `auth.js`, mas qualquer boletim criado no painel editorial em `superadmin.html` segue só no `localStorage` de quem o criou. Para compartilhamento real é preciso uma tabela `bulletins` no Supabase + `_sbLoadAll`/RLS. Fora do escopo deste pedido.
+
+---
+
+## 🐛 PENDENTE — "versão antiga do boletim" persiste após 3 deploys (diagnóstico em pausa) 2026-09-29
+
+> **Sintoma:** usuário relata que `/membros` continua exibindo uma versão antiga do boletim após `fc95a65` (seed), `5bcd470` (tipografia), `6c513dd` (SW `v1.2.0`), `4eeff5e` (seed versionado + SW `v1.3.0`) e `4210186` (SRI recalculado). **Tudo publicado e verificado em produção — o sintoma persiste.**
+
+### Estado atual: publicado e confirmado no ar
+
+| Verificação | Resultado |
+|---|---|
+| `js/auth.js` online vs local | **byte a byte idêntico** |
+| `sw.js` online vs local | **byte a byte idêntico**, `CACHE_VERSION = 'v1.3.0'` |
+| `membros.html` online vs local | **byte a byte idêntico** |
+| `SEED_VERSION` em produção | `v1.1` presente, `_isStaleSeed` presente |
+| SRI de `auth.js` nas 7 páginas | **7/7 casam** com o hash servido |
+| Rotas `/`, `/membros`, `/login`, `/reset-password`, `/mfa-verify` | HTTP 200 |
+| Auditoria de segurança | OK |
+
+### O que JÁ foi eliminado como causa
+
+- [x] **Deploy não publicado** — arquivos online idênticos ao local.
+- [x] **Service Worker servindo cache velho** — `v1.3.0` no ar; `auth.js` fora da regra `stale-while-revalidate`.
+- [x] **SRI quebrado bloqueando `auth.js`** — verificado 7/7 (o risco existiu: `4eeff5e` alterava `auth.js` e deixou as 7 páginas para trás; corrigido em `4210186`).
+- [x] **Cadeia de boot de `membros.html` quebrada antes do render** — `catFilters` existe (1 ocorrência), `contentData` é atribuído em `membros.html:1261`, sem `return` antecipado.
+- [x] **Seed não passa no filtro de status** — `DEFAULT_BULLETINS[0].status === 'published'`, e `getBulletins()` chama `_ensureBulletinsSeeded()` **antes** de ler e filtrar (`js/auth.js:1441`), então não há elemento obsoleto retornado.
+- [x] **Supabase sobrescrevendo boletins** — `_sbLoadAll()` não toca em `BULLETINS_KEY`; a persistência é 100% `localStorage`.
+- [x] **ID do seed mudou historicamente** — `blt_seed_cam_frontal_parabrisa` existe apenas em `fc95a65`; não háórfãos de id antigo.
+
+### 🔎 ACHADO NOVO (esta rodada) — cards de demonstração hardcoded
+
+`membros.html:1007-1080` contém **4 boletins fictícios escritos direto no HTML**, com `openBulletin(this)` **sem `data-blt-id`**:
+
+| Título | Data | Marca |
+|---|---|---|
+| Novo padrão AVM para BYD Seal 2025 | 29/04/2026 | BYD |
+| Honda LKAS — erro C1B00 após troca de parabrisa | 22/04/2026 | Honda |
+| Sequência correta: Toyota Techstream v17 + LDA Target 180° | 15/04/2026 | Toyota |
+| Nissan LKA — 12 novos modelos adicionados (v5.1) | — | Nissan |
+
+`renderBulletinsDynamic()` (`membros.html:2378`) faz `grid.innerHTML = ...` **somente se `published.length > 0`**; senão mantém os estáticos como fallback. E o fallback de `openBulletin()` (`membros.html:1967-1984`) renderiza um **stub genérico** — sem tabelas, sem número, sem nada do seed.
+
+> **Se o usuário estiver vendo esses 4 cards, é este o caminho.** Conteúdo fictício se passando por conteúdo real é pior que lista vazia.
+
+### ⏸️ PAUSADO — precisa do estado do navegador do usuário
+
+Rodar em `/membros`, F12 → Console (leitura pura, não altera nada) e colar o resultado:
+
+```js
+JSON.stringify({
+  cards: document.querySelectorAll('#bltGrid .blt-card').length,
+  titulos: [...document.querySelectorAll('#bltGrid .blt-card-title')].map(e=>e.textContent),
+  storage: JSON.parse(localStorage.getItem('adaspro_bulletins')||'[]').map(b=>({n:b.bulletinNumber,st:b.status,sv:b._seedVersion,up:b.updatedAt})),
+  erro: (document.getElementById('authLoadingMsg')?.textContent||'').slice(0,140)
+}, null, 1)
+```
+
+| Leitura | Diagnóstico | Próximo passo |
+|---|---|---|
+| `cards:4` + `storage:[]` | seed nunca entra no storage | investigar escrita/`_getItems` |
+| `cards:4` + storage com 1 item **sem `sv`** | `auth.js` velho rodando | investigar cache residual |
+| `cards:1` com `sv:'v1.1'` | boletim novo **está** no ar | perguntar qual cartão abriu e o que esperava |
+| `erro` preenchido | boot morreu antes de `membros.html:1331` | corrigir conforme a mensagem |
+
+### Tarefas para a próxima sessão
+
+- [ ] **Remover os 4 cards estáticos** e substituir por estado vazio explícito ("Nenhum boletim publicado") — conteúdo de demonstração não deve ser indistinguível do real.
+- [ ] **Fechar o diagnóstico** com a leitura de console acima **antes** de editar `auth.js` de novo.
+- [ ] **Repro headless** do caminho `getBulletins → renderBulletinsDynamic` — `jsdom` não está instalado e o Firefox falha com `RenderCompositorSWGL failed mapping default framebuffer`, então não há validação visual automatizada neste projeto.
+
+> ⚠️ **Lição do caso:** três rodadas de correção por suposição (SW → seed → SRI) falharam em acertar o alvo. O sintoma nunca foi confirmado por observação do lado do cliente. Diagnosticar por leitura de estado real antes de editar.

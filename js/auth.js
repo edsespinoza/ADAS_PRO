@@ -1392,14 +1392,39 @@ const AUTH = (function () {
     },
   ];
 
-  /* Hidratação do seed. Idempotente por id: se o boletim já está no storage
-     (porque foi editado ou arquivado no painel), não é reinserido — caso
-     contrário o usuário veria duplicata a cada carga. Materializa também os
-     defaults do addBulletin, para o seed passar pelo mesmo formato. */
+  /* Hidratação do seed.
+
+     Idempotente por id, mas versionada: um seed nunca é reescrito se o
+     usuário o editou ou arquivou no painel (esses casos carregam
+     `_seedVersion` divergente ou um `updatedAt` humano). Quando o storage
+     tem um seed de uma versão ANTERIOR do DEFAULT_BULLETINS, a cópia é
+     substituída — sem isso, quem já tinha visitado antes do fix continuava
+     vendo o texto antigo indefinidamente, porque a busca por id nunca erra,
+     só nunca acha. Materializa também os defaults do addBulletin, para o
+     seed passar pelo mesmo formato. */
+  const SEED_VERSION = 'v1.1';
+
+  function _isStaleSeed(stored, seed) {
+    // Seed nunca editado pelo painel: atualiza sempre que a versão do
+    // código for mais nova que a do storage.
+    if (stored.updatedAt === seed.updatedAt) return stored._seedVersion !== SEED_VERSION;
+    // Editado/arquivado no painel (updatedAt humano, com ou sem semântica
+    // de seed) — nunca sobrescrever.
+    return false;
+  }
+
   function _ensureBulletinsSeeded() {
     const list = _getItems(BULLETINS_KEY);
+    let changed = false;
+    const next = list.map(stored => {
+      const seed = DEFAULT_BULLETINS.find(s => s.id === stored.id);
+      if (!seed || !_isStaleSeed(stored, seed)) return stored;
+      changed = true;
+      return { ...seed, _seedVersion: SEED_VERSION };
+    });
     const missing = DEFAULT_BULLETINS.filter(s => !list.some(x => x.id === s.id));
-    if (missing.length) _saveItems(BULLETINS_KEY, [...list, ...missing]);
+    if (missing.length) { next.push(...missing.map(s => ({ ...s, _seedVersion: SEED_VERSION }))); changed = true; }
+    if (changed) _saveItems(BULLETINS_KEY, next);
   }
 
   let _bulletinSeq = null;

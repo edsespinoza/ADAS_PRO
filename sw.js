@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
-   ADAS PRO — Service Worker v1.1.0
+   ADAS PRO — Service Worker v1.2.0
    Stale-while-revalidate static · Network-only API · Offline PDFs
    ═══════════════════════════════════════════════════════════ */
 
-const CACHE_VERSION = 'v1.1.0';
+const CACHE_VERSION = 'v1.2.0';
 const CACHE_PREFIX = 'adaspro';
 
 const APP_SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;

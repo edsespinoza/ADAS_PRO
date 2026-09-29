@@ -2459,6 +2459,9 @@ if ('serviceWorker' in navigator) {
         }
       });
     });
+    // O navegador só re-checa sw.js periodicamente (até 24h). Sem isto, um
+    // deploy novo fica invisível por horas mesmo com CACHE_VERSION bumpada.
+    reg.update().catch(() => {});
   }).catch(() => {});
 }
 </script>

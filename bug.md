@@ -1120,3 +1120,37 @@ confirmado por nova consulta de baseline depois.
   (era 20; +44 novos, incluindo regressões para cada achado)
 - `npm run security` → OK
 - `node --check js/auth.js` → OK
+
+---
+
+## 📋 FEATURE — Boletim técnico de exemplo (seed) + correção de prefixo duplicado no número 2026-09-29
+
+> **Solicitação:** gerar um boletim técnico ADAS preenchido, completo e real, visível para os membros.
+
+### O que foi feito
+
+- [x] **Boletim de exemplo publicado** — `BT-2026-001` "Recalibração da câmera frontal de ADAS após substituição do para-brisa" (`js/auth.js`, `DEFAULT_BULLETINS`).
+  - **Por que seed e não registro no Supabase:** `_sbLoadAll()` não carrega boletins — a persistência editorial é 100% `localStorage`. Sem seed, o boletim existiria só para quem o criou no próprio navegador. O seed garante que ele aparece para todos, desde que o `auth.js` chegue ao cliente.
+  - **Hidratação idempotente** — `_ensureBulletinsSeeded()` roda em `getBulletins()` e `getBulletinById()`; insere por `id` estável (`blt_seed_cam_frontend_...`) e **não** reinsere o que já existe. Um boletim arquivado/editado no painel editorial não volta sozinho.
+  - **Conteúdo:** as 17 seções do modal preenchidas — identificação, resumo, 5 veículos, 6 sistemas, 5 sintomas + 4 DTCs, causa raiz, 6 critérios de aplicação, matriz sintoma→causa→ação (5 linhas), 7 pré-requisitos, 6 ferramentas, 6 specs, **13 passos** (viram checklist com progresso), 6 critérios de aprovação, 5 ações de falha, serviço 41-28-00 / 1,5 h, garantia, 4 referências, anexo.
+  - **Rigor técnico:** os valores numéricos (datum do alvo, aperto, tolerâncias) estão marcados como **referência típica do setor**, com instrução explícita de confirmar no manual de serviço do modelo. Nenhum número de peça autoritativo foi inventado — o campo `referenceDocs` aponta para a fonte do fabricante.
+- [x] **🔧 Correção incidental — prefixo `BT` duplicado** (`membros.html:2011`)
+  - **Antes:** o chip de identificação renderizava `BT BT-2026-001`, porque a linha prefixava `BT ` sobre um `bulletinNumber` que já vem no formato `BT-AAAA-NNN` (produzido por `_nextBulletinNumber()` e confirmado pelo help do editor e pelo placeholder de `supersedes`).
+  - **Fix:** removido o prefixo hardcoded. Afetava **todo** boletim, não só o seed.
+
+### Verificação
+
+| Teste | Resultado |
+|---|---|
+| `node --check js/auth.js` | OK |
+| 24 checks de seed (filtros, busca por id, 30 campos, tabelas, idempotência, arquivar, numeração) | todos passam |
+| 17 checks de render (extraindo a `_renderBulletin` real do `membros.html` e rodando contra o seed) | todos passam — **17/17 seções** renderizam |
+| Cruzamento dos 35 campos lidos pelo renderer contra o seed | todos com valor (`parts`/`supersedes` vazios, ambos guardados) |
+| Checklist de passos | 13 passos, `01`..`13`, com handler de progresso |
+| SRI `js/auth.js` | 7/7 HTML conferem com o hash real |
+| CSP (`vercel.json`) | hash do script inline de `membros.html` atualizado, antigo removido |
+| `npx deno test --allow-all supabase/functions/` | 64 passed / 0 failed |
+
+### Pendência conhecida (não bloqueia)
+
+- [ ] **Boletins continuam locais ao navegador.** O seed é compartilhado por estar no `auth.js`, mas qualquer boletim criado no painel editorial em `superadmin.html` segue só no `localStorage` de quem o criou. Para compartilhamento real é preciso uma tabela `bulletins` no Supabase + `_sbLoadAll`/RLS. Fora do escopo deste pedido.

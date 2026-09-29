@@ -1194,6 +1194,214 @@ const AUTH = (function () {
   }
 
   /* ─── Boletins Técnicos ─── */
+
+  /* Modelo de referência da plataforma. Preenche as 17 seções que o modal do
+     membro (_renderBulletin, membros.html) sabe renderizar — identificação
+     técnica, resumo, veículos, sistemas, sintomas/DTCs, causa raiz, critérios
+     de aplicação, pré-requisitos/segurança, ferramentas, specs, procedimento
+     com checklist, aprovação, solução de problemas, serviço/garantia,
+     referências e anexos.
+
+     IMPORTANTE: os valores numéricos (datum do alvo, aperto, tolerâncias) são
+     REFERÊNCIA TÍPICA do setor, não do fabricante. O campo `referenceDocs`
+     e o corpo do boletim mandam confirmar no manual de serviço do modelo —
+     usar número de fabricante em campo operacional é risco de serviço errado. */
+  const DEFAULT_BULLETINS = [
+    {
+      id: 'blt_seed_cam_frontal_parabrisa',
+      bulletinNumber: 'BT-2026-001',
+      type: 'procedimento',
+      status: 'published',
+      title: 'Recalibração da câmera frontal de ADAS após substituição do para-brisa',
+      summary: 'A câmera frontal é montada no para-brisa. Ao trocar o vidro, o eixo óptico perde a referência de fábrica e o módulo desativa AEB, ACC e Lane Keeping. Este procedimento restabelece a mira por calibração estática com alvo, seguida da conferência dinâmica em rodovia — da inspeção do suporte da câmera até a validação final sem DTCs.',
+      classification: 'ADAS-CAL-001',
+      reference: 'TBB-FRT-014',
+      revision: 'A',
+      supersedes: '',
+      severity: 'critical',
+      layout: 'technical',
+      icon: '📋',
+      accessLevel: 1,
+      author: 'Equipe Técnica ADAS PRO',
+      authorId: '',
+      tags: ['calibração', 'câmera frontal', 'para-brisa', 'aeb', 'acc', 'lkas', 'honda', 'toyota', 'nissan'],
+      brands: ['honda', 'toyota', 'nissan', 'subaru', 'hyundai'],
+      cat: '',
+
+      appliedVehicles: [
+        '2022-2025 Civic (FE1/FE3) — câmera frontal Honda Sensing',
+        '2023-2025 CR-V (RE5) — câmera frontal Honda Sensing',
+        '2022-2024 Corolla Cross (E20) — Toyota Safety Sense 3.0',
+        '2023-2025 Kicks (P15) — Nissan ProPILOT Assist',
+        '2022-2024 Tucson (NX4) — Hyundai Smart Cruise',
+      ],
+      appliedSystems: [
+        'Câmera frontal de ADAS (Front View Camera Module)',
+        'AEB / Pre-Collision Mitigation',
+        'ACC — Controle de cruzeiro adaptativo',
+        'LKAS / LDW — Assistência e aviso de saída de faixa',
+        'TSR — Reconhecimento de sinalização',
+        'HW — Highway Assist',
+      ],
+      component: 'ADAS CAMERA — Front View Camera Module (FCCM)',
+      dtcs: ['C1B00', 'C1B03', 'C1B07', 'C1B12'],
+
+      vehicleTable: [
+        { model: 'Civic Touring',    year: '2023', engine: '2.0L turbo',   chassis: 'FE3' },
+        { model: 'CR-V',             year: '2024', engine: '1.5L turbo',   chassis: 'RE5' },
+        { model: 'Corolla Cross',    year: '2023', engine: '2.0L hybrid',  chassis: 'E20' },
+        { model: 'Kicks',            year: '2024', engine: '1.6L',         chassis: 'P15' },
+        { model: 'Tucson',           year: '2023', engine: '1.6L T-GDi',   chassis: 'NX4' },
+      ],
+
+      reportedSymptoms: [
+        'Luz de aviso "Assistência à direção não disponível" ou "ADAS indisponível" acesa no painel logo após a troca do para-brisa',
+        'AEB e ACC desativados; o Cruise Adaptativo deixa de ser selecionável no painel de instrumentos',
+        'LDW e LKAS desligados automaticamente com aviso sonoro ao ultrapassar a faixa',
+        'Folga visível entre o módulo da câmera e o suporte após a remoção do vidro',
+        'Câmera desalinhada na inspeção visual, com trincheira de ar no para-brisa novo na faixa da câmera',
+      ],
+      rootCause: 'O módulo da câmera frontal é afixado ao para-brisa por um bracketê que transmite a referência óptica de fábrica. A remoção e a reinstalação do vidro deslocam esse eixo — tipicamente entre 0,5° e 1,5° em arfagem ou guinada, valores suficientes para que o módulo identifique horizonte e geometria de faixa fora da janela de tolerância. O ECU então declara o eixo fora de faixa e desabilita todo o conjunto, mesmo com o módulo e a câmera eletricamente perfeitos. O mesmo sintoma aparece quando o bracketê é substituído, fora de assento, ou quando a calibração estática é concluída sem a conferência dinâmica. O ponto central: trocar o para-brisa em veículo com ADAS é, por si só, um serviço incompleto — a mira não se recupera sozinha.',
+
+      applicability: [
+        'Para-brisa substituído — e não apenas reparado por injeção de resina na faixa da câmera',
+        'Suporte/bracketê da câmera frontal substituído, danificado ou removido durante a troca de vidro',
+        'Colisão na região do para-brisa com remoção do vidro, mesmo sem troca do módulo',
+        'Calibração estática realizada sem a conferência dinâmica em rodovia',
+        'Ocorrência de C1B03 ou C1B07 sem que a câmera tenha sido fisicamente removida (indica calibração anterior fora de tolerância)',
+        'Veículo recebido de outra oficina com ADAS inoperante e sem registro de calibração no histórico',
+      ],
+      symptomAction: [
+        { symptom: 'Aviso de ADAS indisponível após troca de para-brisa', cause: 'Eixo óptico da câmera fora da tolerância de fábrica', action: 'Executar calibração estática no datum prescrito e, em seguida, a dinâmica' },
+        { symptom: 'AEB inativo enquanto os demais sistemas respondem', cause: 'Estática concluída, dinâmica não executada', action: 'Executar a conferência dinâmica e limpar a memória de calibração do módulo' },
+        { symptom: 'C1B12 (falha interna) persiste após refazer a calibração', cause: 'Módulo com defeito interno, conector oxidado ou alimentação fora de faixa', action: 'Verificar conector, alimentação e integridade do módulo antes de substituir' },
+        { symptom: 'Alinhamento visual da câmera fora do lugar após a troca', cause: 'Bracketê fora de assento ou colado fora da marca de referência', action: 'Reposicionar o módulo na marca antes de calibrar — calibração não corrige bracketê deformado' },
+        { symptom: 'Rotina não conclui após 3 tentativas', cause: 'Piso irregular ou pressão de pneu fora da especificação', action: 'Nivelar o veículo e ajustar a pressão antes de repetir' },
+      ],
+
+      calibrationType: 'Estática e dinâmica',
+      preconditions: [
+        'Piso plano, nivelado, com iluminação uniforme e sem reflexo direto no alvo',
+        'Pneus na pressão da etiqueta do veículo e sem carga desnecessária (tanque cheio, sem bagagem)',
+        'Volante centralizado sem marcas de desvio, marcha em P, freio de estacionamento aplicado e motor em marcha lenta',
+        'Nenhuma DTC ativa no módulo ADAS antes de iniciar a calibração',
+        'Altura de marcha (ride height) conferida e dentro da tolerância do modelo',
+        'Bracketê e módulo sem folga; para-brisa novo sem trincheira de ar na faixa óptica',
+        'Módulo termicamente estabilizado — não calibrar logo após trabalho térmico na capô',
+      ],
+      requiredTools: [
+        'Alvo de calibração da câmera frontal específico do modelo (tabela ou photomodel)',
+        'Nivelador a laser ou nível de precisão para o alvo',
+        'Scanner de diagnóstico com a rotina de calibração ADAS do modelo',
+        'Trena a laser ou fita métrica de precisão para medir o datum',
+        'Chave de torque calibrada para o aperto do bracketê da câmera',
+        'Pano de microfibra e produto de limpeza de óptica homologado',
+      ],
+      specsTable: [
+        { param: 'Distância do alvo ao eixo dianteiro', value: 'Referência 800 mm', note: 'Medir do centro do eixo dianteiro ao plano do alvo — confirmar o datum no manual do modelo' },
+        { param: 'Altura do alvo', value: 'Conforme manual do modelo', note: 'Alvo na altura especificada para o eixo óptico da câmera' },
+        { param: 'Nivelamento do alvo', value: 'Tolerância ±0,5°', note: 'Conferir com nivelador antes de iniciar a rotina' },
+        { param: 'Paralelismo veículo/alvo', value: 'Tolerância ±0,5°', note: 'Veículo posicionado paralelamente ao plano do alvo' },
+        { param: 'Pressão dos pneus', value: 'Etiqueta do veículo', note: 'Conferir antes de posicionar sobre o alvo' },
+        { param: 'Aperto do bracketê da câmera', value: 'Referência 2,5 N·m', note: 'Chave calibrada; rosca direita — confirmar valor no manual' },
+      ],
+      steps: [
+        'Conectar o scanner e registrar as DTCs existentes. Se houver DTC ativa no módulo ADAS, resolver antes de iniciar a calibração.',
+        'Remover a trincheira de ar da faixa da câmera e conferir o selo do para-brisa novo. Trincheira na área ótica invalida a calibração.',
+        'Inspecionar o bracketê da câmera: assentado até o batente, parafusos sem folga, sem sinal de colisão e sem cola fora da marca de referência.',
+        'Conferir a pressão dos pneus conforme a etiqueta e verificar o nivelamento do veículo no piso.',
+        'Posicionar o veículo sobre o alvo conforme o datum prescrito: distância do alvo ao centro do eixo dianteiro e altura do alvo, ambos conforme o manual do modelo.',
+        'Nivelar o alvo com precisão e alinhar o veículo paralelamente ao plano do alvo.',
+        'Centralizar o volante, selecionar a marcha P e aplicar o freio de estacionamento.',
+        'No scanner, entrar na rotina de calibração da câmera frontal e executar a leitura do alvo.',
+        'Aguardar a conclusão da gravação. Não interromper a rotina nem desligar a ignição durante a escrita.',
+        'Limpar a memória de calibração do módulo ADAS e confirmar a ausência de DTCs da família C1Bxx.',
+        'Se a rotina exigir, executar a calibração dinâmica em rodovia livre, na velocidade e trajetória indicadas pelo manual, até a integração ser concluída.',
+        'Executar o teste de validação em via urbana e highway: confirmar que o Lane Keeping acompanha a faixa sem correção excessiva e que o AEB reconhece alvo em ensaio controlado.',
+        'Registrar no histórico do veículo: datum utilizado, resultado da estática, conclusão da dinâmica e ausência de DTCs.',
+      ],
+      safetyNotes: [
+        'A ADAS fica inoperante durante todo o processo. Não entregar o veículo ao cliente antes do teste de validação concluído.',
+        'O ensaio de AEB exige área fechada, alvo remoto e condutor treinado. Nunca executar em via pública.',
+        'Desativar ACC e Lane Keeping durante o trajeto até a conclusão da calibração dinâmica.',
+        'Usar EPI e apoiar o veículo no elevador com trava de segurança em qualquer desmontagem do cowl ou da base da câmera.',
+        'Não apontar luz de calibração intensa na óptica por período prolongado — o módulo monitora temperatura e luz ambiente.',
+      ],
+
+      passCriteria: [
+        'Calibração estática concluída dentro da tolerância, sem exceder o número de tentativas',
+        'Dinâmica concluída e integrada, sem DTC ativa no módulo',
+        'Lane Keeping acompanha a faixa sem correção excessiva nem saída involuntária',
+        'AEB e ACC selecionáveis no painel, sem mensagem de indisponibilidade',
+        'Nenhum código da família C1Bxx memorizado após o teste de validação',
+        'Câmera sem trincheira de ar e bracketê sem folga',
+      ],
+      failureActions: [
+        'Se o eixo permanecer fora de tolerância: confirmar datum, nivelamento do alvo e nivelamento do veículo, e repetir uma única vez',
+        'Se persistir na segunda tentativa: verificar deformação do bracketê e a posição do módulo na marca de referência',
+        'Se C1B12 persistir: verificar conector, alimentação e integridade do módulo antes de decidir a substituição',
+        'Se a dinâmica não concluir: repetir a estática e garantir rota de integração aprovada e pista livre',
+        'Nunca entregar o veículo com ADAS inoperante e sem registro da causa na ordem de serviço',
+      ],
+      referenceDocs: [
+        'Manual de serviço do modelo — seção ADAS: calibração da câmera frontal (fonte autoritativa do datum e das tolerâncias)',
+        'Manual do operador da ferramenta de diagnóstico — rotina de calibração ADAS',
+        'Comunicado do fabricante exigindo recalibração após substituição do para-brisa',
+        'Biblioteca técnica ADAS PRO — material de calibração por marca e modelo',
+      ],
+      attachments: [
+        'Biblioteca técnica ADAS PRO — PDF de calibração da câmera frontal da marca e modelo correspondente',
+      ],
+
+      labor: {
+        code: '41-28-00',
+        time: '1,5 h',
+        note: 'Inclui inspeção do bracketê, calibração estática, dinâmica e teste de validação em via.',
+      },
+      warranty: 'Garantia de fabricante aplicável quando a desativação do ADAS decorrer de colisão coberta ou de peça defeituosa. Documentar a calibração no histórico do veículo: sem registro, a garantia do sistema tende a ser negada por serviço não executado.',
+
+      content: `<h3>Por que a troca de para-brisa derruba o ADAS</h3>
+<p>A câmera frontal não é um acessório solto: ela é fixada ao vidro por um bracketê que carrega a referência óptica de fábrica. Esse datum é definido na linha de montagem em microradianos — um deslocamento pequeno demais para o olho, grande demais para o software. Ao remover e reinstalar o vidro, o eixo sai da tolerância.</p>
+<p>O módulo não adverte que está "errado": ele detecta que o horizonte percebido e a geometria de faixa não batem com o modelo do veículo e desabilita o conjunto inteiro. AEB, ACC, LKAS e LDW caem juntos. Por isso o serviço de vidro, sozinho, deixa o veículo <strong>com ADAS inoperante e sem qualquer sinal claro de que algo está errado</strong> — a única pista é a mensagem no painel.</p>
+
+<h3>O que costuma ser esquecido</h3>
+<ul>
+<li><strong>Trincheira de ar</strong> no para-brisa novo, na faixa da câmera. É a causa mais comum de calibração que não fecha na segunda tentativa.</li>
+<li><strong>Calibração estática sem a dinâmica.</strong> A estática grava a mira; a dinâmica integra o carro à via. Só a estática deixa o sistema parcial.</li>
+<li><strong>Bracketê deformado.</strong> Calibração corrige posição, não geometria. Bracketê fora de assento tem de ser reparado antes.</li>
+<li><strong>Registro no histórico.</strong> Sem o registro da calibração, a garantia do sistema é a primeira a cair.</li>
+</ul>
+
+<h3>Sequência recomendada</h3>
+<ol>
+<li><strong>Inspecionar</strong> — módulo, bracketê, trincheira e DTCs.</li>
+<li><strong>Preparar o piso</strong> — nivelamento, pressão de pneu, altura de marcha.</li>
+<li><strong>Posicionar</strong> — datum e nivelamento do alvo, volante ao centro, marcha P.</li>
+<li><strong>Calibrar</strong> — estática com o alvo, depois dinâmica em rodovia.</li>
+<li><strong>Validar</strong> — ensaio de Lane Keeping e AEB em ambiente controlado.</li>
+<li><strong>Registrar</strong> — datum, resultados e ausência de DTCs no histórico do veículo.</li>
+</ol>
+
+<h3>Sobre os números deste boletim</h3>
+<p>Os valores citados — datum do alvo, aperto do bracketê, tolerâncias de nivelamento — são <strong>referência típica do setor</strong>, apresentados para dar ordem de grandeza e permitir o planejamento do posto. Eles <strong>não substituem o manual de serviço do modelo</strong>: o datum é específico por marca, modelo e ano, e divergir dele compromete a segurança do sistema. Confirme sempre na fonte do fabricante antes de executar. O material específico de cada marca está na Biblioteca Técnica ADAS PRO.</p>`,
+
+      createdAt: Date.parse('2026-08-20T12:00:00Z'),
+      updatedAt: Date.parse('2026-08-20T12:00:00Z'),
+      publishedAt: Date.parse('2026-08-21T09:00:00Z'),
+      version: 'v1.0',
+    },
+  ];
+
+  /* Hidratação do seed. Idempotente por id: se o boletim já está no storage
+     (porque foi editado ou arquivado no painel), não é reinserido — caso
+     contrário o usuário veria duplicata a cada carga. Materializa também os
+     defaults do addBulletin, para o seed passar pelo mesmo formato. */
+  function _ensureBulletinsSeeded() {
+    const list = _getItems(BULLETINS_KEY);
+    const missing = DEFAULT_BULLETINS.filter(s => !list.some(x => x.id === s.id));
+    if (missing.length) _saveItems(BULLETINS_KEY, [...list, ...missing]);
+  }
+
   let _bulletinSeq = null;
   function _nextBulletinNumber() {
     if (_bulletinSeq === null) {
@@ -1205,13 +1413,17 @@ const AUTH = (function () {
     return `BT-${new Date().getFullYear()}-${String(_bulletinSeq).padStart(3,'0')}`;
   }
   function getBulletins(filters = {}) {
+    _ensureBulletinsSeeded();
     let items = _getItems(BULLETINS_KEY);
     if (filters.status)   items = items.filter(b => b.status   === filters.status);
     if (filters.cat)      items = items.filter(b => b.cat      === filters.cat);
     if (filters.severity) items = items.filter(b => b.severity === filters.severity);
     return items.sort((a,b) => ts(b.updatedAt) - ts(a.updatedAt));
   }
-  function getBulletinById(id) { return _getItems(BULLETINS_KEY).find(b => b.id === id) || null; }
+  function getBulletinById(id) {
+    _ensureBulletinsSeeded();
+    return _getItems(BULLETINS_KEY).find(b => b.id === id) || null;
+  }
   function addBulletin(item) {
     const sess = getSession();
     const id = 'blt_' + Date.now().toString(36);

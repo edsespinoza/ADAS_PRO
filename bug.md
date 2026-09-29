@@ -1007,3 +1007,116 @@
   - `npm run security:db` → `bash scripts/security-audit-db.sh` executa as 8 seções de `sql/security_audit/*.sql` **individualmente** (`supabase db query` só renderiza o último result set de um script — por isso cada seção vira um arquivo): tabelas sem RLS, `SECURITY DEFINER` sem `search_path`, `EXECUTE` para anon/authenticated, buckets públicos, políticas por tabela, usuários sem MFA, usuários bloqueados.
   - `security/README.md`: instruções WAF (Attack Mode via CLI/dashboard — **não é configurável no `vercel.json`**) + roadmap (remover `unsafe-hashes` convertendo os ~187 handlers estáticos; Trusted Types adiado pois toda renderização usa innerHTML).
   - **Estado:** auditoria de frontend ✅ "OK — tudo coberto" (187 hashes de handlers + 4 de blocos). Auditoria de banco ✅ executada em 2026-08-15 — **0 tabelas sem RLS, 0 funções `SECURITY DEFINER` com `search_path` perigoso, 0 buckets públicos**; funções helper (`can_manage_role`, `get_my_role`, `is_admin*`, `role_level`) expostas a anon/authenticated são intencionais (usadas nas políticas RLS); políticas por tabela: users 4, tickets 4, settings 4, notifications 8, audit_logs 2. **Ponto de atenção:** 3 usuários com **0 fatores TOTP** (MFA inativo) → alinhado com pendência manual B/C. **Deploy Vercel prod pendente** — validar no browser que nenhum handler está bloqueado pela CSP antes de considerar concluído.
+
+---
+
+## 🔐 SEGURANÇA — Auditoria completa e correções no api-gateway / approve-user 2026-09-29
+
+Revisão manual das 4 Edge Functions, do `auth.js` e do SQL de rate limit. Todos os
+achados foram corrigidos e cobertos por testes (64/64 passando).
+
+### 🔴 CRÍTICOS
+
+**1. MFA ausente no `api-gateway`**
+Qualquer senha vazada servia para `get_download`, `get_user`, `update` e `submit_quiz`
+via API — o gate de MFA que existe no painel não existia na API. Agora as ações
+sensíveis exigem `aal2` (`MFA_REQUIRED_ACTIONS` em `api-gateway/handler.ts`);
+contas sem MFA configurado passam normalmente.
+
+**2. `validateApiKey` não checava o status do dono**
+A função só validava `api_keys.active`. Combinado com o item 3, uma conta
+bloqueada continuava autenticando no gateway. Agora também valida que o dono
+existe em `public.users` e está `active`; chaves órfãs (`user_id` NULL, permitido
+pelo DDL) são rejeitadas.
+
+**3. `block()` não revogava API keys**
+O `approve-user` escrevia só `users.status='blocked'`; as chaves seguiam com
+`active=true`. Corrigido em duas camadas: trigger no banco
+(`20260830_revoke_api_keys_on_block.sql`, com `search_path=''`) e revogação
+explícita no handler. Reativar chaves continua sendo decisão manual.
+
+### 🟠 ALTOS
+
+**4. Path de Storage inexistente + catálogo divergente**
+O gateway derivava o path como `${cat}/${id}.pdf` → `honda/honda-lkas.pdf` para o
+arquivo real `honda/honda-lkas-calibration.pdf`. **Todo download via API retornava
+404.** Pior: o mapa do gateway tinha 13 dos 23 itens, então 10 materiais davam
+"conteúdo não encontrado" mesmo com acesso válido.
+
+Causa raiz: o mapa estava duplicado em duas funções e driftou. Agora vive em
+`supabase/functions/_shared/content-map.ts`, importado por `api-gateway` e
+`get-download-url` (23 itens, todos com path validado contra `assets/downloads/`).
+Para adicionar um PDF: editar o mapa compartilhado + `DEFAULT_CONTENT` em
+`js/auth.js` + deploy das duas funções.
+
+**5. Escalação de privilégio via `localStorage`**
+Em `auth.js`, o sync do registro pendente fazia `{ ...pending, id }` — o objeto do
+`localStorage` é controlado por quem tiver XSS, então plantar `role:'superadmin'`
+concedia sessão privilegiada em memória (o RLS impedia a persistência, mas a sessão
+já valia). Agora há whitelist: só campos de perfil, com `role`, `status`, `plan` e
+`permissions` forçados no piso da tabela.
+
+### 🟡 MÉDIOS
+
+- **`list_content`/`get_content` sem filtro** — devolviam o catálogo inteiro,
+  expondo metadados de materiais que o usuário não podia acessar. Agora filtram por
+  permissão + `moduleAccess` + `accessLevel`, com os mesmos codes de erro de `get_content`.
+- **Sem limite de payload** — `req.json()` lia o corpo inteiro em memória. O
+  `content-length` sozinho é burlável (chunked), então `readJsonBody()` consome o
+  stream e aborta em 32 KB.
+- **`update_progress` sem validar `contentId`** — aceitava qualquer string,
+  gravando lixo em `user_progress`. Agora valida contra o catálogo.
+- **CORS com origin global** — `currentOrigin` era variável de módulo, race entre
+  requisições. Agora é local por requisição.
+
+### 🟢 BAIXOS
+
+- `update` validava `approvedBy`/`accessType`/`accessExpires` só por tipo. Agora
+  `approvedBy` precisa ser o próprio chamador (não allows falsificar autoria no
+  `audit_logs`), `accessType` é uma lista fechada e `accessExpires` um timestamp válido.
+
+### Correção incidental
+
+`get-download-url/index.ts:103` indexava um objeto literal com valor `any`, o que
+quebrava sob `strictNullChecks`. O tsconfig das functions foi de `strict: false` para
+`strictNullChecks: true` (era a causa dos falsos erros de narrowing do LSP).
+
+### Deploy em produção — 2026-09-29 ✅
+
+O projeto Supabase estava com `status: INACTIVE` (pausado automaticamente pelo
+free tier após 7 dias sem atividade; última alteração em 2026-08-29). Isso
+bloqueava tanto a conexão direta do Postgres quanto o upload de nova versão
+das funções — o `PATCH` era aceito, mas a versão não subia.
+
+Sequência executada:
+
+1. `POST /v1/projects/zqydyyticvtmirjzskly/restore` → projeto `ACTIVE_HEALTHY`
+   em ~4 min (COMING_UP → RESTORING → ACTIVE_HEALTHY)
+2. Migration `20260830_revoke_api_keys_on_block.sql` aplicada
+3. Deploy: `api-gateway` (v2→v3), `get-download-url` (v7→v8),
+   `approve-user` (v5→v6)
+
+Baseline antes/depois: 2 chaves ativas, ambas de usuários `active` — não havia
+conta bloqueada com credencial viva para limpar.
+
+### Validação em produção
+
+| Teste | Resultado |
+|---|---|
+| `list_content` sem credencial | 401 |
+| API key inválida | 401 `INVALID_API_KEY` |
+| Body de 200 KB via chunked (sem `content-length`) | **413** — o teto no stream funciona |
+| CORS com `Origin: https://evil.example` | não reflete (fixa `adaspro.com.br`) |
+| CORS com origem permitida | reflete `adaspro.com.br` |
+| Trigger revoga chaves no block | 2 → 0 chaves ativas (teste em transação com `ROLLBACK`, estado preservado) |
+
+O teste do trigger rodou dentro de `BEGIN; … ROLLBACK;` — nada foi persistido,
+confirmado por nova consulta de baseline depois.
+
+### Verificação
+
+- `npx deno check` limpo nas 4 funções + módulo compartilhado
+- `npx deno test --allow-read supabase/functions/` → **64 passed / 0 failed**
+  (era 20; +44 novos, incluindo regressões para cada achado)
+- `npm run security` → OK
+- `node --check js/auth.js` → OK

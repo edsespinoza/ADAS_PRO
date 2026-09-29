@@ -4,6 +4,7 @@
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
+import { CONTENT_MAP as CONTENT_CATALOG } from '../_shared/content-map.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  'https://adaspro.com.br',
@@ -13,33 +14,14 @@ const corsHeaders = {
 
 // Mapa de conteúdo: contentId → { cat, filePath, accessLevel, downloadLevel }
 // Mantido server-side para evitar que o cliente forje metadados.
-// SYNCHRONIZATION: accessLevel/downloadLevel devem refletir DEFAULT_CONTENT em js/auth.js
-// e CONTENT_MAP deve ser mantido em sincronia com o catálogo (novo PDF = editar ambos + deploy).
-const CONTENT_MAP: Record<string, { cat: string; filePath: string | null; accessLevel: number; downloadLevel: number }> = {
-  'honda-lkas':      { cat:'honda',      filePath: 'honda/honda-lkas-calibration.pdf', accessLevel:2, downloadLevel:3 },
-  'honda-avm':       { cat:'honda',      filePath: 'honda/honda-avm-360.pdf',           accessLevel:2, downloadLevel:3 },
-  'honda-acc':       { cat:'honda',      filePath: null,                                accessLevel:2, downloadLevel:3 },
-  'toyota-ldw':      { cat:'toyota',     filePath: 'toyota/toyota-ldw-120.pdf',         accessLevel:2, downloadLevel:3 },
-  'toyota-180':      { cat:'toyota',     filePath: 'toyota/toyota-lda-180.pdf',         accessLevel:2, downloadLevel:3 },
-  'toyota-avm':      { cat:'toyota',     filePath: 'toyota/toyota-avm.pdf',             accessLevel:2, downloadLevel:3 },
-  'nissan-lka':      { cat:'nissan',     filePath: 'nissan/nissan-lka-tipo1.pdf',       accessLevel:2, downloadLevel:3 },
-  'nissan-propilot': { cat:'nissan',     filePath: 'nissan/nissan-propilot.pdf',        accessLevel:2, downloadLevel:3 },
-  'nissan-radar':    { cat:'nissan',     filePath: null,                                accessLevel:2, downloadLevel:3 },
-  'subaru-type1':    { cat:'subaru',     filePath: 'subaru/subaru-eyesight-tipo1.pdf',  accessLevel:3, downloadLevel:3 },
-  'subaru-type2':    { cat:'subaru',     filePath: 'subaru/subaru-eyesight-tipo2.pdf',  accessLevel:3, downloadLevel:3 },
-  'hyundai-avm':     { cat:'hyundai',    filePath: 'hyundai/hyundai-avm.pdf',           accessLevel:3, downloadLevel:3 },
-  'hyundai-radar':   { cat:'hyundai',    filePath: 'hyundai/hyundai-radar-acc.pdf',     accessLevel:3, downloadLevel:3 },
-  'audi-lidar':      { cat:'vag',        filePath: 'vag/audi-lidar-vas6430.pdf',        accessLevel:3, downloadLevel:4 },
-  'vag-avm':         { cat:'vag',        filePath: 'vag/vag-avm.pdf',                   accessLevel:3, downloadLevel:4 },
-  'mercedes-night':  { cat:'mercedes',   filePath: 'mercedes/mercedes-night-vision.pdf',accessLevel:3, downloadLevel:4 },
-  'mercedes-rcw':    { cat:'mercedes',   filePath: 'mercedes/mercedes-rcw.pdf',         accessLevel:3, downloadLevel:4 },
-  'ford-avm':        { cat:'ford',       filePath: 'ford/ford-avm-360.pdf',             accessLevel:3, downloadLevel:4 },
-  'radar-univ':      { cat:'radar',      filePath: 'radar/universal-radar-plate.pdf',   accessLevel:3, downloadLevel:4 },
-  'mazda-avm':       { cat:'mazda',      filePath: 'mazda/mazda-avm-fsc.pdf',           accessLevel:3, downloadLevel:4 },
-  'mitsubishi-lka':  { cat:'mitsubishi', filePath: 'mitsubishi/mitsubishi-lka-avm.pdf', accessLevel:3, downloadLevel:4 },
-  'byd-avm':         { cat:'chineses',   filePath: 'chineses/byd-avm-pattern.pdf',      accessLevel:3, downloadLevel:4 },
-  'mg-chery':        { cat:'chineses',   filePath: 'chineses/mg-chery-avm.pdf',         accessLevel:3, downloadLevel:4 },
-};
+//
+// SYNCHRONIZATION: o catálogo vive em _shared/content-map.ts, importado
+// também pelo api-gateway. Antes havia duas cópias independentes e elas
+// divergiram (o gateway tinha 13 de 23 itens e paths derivados de
+// `${cat}/${id}.pdf`, que não existiam no Storage). Adicionar um PDF agora
+// exige: _shared/content-map.ts + DEFAULT_CONTENT em js/auth.js + deploy das
+// duas funções.
+const CONTENT_MAP = CONTENT_CATALOG;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -99,8 +81,9 @@ serve(async (req) => {
     if (!hasPermission) return json({ error: 'Sem permissão para este conteúdo.' }, 403);
 
     // 3a. Nível do usuário (plano) — staff (nível 4) sempre passa, como no cliente.
+    const PLAN_LEVELS: Record<string, number> = { free:1, modulo:2, pro:3, premium:4 };
     const isStaffLevel = isStaff;
-    const userLevel = isStaffLevel ? 4 : { free:1, modulo:2, pro:3, premium:4 }[userData.plan] || 1;
+    const userLevel = isStaffLevel ? 4 : PLAN_LEVELS[userData.plan] || 1;
 
     // 3a.1 Nível mínimo do item (accessLevel/downloadLevel) — espelha canViewContent/
     //      canDownloadContent do cliente. A URL assinada habilita visualização e download,

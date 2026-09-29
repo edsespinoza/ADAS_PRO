@@ -44,7 +44,7 @@ CREATE OR REPLACE FUNCTION public.increment_rate_limit(
 RETURNS integer
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   new_count integer;
@@ -63,6 +63,11 @@ BEGIN
   RETURN new_count;
 END;
 $$;
+
+-- EXECUTE apenas para service_role (api-gateway as-server). Anon/authenticated
+-- não podem mais invocar (CRÍTICO #1 / anon-exec + search_path predisposto).
+REVOKE EXECUTE ON FUNCTION public.increment_rate_limit(text, timestamptz, integer, integer) FROM anon, authenticated, public;
+GRANT  EXECUTE ON FUNCTION public.increment_rate_limit(text, timestamptz, integer, integer) TO service_role;
 
 -- Verificação
 SELECT 'rate_limits criado com sucesso' AS status;

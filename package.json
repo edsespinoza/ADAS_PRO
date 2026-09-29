@@ -9,6 +9,7 @@
     "security:db": "bash scripts/security-audit-db.sh"
   },
   "devDependencies": {
+    "deno": "^2.9.6",
     "dotenv": "^16.4.5",
     "typescript": "^5.9.3"
   }

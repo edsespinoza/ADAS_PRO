@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-    "allowJs": true,
     "checkJs": false,
     "noEmit": true,
     "skipLibCheck": true,
     "target": "ES2021",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "types": [],
-    "strict": false
+    "strictNullChecks": true
   },
-  "include": ["js/**/*.js", "js/**/*.ts"],
-  "exclude": ["node_modules", "supabase"]
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

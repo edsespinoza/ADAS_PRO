@@ -1,533 +1,387 @@
 // ADAS PRO — Edge Function: api-gateway
 // API pública — roteamento, validação de API key, rate limiting
 // Deploy: supabase functions deploy api-gateway
+//
+// A lógica testável está em handler.ts.
 
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0';
+import {
+  CONTENT_MAP, CATEGORIES, MFA_REQUIRED_ACTIONS, RATE_LIMIT, RATE_WINDOW_MS,
+  bodyTooLarge, checkRateLimit, evaluateAccess, isValidContentId, paginate,
+  readJsonBody,
+  requireMfa, sha256Hex, validateApiKey, validateJwt,
+  type ApiKeyDeps, type GatewayDeps, type JwtDeps,
+} from './handler.ts';
 
-const ALLOWED_ORIGINS = ['https://adaspro.com.br'];
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-let currentOrigin: string | null = null;
+function adminClient() {
+  return createClient(SUPABASE_URL, SERVICE_KEY);
+}
 
-function corsHeadersFor(origin: string | null) {
+let rateLimitAdmin: ReturnType<typeof createClient> | null = null;
+function getRateLimitAdmin() {
+  if (!rateLimitAdmin) rateLimitAdmin = createClient(SUPABASE_URL, SERVICE_KEY);
+  return rateLimitAdmin;
+}
+
+const rateLimitDeps: GatewayDeps = {
+  incrementRateLimit: async (bucket, window, limit, windowMs) => {
+    const { data, error } = await getRateLimitAdmin().rpc('increment_rate_limit', {
+      p_bucket: bucket, p_window: window, p_limit: limit, p_window_ms: windowMs,
+    });
+    if (error) { console.error('rate_limits rpc error:', error.message); return null; }
+    return typeof data === 'number' ? data : null;
+  },
+};
+
+const apiKeyDeps: ApiKeyDeps = {
+  lookupKey: async (hash) => {
+    const { data } = await adminClient()
+      .from('api_keys').select('user_id, plan, active')
+      .eq('key_hash', hash).eq('active', true).maybeSingle();
+    return data as { user_id: string | null; plan: string; active: boolean } | null;
+  },
+  loadOwner: async (userId) => {
+    const { data } = await adminClient()
+      .from('users').select('id, role, status, permissions, plan')
+      .eq('id', userId).maybeSingle();
+    return data as { id: string; role: string; status: string; permissions: string[]; plan: string } | null;
+  },
+  sha256: sha256Hex,
+};
+
+function json(data: unknown, status: number, origin: string | null) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+  });
+}
+
+function corsHeaders(origin: string | null) {
+  // SECURITY: `origin` é lido do request corrente — nunca de estado global
+  // compartilhado, que sob concorrência poderia devolver o origin de outro
+  // request (corrida de CORS).
   return {
-    'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.includes(origin) ? origin : 'https://adaspro.com.br',
+    'Access-Control-Allow-Origin': origin && ALLOWED.includes(origin) ? origin : 'https://adaspro.com.br',
     'Vary': 'Origin',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, content-type, x-api-key',
     'Cache-Control': 'private, no-store',
   };
 }
+const ALLOWED = ['https://adaspro.com.br'];
 
-/* ─── Rate Limiting (shared via rate_limits table) ─── */
-const RATE_LIMIT = 100;
-const RATE_WINDOW_MS = 60_000; // 1 minuto
-
-let rateLimitAdmin: ReturnType<typeof createClient> | null = null;
-
-function getRateLimitAdmin() {
-  if (!rateLimitAdmin) {
-    rateLimitAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-  }
-  return rateLimitAdmin;
-}
-
-function windowStart(nowMs: number): string {
-  return new Date(Math.floor(nowMs / RATE_WINDOW_MS) * RATE_WINDOW_MS).toISOString();
-}
-
-async function checkRateLimit(key: string): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
-  const now = Date.now();
-  const bucket = key;
-  const window = windowStart(now);
-
-  try {
-    const admin = getRateLimitAdmin();
-
-    // Incrementa (upsert) o contador da janela atual no banco compartilhado.
-    // Retorna a contagem pós-incremento para computarmos remaining/reset.
-    const { data, error } = await admin.rpc('increment_rate_limit', {
-      p_bucket: bucket,
-      p_window: window,
-      p_limit: RATE_LIMIT,
-      p_window_ms: RATE_WINDOW_MS,
-    });
-
-    if (error) {
-      console.error('rate_limits rpc error:', error);
-      throw error;
-    }
-
-    const count = (data as number) ?? 0;
-    const allowed = count <= RATE_LIMIT;
-    const resetAt = (Math.floor(now / RATE_WINDOW_MS) + 1) * RATE_WINDOW_MS;
-
-    return { allowed, remaining: Math.max(RATE_LIMIT - count, 0), resetAt };
-  } catch {
-    // Fail-open: se o banco de rate limit falhar, não bloqueia o tráfego
-    // público. Em produção isso é aceitável porque a autenticação e RLS já
-    // protegem os endpoints; o rate limit é uma camada adicional.
-    return { allowed: true, remaining: RATE_LIMIT, resetAt: now + RATE_WINDOW_MS };
-  }
-}
-
-/* ─── API Key validation ─── */
-const VALID_API_KEYS = new Map<string, { userId: string; plan: string; active: boolean }>();
-
-async function validateApiKey(apiKey: string): Promise<{ valid: boolean; userId?: string; plan?: string }> {
-  if (!apiKey || !apiKey.startsWith('adas_live_')) return { valid: false };
-
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
-
-  const { data } = await supabase
-    .from('api_keys')
-    .select('user_id, plan, active')
-    .eq('key_hash', await hashKey(apiKey))
-    .eq('active', true)
-    .single();
-
-  if (!data) return { valid: false };
-  return { valid: true, userId: data.user_id, plan: data.plan };
-}
-
-async function hashKey(key: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(key);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/* ─── JWT validation ─── */
-async function validateJwt(authHeader: string): Promise<{ valid: boolean; userId?: string; role?: string }> {
-  if (!authHeader?.startsWith('Bearer ')) return { valid: false };
-
-  const token = authHeader.slice(7);
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return { valid: false };
-
-  const supabaseAdmin = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
-
-  const { data: userData } = await supabaseAdmin
-    .from('users').select('role, status').eq('id', user.id).single();
-
-  if (userData?.status !== 'active') return { valid: false };
-  return { valid: true, userId: user.id, role: userData?.role };
-}
-
-/* ─── Content data ─── */
-const CATEGORIES = [
-  { id:'honda', label:'Honda & Acura', icon:'🔵' },
-  { id:'toyota', label:'Toyota & Lexus', icon:'🔴' },
-  { id:'nissan', label:'Nissan & Infiniti', icon:'🟡' },
-  { id:'subaru', label:'Subaru EyeSight', icon:'🟢' },
-  { id:'hyundai', label:'Hyundai & Kia', icon:'🔷' },
-  { id:'vag', label:'VAG (Audi/VW/Seat)', icon:'🟣' },
-  { id:'mercedes', label:'Mercedes-Benz', icon:'⭕' },
-  { id:'ford', label:'Ford & Lincoln', icon:'🔸' },
-  { id:'radar', label:'Radar Universal', icon:'📡' },
-  { id:'mazda', label:'Mazda AVM 360°', icon:'🔶' },
-  { id:'mitsubishi', label:'Mitsubishi', icon:'🔹' },
-  { id:'chineses', label:'BYD / Chery / MG', icon:'🇨🇳' },
+const CERTIFICATIONS = [
+  { id:'cert-level-1', name:'ADAS Fundamentals', level:1, hours:8, modules:4, description:'Fundamentos de sistemas ADAS, componentes, funcionamento e terminologia.' },
+  { id:'cert-level-2', name:'ADAS Calibration Specialist', level:2, hours:16, modules:5, description:'Especialização em calibração de câmeras e radares ADAS.' },
+  { id:'cert-level-3', name:'ADAS Advanced Diagnostics', level:3, hours:24, modules:6, description:'Diagnóstico avançado, códigos de falha e procedimentos de reparo.' },
 ];
 
-const CONTENT_MAP: Record<string, { cat: string; title: string; desc: string; accessLevel: number; downloadLevel: number; fileSize: string; pages: number; version: string; updatedAt: string; models: string[] }> = {
-  'honda-lkas':      { cat:'honda', title:'Honda LKAS Calibration', desc:'Guia completo de calibração do sistema LKAS para Honda e Acura.', accessLevel:2, downloadLevel:3, fileSize:'2.4 MB', pages:18, version:'v3.1', updatedAt:'Abr/2026', models:['Civic','CR-V','HR-V','Accord'] },
-  'honda-avm':       { cat:'honda', title:'Honda AVM 360°', desc:'Padrão de calibração AVM para câmeras de visão panorâmica Honda.', accessLevel:2, downloadLevel:3, fileSize:'1.8 MB', pages:12, version:'v2.4', updatedAt:'Mar/2026', models:['CR-V 2017+','Odyssey','Pilot'] },
-  'toyota-ldw':      { cat:'toyota', title:'Toyota LDW/LDA — Target 120°', desc:'Sistema Lane Departure Warning para veículos Toyota/Lexus.', accessLevel:2, downloadLevel:3, fileSize:'3.1 MB', pages:22, version:'v4.2', updatedAt:'Abr/2026', models:['Corolla','Camry','RAV4','Hilux'] },
-  'toyota-180':      { cat:'toyota', title:'Toyota LDA — Target 180°', desc:'Target de calibração 180° para câmeras frontais Toyota/Lexus 2019+.', accessLevel:2, downloadLevel:3, fileSize:'2.9 MB', pages:20, version:'v3.8', updatedAt:'Mar/2026', models:['RAV4 2019+','Camry 2019+'] },
-  'nissan-lka':      { cat:'nissan', title:'Nissan/Infiniti LKA — Tipo 1', desc:'348+ modelos suportados. Cobertura 2013–2024.', accessLevel:2, downloadLevel:3, fileSize:'4.7 MB', pages:28, version:'v5.1', updatedAt:'Abr/2026', models:['Sentra','Frontier','X-Trail'] },
-  'subaru-type1':    { cat:'subaru', title:'Subaru EyeSight — Tipo 1', desc:'Calibração EyeSight geração 1 e 2. 350+ entradas.', accessLevel:3, downloadLevel:3, fileSize:'5.2 MB', pages:32, version:'v4.5', updatedAt:'Abr/2026', models:['Forester','Outback','Legacy'] },
-  'hyundai-avm':     { cat:'hyundai', title:'Hyundai & Kia AVM 360°', desc:'Padrões de calibração AVM. 4 câmeras.', accessLevel:3, downloadLevel:3, fileSize:'2.6 MB', pages:18, version:'v3.3', updatedAt:'Mar/2026', models:['Tucson','Santa Fe','Sorento'] },
-  'audi-lidar':      { cat:'vag', title:'Audi LIDAR ACC — VAS6430-12', desc:'Target proprietário VAS6430-12 para calibração LIDAR Audi.', accessLevel:3, downloadLevel:4, fileSize:'6.1 MB', pages:38, version:'v5.0', updatedAt:'Abr/2026', models:['A4 2016+','A6 2019+','Q5','Q7'] },
-  'ford-avm':        { cat:'ford', title:'Ford AVM 360°', desc:'Target LH e RH para calibração AVM Ford.', accessLevel:3, downloadLevel:4, fileSize:'4.2 MB', pages:28, version:'v3.7', updatedAt:'Mar/2026', models:['Ranger 2022+','Bronco Sport','Explorer'] },
-  'radar-univ':      { cat:'radar', title:'Universal Radar Plate — ACC', desc:'Solução universal de target para ACC/SCC/AEB.', accessLevel:3, downloadLevel:4, fileSize:'1.9 MB', pages:12, version:'v2.1', updatedAt:'Abr/2026', models:['Genesis','Hyundai','Kia','Nissan'] },
-  'mazda-avm':       { cat:'mazda', title:'Mazda AVM 360° + FSC', desc:'Front Side Camera target, calibração multi-ângulo.', accessLevel:3, downloadLevel:4, fileSize:'3.7 MB', pages:24, version:'v2.6', updatedAt:'Mar/2026', models:['CX-5 2021+','CX-50','CX-90'] },
-  'mitsubishi-lka':  { cat:'mitsubishi', title:'Mitsubishi LKA + AVM', desc:'Eclipse Cross, Outlander, EK-models.', accessLevel:3, downloadLevel:4, fileSize:'2.5 MB', pages:18, version:'v2.3', updatedAt:'Fev/2026', models:['Eclipse Cross 2018+','Outlander 2022+'] },
-  'byd-avm':         { cat:'chineses', title:'BYD AVM — 4 Variantes', desc:'Padrão de calibração AVM para veículos BYD.', accessLevel:3, downloadLevel:4, fileSize:'2.3 MB', pages:16, version:'v1.8', updatedAt:'Abr/2026', models:['BYD Dolphin','BYD Seal','BYD Atto 3'] },
-};
-
-function json(data: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...corsHeadersFor(currentOrigin) },
-  });
-}
-
-function paginate<T>(items: T[], page: number, perPage: number) {
-  const start = (page - 1) * perPage;
-  return {
-    data: items.slice(start, start + perPage),
-    total: items.length,
-    page,
-    per_page: perPage,
-  };
-}
-
 serve(async (req) => {
-  currentOrigin = req.headers.get('origin');
+  const origin = req.headers.get('origin');
 
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeadersFor(currentOrigin) });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) });
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return json({ ok:false, error:'Method not allowed.', code:'METHOD_NOT_ALLOWED' }, 405, origin);
+  }
+  // Atalho via header (barato); o teto real é aplicado na leitura do stream.
+  if (bodyTooLarge(req)) {
+    return json({ ok:false, error:'Payload muito grande.', code:'PAYLOAD_TOO_LARGE' }, 413, origin);
+  }
 
   try {
-    // 1. Rate limit (shared via rate_limits table) — duas dimensões:
-    //    por credencial (x-api-key/token) e por IP, impedindo tanto o
-    //    vazamento/rotação de token quanto o flood a partir de um host.
+    /* ─── 1. Rate limit (credencial + IP) ─── */
     const clientIp = req.headers.get('x-real-ip')
       || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
       || 'unknown';
     const cred = req.headers.get('x-api-key') || req.headers.get('authorization') || 'anonymous';
 
-    let allowed = true;
-    let remaining = RATE_LIMIT;
-    let resetAt = 0;
+    let allowed = true, remaining = RATE_LIMIT, resetAt = 0;
     for (const bucket of [`cred:${cred}`, `ip:${clientIp}`]) {
-      const r = await checkRateLimit(bucket);
+      const r = await checkRateLimit(bucket, rateLimitDeps);
       if (!r.allowed) allowed = false;
       remaining = Math.min(remaining, r.remaining);
       resetAt = Math.max(resetAt, r.resetAt);
     }
-    const rateLimit = { allowed, remaining, resetAt };
+    if (!allowed) {
+      return json({ ok:false, error:'Rate limit excedido. Tente novamente em breve.', code:'RATE_LIMITED' }, 429, origin);
+    }
     const rateHeaders = {
       'X-RateLimit-Limit': String(RATE_LIMIT),
-      'X-RateLimit-Remaining': String(rateLimit.remaining),
-      'X-RateLimit-Reset': String(Math.floor(rateLimit.resetAt / 1000)),
+      'X-RateLimit-Remaining': String(remaining),
+      'X-RateLimit-Reset': String(Math.floor(resetAt / 1000)),
     };
 
-    if (!rateLimit.allowed) {
-      return json({ ok: false, error: 'Rate limit excedido. Tente novamente em breve.', code: 'RATE_LIMITED' }, 429);
-    }
-
-    // 2. Authenticate
+    /* ─── 2. Autenticação ─── */
     const apiKey = req.headers.get('x-api-key');
     const authHeader = req.headers.get('authorization');
 
-    let userId: string | undefined;
-    let userRole: string | undefined;
-    let apiKeyPlan: string | undefined;
+    let userId: string;
+    let userRole = '';
+    let viaApiKey = false;
+    let owner: { role:string; status:string; permissions:string[]; plan:string } | null = null;
 
     if (apiKey) {
-      const keyResult = await validateApiKey(apiKey);
+      const keyResult = await validateApiKey(apiKey, apiKeyDeps);
       if (!keyResult.valid) {
-        return json({ ok: false, error: 'API Key inválida ou inativa.', code: 'INVALID_API_KEY' }, 401);
+        return json({ ok:false, error:'API Key inválida, inativa ou revogada.', code:'INVALID_API_KEY' }, 401, origin);
       }
       userId = keyResult.userId;
-      apiKeyPlan = keyResult.plan;
+      viaApiKey = true;
+      owner = await apiKeyDeps.loadOwner(userId);
     } else if (authHeader) {
-      const jwtResult = await validateJwt(authHeader);
+      const supabaseUser = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: authData, error: authErr } = await supabaseUser.auth.getUser();
+      if (authErr || !authData?.user) {
+        return json({ ok:false, error:'Token JWT inválido ou sessão expirada.', code:'INVALID_TOKEN' }, 401, origin);
+      }
+      const uid = authData.user.id;
+      const jwtDeps: JwtDeps = {
+        verifyToken: async () => true,
+        loadUser: async (id) => {
+          const { data } = await adminClient().from('users').select('role, status').eq('id', id).maybeSingle();
+          return data as { role:string; status:string } | null;
+        },
+      };
+      const jwtResult = await validateJwt(authHeader, jwtDeps, uid);
       if (!jwtResult.valid) {
-        return json({ ok: false, error: 'Token JWT inválido ou sessão expirada.', code: 'INVALID_TOKEN' }, 401);
+        return json({ ok:false, error:'Conta inativa ou pendente de aprovação.', code:'INACTIVE' }, 403, origin);
       }
       userId = jwtResult.userId;
       userRole = jwtResult.role;
+      const { data: full } = await adminClient()
+        .from('users').select('role, status, permissions, plan').eq('id', userId).maybeSingle();
+      owner = full as typeof owner;
     } else {
-      return json({ ok: false, error: 'Autenticação obrigatória. Use X-API-Key ou Authorization Bearer.', code: 'NO_AUTH' }, 401);
+      return json({ ok:false, error:'Autenticação obrigatória. Use X-API-Key ou Authorization Bearer.', code:'NO_AUTH' }, 401, origin);
     }
 
-    // 3. Parse action
+    if (!userId) {
+      return json({ ok:false, error:'Identidade não resolvida.', code:'NO_IDENTITY' }, 403, origin);
+    }
+    if (owner && owner.status !== 'active') {
+      return json({ ok:false, error:'Conta inativa ou pendente de aprovação.', code:'INACTIVE' }, 403, origin);
+    }
+
+    /* ─── 3. Parse da action ─── */
     const url = new URL(req.url);
     let action = url.searchParams.get('action') || '';
 
     let body: Record<string, unknown> = {};
     if (req.method === 'POST') {
-      body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-      action = typeof body.action === 'string' ? body.action : action;
-      // Merge body into params for handlers (arrays são preservados no body —
-      // String(Array) os destruiria, ex.: submit_quiz answers)
+      // Leitura com teto real no stream — `req.json()` sem limite permitiria
+      // DoS de memória via body grande enviado em chunked (sem content-length).
+      const parsed = await readJsonBody(req);
+      if (!parsed.ok) {
+        return json({ ok:false, error:'Payload muito grande.', code:'PAYLOAD_TOO_LARGE' }, 413, origin);
+      }
+      body = parsed.data;
+      if (typeof body.action === 'string') action = body.action;
       for (const [k, v] of Object.entries(body)) {
         if (k !== 'action' && !Array.isArray(v)) url.searchParams.set(k, String(v));
       }
     }
 
-    // 4. Route
+    /* ─── 4. MFA (aal2) para ações sensíveis ─── */
+    // SECURITY: sem este gate, uma senha vazada (sessão aal1, MFA não
+    // concluído) bastava para assinar downloads e ler dados do usuário —
+    // anulando o controle de MFA que get-download-url/notify/approve-user exigem.
+    // Chave de API não tem sessão de usuário, logo não passa por aqui.
+    if (!viaApiKey && MFA_REQUIRED_ACTIONS.has(action) && authHeader) {
+      const supabaseUser = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const aal = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
+      const mfa = await requireMfa(aal);
+      if (!mfa.ok) return json({ ok:false, error: mfa.msg, code:'MFA_REQUIRED' }, 403, origin);
+    }
+
+    /* ─── 5. Rotear ─── */
     switch (action) {
       case 'list_content': {
         const category = url.searchParams.get('category');
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const perPage = Math.min(parseInt(url.searchParams.get('per_page') || '20'), 100);
+        const page = Math.max(1, parseInt(url.searchParams.get('page') || '1') || 1);
+        const perPage = Math.min(Math.max(1, parseInt(url.searchParams.get('per_page') || '20') || 20), 100);
 
-        let items = Object.entries(CONTENT_MAP).map(([id, c]) => ({ id, ...c }));
-        if (category) items = items.filter(i => i.cat === category);
+        // SECURITY: filtrar por permissão/plano. Antes devolvia o catálogo
+        // completo (incl. accessLevel/downloadLevel) a qualquer autenticado,
+        // expondo o catálogo pago a contas free.
+        const isStaff = !!owner && ['admin','gestor','superadmin'].includes(owner.role);
+        const perms = owner?.permissions || [];
+        const visible = Object.entries(CONTENT_MAP)
+          .map(([id, c]) => ({ id, ...c }))
+          .filter(i => isStaff || (perms.includes(i.cat) && (i.accessLevel || 1) <= (isStaff ? 4 : planLevel(owner?.plan))));
+        const items = category ? visible.filter(i => i.cat === category) : visible;
 
-        return json({ ok: true, ...paginate(items, page, perPage), ...rateHeaders });
+        return json({ ok:true, ...paginate(items, page, perPage), ...rateHeaders }, 200, origin);
       }
 
       case 'get_content': {
         const id = url.searchParams.get('id');
-        if (!id) return json({ ok: false, error: 'Parâmetro "id" obrigatório.', code: 'MISSING_ID' }, 400);
-
+        if (!isValidContentId(id)) {
+          return json({ ok:false, error:'Parâmetro "id" inválido.', code:'MISSING_ID' }, 400, origin);
+        }
         const item = CONTENT_MAP[id];
-        if (!item) return json({ ok: false, error: 'Material não encontrado.', code: 'NOT_FOUND' }, 404);
+        if (!item) return json({ ok:false, error:'Material não encontrado.', code:'NOT_FOUND' }, 404, origin);
 
-        return json({ ok: true, data: { id, ...item }, ...rateHeaders });
+        const decision = evaluateAccess(item, owner);
+        if (!decision.allowed) {
+          return json({ ok:false, error:'Sem permissão para este material.', code: decision.code }, 403, origin);
+        }
+        return json({ ok:true, data:{ id, ...item }, ...rateHeaders }, 200, origin);
       }
 
       case 'get_download_url': {
         const id = url.searchParams.get('contentId') || url.searchParams.get('id');
-        if (!id) return json({ ok: false, error: 'Parâmetro "contentId" obrigatório.', code: 'MISSING_ID' }, 400);
-
+        if (!isValidContentId(id)) {
+          return json({ ok:false, error:'Parâmetro "contentId" inválido.', code:'MISSING_ID' }, 400, origin);
+        }
         const item = CONTENT_MAP[id];
-        if (!item) return json({ ok: false, error: 'Material não encontrado.', code: 'NOT_FOUND' }, 404);
+        if (!item) return json({ ok:false, error:'Material não encontrado.', code:'NOT_FOUND' }, 404, origin);
 
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        const planLevels: Record<string, number> = { free: 1, modulo: 2, pro: 3, premium: 4 };
-
-        // Permissões do dono (JWT ou chave com user_id) — nunca confiar em dados do cliente
-        let userData: { role?: string; status?: string; permissions?: string[]; plan?: string } | null = null;
-        if (userId) {
-          const { data } = await supabaseAdmin
-            .from('users').select('role, status, permissions, plan').eq('id', userId).maybeSingle();
-          userData = data ?? null;
-          if (!userData) return json({ ok: false, error: 'Usuário não encontrado.', code: 'USER_NOT_FOUND' }, 404);
-          if (userData.status !== 'active') {
-            return json({ ok: false, error: 'Conta inativa ou pendente de aprovação.', code: 'INACTIVE' }, 403);
-          }
-        }
-
-        // Staff (gestor/admin/superadmin) sempre passa — espelha get-download-url/auth.js
-        const staffRoles = ['admin', 'gestor', 'superadmin'];
-        const isStaff = (!!userData && !!userData.role && staffRoles.includes(userData.role))
-          || (!!userRole && staffRoles.includes(userRole));
-
-        const hasPermission = isStaff || (userData?.permissions || []).includes(item.cat);
-        if (!hasPermission) {
-          return json({ ok: false, error: 'Sem permissão para este material.', code: 'NO_PERMISSION' }, 403);
-        }
-
-        // Nível do plano — staff = nível 4; chave sem dono usa o plano da própria chave
-        const userLevel = isStaff
-          ? 4
-          : (planLevels[userData?.plan || apiKeyPlan || 'free'] || 1);
-
-        if (userLevel < (item.accessLevel || 1)) {
-          return json({ ok: false, error: 'Seu plano não permite visualizar este material.', code: 'PLAN_LEVEL' }, 403);
-        }
-        if (userLevel < (item.downloadLevel || 2)) {
-          return json({ ok: false, error: 'Seu plano não permite baixar este material.', code: 'INSUFFICIENT_ACCESS' }, 403);
-        }
-
-        // Configuração do módulo (moduleAccess) — staff passa
-        const { data: settingsData } = await supabaseAdmin
+        const { data: settingsData } = await adminClient()
           .from('settings').select('value').eq('key', 'app').maybeSingle();
-        const mod = settingsData?.value?.moduleAccess?.[item.cat];
-        if (mod && mod.enabled === false && !isStaff) {
-          return json({ ok: false, error: 'Este módulo está desativado.', code: 'MODULE_DISABLED' }, 403);
-        }
-        if (mod && mod.minLevel && !isStaff && userLevel < mod.minLevel) {
-          return json({ ok: false, error: 'Seu plano não permite acesso a este módulo.', code: 'MODULE_LEVEL' }, 403);
+        const mod = settingsData?.value?.moduleAccess?.[item.cat] ?? null;
+
+        const decision = evaluateAccess(item, owner, { needFile: true, moduleAccess: mod });
+        if (!decision.allowed) {
+          const msgs: Record<string, string> = {
+            NO_PERMISSION: 'Sem permissão para este material.',
+            PLAN_LEVEL: 'Seu plano não permite visualizar este material.',
+            INSUFFICIENT_ACCESS: 'Seu plano não permite baixar este material.',
+            FILE_UNAVAILABLE: 'Arquivo ainda não disponível.',
+          };
+          const status = decision.code === 'FILE_UNAVAILABLE' ? 404 : 403;
+          return json({ ok:false, error: msgs[decision.code], code: decision.code }, status, origin);
         }
 
-        // Generate signed URL (1h)
-        const { data: signedUrl, error } = await supabaseAdmin.storage
-          .from('materiais')
-          .createSignedUrl(`${item.cat}/${id}.pdf`, 3600);
-
-        if (error) return json({ ok: false, error: 'Erro ao gerar URL de download.', code: 'STORAGE_ERROR' }, 500);
+        // Usa o filePath do catálogo — nunca constrói de cat/id (404 em tudo).
+        const { data: signedUrl, error } = await adminClient().storage
+          .from('materiais').createSignedUrl(item.filePath!, 3600);
+        if (error || !signedUrl) {
+          return json({ ok:false, error:'Erro ao gerar URL de download.', code:'STORAGE_ERROR' }, 500, origin);
+        }
 
         // Auditoria (fail-safe: apenas loga, não bloqueia o download)
-        const { error: logErr } = await supabaseAdmin.from('audit_logs').insert({
-          action: 'download_content',
-          ...(userId ? { actor_id: userId } : {}),
-          target_id: id,
-          details: { cat: item.cat, filePath: `${item.cat}/${id}.pdf` },
+        const { error: logErr } = await adminClient().from('audit_logs').insert({
+          action:'download_content', actor_id:userId, target_id:id,
+          details:{ cat:item.cat, filePath:item.filePath },
           created_at: new Date().toISOString(),
         });
         if (logErr) console.error('[api-gateway] audit_logs falhou:', logErr.message);
 
-        return json({
-          ok: true,
-          data: { url: signedUrl.signedUrl, expiresAt: new Date(Date.now() + 3600000).toISOString(), fileName: `${id}.pdf` },
-          ...rateHeaders,
-        });
+        return json({ ok:true, data:{ url:signedUrl.signedUrl, expiresAt:new Date(Date.now()+3600000).toISOString(), fileName:`${id}.pdf` }, ...rateHeaders }, 200, origin);
       }
 
-      case 'list_categories': {
-        return json({ ok: true, data: CATEGORIES, ...rateHeaders });
-      }
+      case 'list_categories':
+        return json({ ok:true, data:CATEGORIES, ...rateHeaders }, 200, origin);
 
       case 'get_user': {
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        const { data: userData } = await supabaseAdmin
+        const { data: userData } = await adminClient()
           .from('users').select('id, name, email, role, plan, status, permissions').eq('id', userId).single();
-
-        if (!userData) return json({ ok: false, error: 'Usuário não encontrado.', code: 'USER_NOT_FOUND' }, 404);
-        return json({ ok: true, data: userData, ...rateHeaders });
+        if (!userData) return json({ ok:false, error:'Usuário não encontrado.', code:'USER_NOT_FOUND' }, 404, origin);
+        return json({ ok:true, data:userData, ...rateHeaders }, 200, origin);
       }
 
       case 'update_progress': {
         const contentId = url.searchParams.get('contentId');
-        const progress = parseInt(url.searchParams.get('progress') || '0');
+        if (!isValidContentId(contentId)) {
+          return json({ ok:false, error:'Parâmetro "contentId" inválido.', code:'MISSING_ID' }, 400, origin);
+        }
+        // SECURITY: antes aceitava qualquer string e gravava em user_progress.
+        if (!CONTENT_MAP[contentId]) {
+          return json({ ok:false, error:'Material não encontrado.', code:'NOT_FOUND' }, 404, origin);
+        }
+        const progress = Math.min(Math.max(parseInt(url.searchParams.get('progress') || '0') || 0, 0), 100);
         const completed = url.searchParams.get('completed') === 'true';
 
-        if (!contentId) return json({ ok: false, error: 'Parâmetro "contentId" obrigatório.', code: 'MISSING_ID' }, 400);
-
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        const { error } = await supabaseAdmin.from('user_progress').upsert({
-          user_id: userId,
-          content_id: contentId,
-          progress: Math.min(Math.max(progress, 0), 100),
-          completed,
+        const { error } = await adminClient().from('user_progress').upsert({
+          user_id: userId, content_id: contentId, progress, completed,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id,content_id' });
-
-        if (error) return json({ ok: false, error: 'Erro ao salvar progresso.', code: 'DB_ERROR' }, 500);
-        return json({ ok: true, data: { contentId, progress, completed }, ...rateHeaders });
+        if (error) return json({ ok:false, error:'Erro ao salvar progresso.', code:'DB_ERROR' }, 500, origin);
+        return json({ ok:true, data:{ contentId, progress, completed }, ...rateHeaders }, 200, origin);
       }
 
       case 'list_bulletins': {
         const type = url.searchParams.get('type');
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        let query = supabaseAdmin.from('bulletins').select('*').eq('status', 'published').order('created_at', { ascending: false });
+        let query = adminClient().from('bulletins').select('*').eq('status','published').order('created_at',{ ascending:false });
         if (type) query = query.eq('type', type);
-
         const { data, error } = await query;
-        if (error) return json({ ok: false, error: 'Erro ao buscar boletins.', code: 'DB_ERROR' }, 500);
-        return json({ ok: true, data: data || [], ...rateHeaders });
+        if (error) return json({ ok:false, error:'Erro ao buscar boletins.', code:'DB_ERROR' }, 500, origin);
+        return json({ ok:true, data:data||[], ...rateHeaders }, 200, origin);
       }
 
       case 'list_articles': {
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        const { data, error } = await supabaseAdmin
-          .from('articles').select('*').eq('status', 'published').order('created_at', { ascending: false });
-
-        if (error) return json({ ok: false, error: 'Erro ao buscar artigos.', code: 'DB_ERROR' }, 500);
-        return json({ ok: true, data: data || [], ...rateHeaders });
+        const { data, error } = await adminClient().from('articles').select('*')
+          .eq('status','published').order('created_at',{ ascending:false });
+        if (error) return json({ ok:false, error:'Erro ao buscar artigos.', code:'DB_ERROR' }, 500, origin);
+        return json({ ok:true, data:data||[], ...rateHeaders }, 200, origin);
       }
 
-      case 'list_certifications': {
-        const certs = [
-          { id:'cert-level-1', name:'ADAS Fundamentals', level:1, hours:8, modules:4, description:'Fundamentos de sistemas ADAS, componentes, funcionamento e terminologia.' },
-          { id:'cert-level-2', name:'ADAS Calibration Specialist', level:2, hours:16, modules:5, description:'Especialização em calibração de câmeras e radares ADAS.' },
-          { id:'cert-level-3', name:'ADAS Advanced Diagnostics', level:3, hours:24, modules:6, description:'Diagnóstico avançado, códigos de falha e procedimentos de reparo.' },
-        ];
-        return json({ ok: true, data: certs, ...rateHeaders });
-      }
+      case 'list_certifications':
+        return json({ ok:true, data:CERTIFICATIONS, ...rateHeaders }, 200, origin);
 
       case 'submit_quiz': {
         const certId = url.searchParams.get('certificationId');
         const moduleId = url.searchParams.get('moduleId');
-
         if (!certId || !moduleId) {
-          return json({ ok: false, error: 'Parâmetros "certificationId" e "moduleId" obrigatórios.', code: 'MISSING_PARAMS' }, 400);
+          return json({ ok:false, error:'Parâmetros "certificationId" e "moduleId" obrigatórios.', code:'MISSING_PARAMS' }, 400, origin);
         }
 
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        // Busca o gabarito server-side. Sem gabarito (ou gabarito vazio), a
-        // certificação não pode ser calculada com segurança no servidor, então
-        // rejeitamos a submissão para evitar que o cliente controle o resultado.
-        const { data: quizQuestions } = await supabaseAdmin
-          .from('quiz_questions')
-          .select('id, correct_answer')
-          .eq('module_id', moduleId)
-          .eq('certification_id', certId);
-
+        // SECURITY: sem gabarito não calcula resultado — evita que o cliente
+        // controle o score. O gabarito nunca é devolvido na resposta.
+        const { data: quizQuestions } = await adminClient().from('quiz_questions')
+          .select('id, correct_answer').eq('module_id', moduleId).eq('certification_id', certId);
         if (!quizQuestions || quizQuestions.length === 0) {
-          return json({
-            ok: false,
-            error: 'Quiz indisponível para certificação neste momento.',
-            code: 'QUIZ_UNAVAILABLE',
-          }, 409);
+          return json({ ok:false, error:'Quiz indisponível para certificação neste momento.', code:'QUIZ_UNAVAILABLE' }, 409, origin);
         }
 
-        let score = 0;
-        let passed = false;
-        let correctCount = 0;
-
-        // Respostas vêm no body como array (ex.: [{questionId, selected}]) —
-        // aceitamos também a forma string JSON (query string / legado)
         const rawAnswers = body.answers ?? url.searchParams.get('answers');
         let answersList: unknown[] = [];
-        if (Array.isArray(rawAnswers)) {
-          answersList = rawAnswers as unknown[];
-        } else if (typeof rawAnswers === 'string') {
-          try {
-            const parsed = JSON.parse(rawAnswers);
-            if (Array.isArray(parsed)) answersList = parsed;
-          } catch { /* respostas inválidas: mantém score 0 */ }
+        if (Array.isArray(rawAnswers)) answersList = rawAnswers as unknown[];
+        else if (typeof rawAnswers === 'string') {
+          try { const p = JSON.parse(rawAnswers); if (Array.isArray(p)) answersList = p; } catch { /* score 0 */ }
         }
-
         const answerMap = new Map<string, string>(
-          answersList.map((a: any) => [
-            String(a?.questionId ?? a?.id),
-            String(a?.givenAnswer ?? a?.answer ?? a?.selected),
-          ])
+          answersList.map((a: any) => [String(a?.questionId ?? a?.id), String(a?.givenAnswer ?? a?.answer ?? a?.selected)])
         );
 
-        correctCount = quizQuestions.filter((q: any) =>
+        const correctCount = quizQuestions.filter((q: any) =>
           answerMap.get(String(q.id)) === String(q.correct_answer)
         ).length;
+        const score = Math.round((correctCount / quizQuestions.length) * 100);
+        const passed = score >= 70;
 
-        score = Math.round((correctCount / quizQuestions.length) * 100);
-        passed = score >= 70;
-
-        await supabaseAdmin.from('quiz_results').insert({
-          user_id: userId,
-          certification_id: certId,
-          module_id: moduleId,
-          score,
-          passed,
-          completed_at: new Date().toISOString(),
+        await adminClient().from('quiz_results').insert({
+          user_id: userId, certification_id: certId, module_id: moduleId,
+          score, passed, completed_at: new Date().toISOString(),
         });
 
-        return json({
-          ok: true,
-          data: {
-            certificationId: certId,
-            moduleId,
-            score,
-            passed,
-            correctCount,
-            totalCount: quizQuestions.length,
-            completedAt: new Date().toISOString(),
-          },
-          ...rateHeaders,
-        });
+        return json({ ok:true, data:{
+          certificationId:certId, moduleId, score, passed,
+          correctCount, totalCount:quizQuestions.length, completedAt:new Date().toISOString(),
+        }, ...rateHeaders }, 200, origin);
       }
 
       default:
-        return json({ ok: false, error: `Ação desconhecida: "${action}". Consulte /api-docs para endpoints disponíveis.`, code: 'UNKNOWN_ACTION' }, 400);
+        return json({ ok:false, error:`Ação desconhecida: "${action}". Consulte /api-docs para endpoints disponíveis.`, code:'UNKNOWN_ACTION' }, 400, origin);
     }
-
   } catch (err) {
     console.error('API Gateway error:', err);
-    return json({ ok: false, error: 'Erro interno do servidor.', code: 'INTERNAL_ERROR' }, 500);
+    return json({ ok:false, error:'Erro interno do servidor.', code:'INTERNAL_ERROR' }, 500, origin);
   }
 });
+
+function planLevel(plan: string | undefined): number {
+  return ({ free:1, modulo:2, pro:3, premium:4 } as Record<string, number>)[plan || 'free'] || 1;
+}
+
+// Evita warning de import não usado quando RATE_WINDOW_MS só é referenciado aqui.
+void RATE_WINDOW_MS;

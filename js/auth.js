@@ -613,7 +613,26 @@ const AUTH = (function () {
               try {
                 const pending = JSON.parse(pendingRaw);
                 if (pending.email.toLowerCase() === emailClean) {
-                  syncUser = { ...pending, id: data.user.id };
+                  // SECURITY: o objeto de localStorage é controlado por quem
+                  // tiver XSS (ou outra aba). Espalhar {...pending} permitia
+                  // plantar role:'superadmin'/status:'active' e obter uma
+                  // sessão privilegiada em memória (o RLS bloqueia a
+                  // persistência, mas a sessão já era concedida).
+                  // Whitelist: só campos de perfil, com os campos de
+                  // PRIVILÉGIO forçados no piso da tabela.
+                  syncUser = {
+                    id: data.user.id,
+                    name: String(pending.name || '').trim().substring(0, 120),
+                    email: emailClean,
+                    phone: pending.phone ? String(pending.phone).trim().substring(0, 20) : undefined,
+                    role: 'membro',
+                    status: 'pending',
+                    plan: 'free',
+                    permissions: [],
+                    accessType: 'trial',
+                    accessExpires: null,
+                    boughtModules: [],
+                  };
                   localStorage.removeItem('adaspro_pending_user');
                 }
               } catch(_) {}

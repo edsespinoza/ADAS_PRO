@@ -252,6 +252,15 @@ DROP POLICY IF EXISTS "notif_insert" ON public.notifications;
 DROP POLICY IF EXISTS "notif_update" ON public.notifications;
 DROP POLICY IF EXISTS "notif_delete" ON public.notifications;
 
+-- Políticas legadas do schema original (pré-v4). Existiam no banco ao lado das
+-- atuais e, como políticas são combinadas por OU, a `notifs_insert` com
+-- `WITH CHECK true` permitia a qualquer autenticado inserir notificação para
+-- terceiros. Removidas aqui para manter o arquivo canônico e idempotente.
+DROP POLICY IF EXISTS "notifs_select" ON public.notifications;
+DROP POLICY IF EXISTS "notifs_insert" ON public.notifications;
+DROP POLICY IF EXISTS "notifs_update" ON public.notifications;
+DROP POLICY IF EXISTS "notifs_delete" ON public.notifications;
+
 -- SELECT: notificações do próprio usuário OU admin+
 CREATE POLICY "notif_select" ON public.notifications
   FOR SELECT

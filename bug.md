@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-08-29  
+**Última atualização:** 2026-10-08  
 **Responsável:** AutoTech Service
 
 ---
@@ -14,6 +14,40 @@
 | Em andamento | `[~]` |
 | Concluído | `[x]` |
 | Bloqueado | `[!]` |
+
+---
+
+## 🧭 AUDITORIA DE ESTADO — Banco + Migrations + Vercel 2026-10-08
+
+> **Solicitação:** "analise o projeto e atualize o banco de dados e a licença do vercel e qualquer outra pendência".
+
+**Diagnóstico ao vivo (Supabase `zqydyyticvtmirjzskly`):**
+- Edge Functions: `approve-user` (v6), `get-download-url` (v8), `notify` (v6), `api-gateway` (v3) — todas `ACTIVE`.
+- Funções `SECURITY DEFINER` com `search_path=""` conferidas (`adas_create_api_key`, `adas_deactivate_api_key`, `increment_rate_limit`, `revoke_api_keys_on_block`, helpers de role, `prevent_ticket_reassign`).
+- `quiz_questions.correct_answer` bloqueado p/ `authenticated` (`has_column_privilege=false`), `question` legível. `anon` sem acesso.
+- ✅ Políticas de `users`/`tickets`/`settings`/`articles`/`bulletins` idênticas ao canônico `sql/rls_policies.sql`.
+
+- [x] **#103 — CRÍTICO: políticas RLS legadas `notifs_*` ainda ativas no banco (INSERT com `WITH CHECK true`)** ✅ 2026-10-08
+  - **Achado:** o banco live tinha 8 políticas em `notifications` — as 4 canônicas (`notif_*`) **e** 4 legadas do schema pré-v4 (`notifs_select/insert/update/delete`). Como políticas são combinadas por OU, a `notifs_insert` com `WITH CHECK true` permitia a **qualquer autenticado inserir notificação para terceiros**; `notifs_delete`/`update` também eram permissivas.
+  - **Fix:** o canônico `sql/rls_policies.sql` já continha os `DROP POLICY IF EXISTS "notifs_*"` (working tree, não commitado). Aplicado inteiro no live via `supabase db query --linked -f sql/rls_policies.sql` (idempotente). **Verificado pós-fix:** `notifications` agora tem exatamente 4 políticas (`notif_delete`, `notif_insert`, `notif_select`, `notif_update`).
+  - **Arquivo:** `sql/rls_policies.sql`
+
+- [x] **#104 — Histórico de migrations reconciliado (drift local↔remoto)** ✅ 2026-10-08
+  - **Achado:** `supabase migration list` mostrava `20260829`/`20260830` como não aplicadas, embora o conteúdo **já estivesse no banco** (aplicado via `db query -f`, que não grava o histórico). Além disso **dois arquivos locais compartilhavam a versão `20260828`** (`_api_keys` e `_rate_limits`), o que impede o `migration list` de casar 1:1.
+  - **Fix:** `git mv supabase/migrations/20260828_api_keys.sql → 20260827_api_keys.sql` (versão única; conteúdo inalterado, já estava live) e `supabase migration repair --status applied 20260827 20260829 20260830 --linked`. **Verificado:** `migration list` agora mostra 4↔4 (`20260827`,`20260828`,`20260829`,`20260830`).
+  - **Arquivos:** `supabase/migrations/20260827_api_keys.sql`, `20260828_rate_limits.sql`, `20260829_security_fixes.sql`, `20260830_revoke_api_keys_on_block.sql`
+
+**Pendências manuais confirmadas nesta auditoria (não automatizáveis por código):**
+
+| # | Prioridade | Achado | Ação | Onde |
+|---|---|---|---|---|
+| C | 🟠 Alta | `supabase secrets list` **não contém** `RESEND_API_KEY`, `ADMIN_EMAIL` nem `SITE_URL` (só os secrets default do projeto) → função `notify` não envia email | Criar conta em resend.com, gerar `RESEND_API_KEY`, verificar domínio `adaspro.com.br` (DNS TXT/DKIM) e cadastrar os 3 secrets | Supabase Dashboard → Edge Functions → Secrets |
+| D | 🟡 Médio | 4 contas staff (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` `@adaspro.com.br`) com **0 fatores TOTP**; código MFA pronto | Ativar "TOTP obrigatório" e configurar autenticador (ver #36) | Supabase Dashboard → Auth → MFA Policy |
+| F | 🟠 Alta | Senhas de produção (`AutoTech@ADAS2026!` / `Admin@ADAS2026!`) expostas no histórico do código | Trocar as senhas no Supabase Auth | Supabase Dashboard → Authentication → Users |
+| G | 🟠 Alta | `DEMO_ENABLED=true` ativo em produção (bloco "Entrar como Admin — DEMO" no login) | Definir `DEMO_ENABLED=false` | Vercel Dashboard → Project → Settings → Environment Variables |
+| H | 🟠 Alta | `VERCEL_TOKEN` em `~/.bashrc:133` **inválido** (HTTP 403 em `api.vercel.com/v2/user`) → CLI Vercel inoperante (env/deploy/projeto) | Gerar token novo em vercel.com/account/tokens, exportar `VERCEL_TOKEN` e revalidar | Terminal / `~/.bashrc` |
+
+> **Nota boletins ("versão antiga"):** permanece **pausado** aguardando a leitura de console do usuário (ver seção no fim deste arquivo). Não editar `js/auth.js` antes de confirmar o estado real do cliente.
 
 ---
 

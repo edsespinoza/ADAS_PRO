@@ -17,7 +17,7 @@ npm run dev          # Gera config + inicia servidor estático em http://localho
 SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<anon-key>
 SITE_URL=https://adaspro.com.br   # usado pela Edge Function notify (CORS origin)
-DEMO_ENABLED=true                 # omitir ou false em produção
+DEMO_ENABLED=true                 # habilita os botões de DEMO no login (sandbox local)
 ```
 
 > `.env.example` já existe no repo como template — `.env.local` nunca deve ser commitado.
@@ -26,7 +26,7 @@ DEMO_ENABLED=true                 # omitir ou false em produção
 
 `js/supabase-config.js` **não está no `.gitignore`** — é commitado intencionalmente com a anon key (exposta por design; segurança via RLS). Localmente, qualquer execução de `npm run build` o sobrescreve com os valores do `.env.local` (a condição é `NODE_ENV !== 'production'`, não apenas a flag `--dev`). No Vercel (`NODE_ENV=production`), `.env.local` é ignorado e as variáveis do painel são usadas.
 
-`DEMO_ENABLED` padrão é `true` quando a variável não está definida (`DEMO_ENABLED !== 'false'`). Em produção, definir `DEMO_ENABLED=false` no painel do Vercel.
+`DEMO_ENABLED` é **fail-closed** em `scripts/build-config.js` (linha 26): o modo demo só é ligado quando o valor é exatamente `'true'` (`(process.env.DEMO_ENABLED || '').toLowerCase() === 'true'`); qualquer outro valor ou ausente → `demoEnabled: false`. **Em produção o demo está intencionalmente ATIVO** (`DEMO_ENABLED=true` no painel do Vercel) por decisão de produto: os botões `🎯 Entrar como Admin — DEMO` / `👤 Entrar como Membro — DEMO` (`login.html`, exibidos por `js/login.js` quando `SUPABASE_CONFIG.demoEnabled === true`) são a vitrine para o prospect testar o sistema. O modo demo é um **sandbox 100% local** — `AUTH.enterDemoMode()` usa `_mode='local'` e toda operação Supabase é guardada por `!_demo` (apenas dados fictícios; nunca toca dados reais). Histórico: ligado até 2026-08-29, desligado no #106 e reativado em 2026-10-10.
 
 Deploy via Vercel: o `buildCommand` em `vercel.json` é `npm install && npm run build`.
 

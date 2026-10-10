@@ -3,6 +3,8 @@
 .env
 node_modules/
 supabase/.temp/
+# Drop local de segredos (ex.: token_/re_*.txt — chave Resend)
+token_/
 
 # IDE/tooling diagnostic artifacts
 .diag_*.cjs

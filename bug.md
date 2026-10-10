@@ -58,7 +58,7 @@
   - **Segurança:** novo secret **`LEAD_IP_SALT`** definido no projeto (`supabase secrets set`). A função `notify` ganhou o evento **`new_lead`** (template; disparo por fluxos admin).
   - **CSP (item crítico resolvido):** mudanças de script inline em `admin.html`/`index.html` invalidam os hashes SHA-256 commitados em `vercel.json`. Rodado `node scripts/generate-csp.js` **localmente** antes do deploy. O botão "Abrir" do lead usava `onclick="openLead('${...}')"` → **não hasheável**; migrado para `data-act="openLead" data-id`. **CSP servido em produção = `vercel.json`** (11396 chars, match exato).
   - **Verificado (produção, 2026-10-10):** E2E por curl na `capture-lead` — lead válido `200 {ok:true}`; honeypot `200` sem insert; e-mail inválido `400`; duplicado <24h `200 {dedup:true}` (uma única linha, `profile` atualizado); burst → `429`. Preflight CORS `https://adaspro.com.br` OK; 5 headers de segurança presentes. Endpoint `/` serve `js/supabase-config.js?v=20261010` e o honeypot. **Linhas de teste removidas** (`leads` = 0). Deploy `vercel --prod --yes` aliased `https://adaspro.com.br`.
-  - **Pendência relacionada:** o aviso por e-mail de novo lead só passa a funcionar após resolver **C** (`RESEND_API_KEY`/`ADMIN_EMAIL`); sem isso o lead ainda é gravado normalmente.
+  - **Pendência relacionada (✅ RESOLVIDA em 2026-10-10 — ver C):** o aviso por e-mail de novo lead **está ativo**. `RESEND_API_KEY`/`ADMIN_EMAIL`/`SITE_URL` configurados; teste de envio Resend = `delivered`; E2E `capture-lead` = `{ok:true}` + `dedup:true`.
 
 - [x] **#108 — MIGRAÇÃO: boletins `localStorage` → Supabase (`public.bulletins.payload` + dual-write)** ✅ 2026-10-10
   - **Contexto/autorização:** o **freeze de `js/auth.js`** (seção "versão antiga" no fim deste arquivo) foi **sobreposto por diretiva explícita do usuário** ("destrave a migração dos boletins e faça o deploy para o sistema online"). Antes, um boletim criado no painel editorial só existia no `localStorage` de quem o criou.
@@ -102,7 +102,7 @@
 
 | # | Prioridade | Achado | Ação | Onde |
 |---|---|---|---|---|
-| C | 🟠 Alta | `supabase secrets list` **não contém** `RESEND_API_KEY`, `ADMIN_EMAIL` nem `SITE_URL` (só os secrets default do projeto) → função `notify` não envia email; **também bloqueia o aviso de novo lead** (`capture-lead`, ver #107) | Criar conta em resend.com, gerar `RESEND_API_KEY`, verificar domínio `adaspro.com.br` (DNS TXT/DKIM) e cadastrar os 3 secrets | Supabase Dashboard → Edge Functions → Secrets |
+| C | ✅ Resolvido | Secrets de e-mail **configurados** (2026-10-10) via `supabase secrets set`: `SITE_URL=https://adaspro.com.br`, `ADMIN_EMAIL=espinozatecnico@gmail.com`, `RESEND_API_KEY` (conta Resend criada; domínio `adaspro.com.br` **verificado**). Teste de envio Resend → **HTTP 200 / `delivered`**; E2E `capture-lead` → `{ok:true}` + `dedup:true`; e-mail de aviso entregue | — | Supabase → Project Settings → Edge Functions → Secrets |
 | D | 🟡 Médio | 4 contas staff (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` `@adaspro.com.br`) com **0 fatores TOTP**; código MFA pronto | Ativar "TOTP obrigatório" e configurar autenticador (ver #36) | Supabase Dashboard → Auth → MFA Policy |
 | F | 🟠 Alta | Senhas de produção (`AutoTech@ADAS2026!` / `Admin@ADAS2026!`) expostas no histórico do código | Trocar as senhas no Supabase Auth | Supabase Dashboard → Authentication → Users |
 | G | ✅ Resolvido | Modo demo em produção — **revertido por decisão de produto** (2026-10-10): `DEMO_ENABLED=true` **reativado** de propósito em produção (ver #106). O demo é sandbox local sem dados reais | — | Vercel Dashboard → Project → Settings → Environment Variables |
@@ -313,7 +313,7 @@
 |---|-----------|------|------|
 | A | 🔴 Alta | Revogar token Supabase CLI usado em 2026-04-27 | supabase.com/dashboard/account/tokens |
 | B | 🟠 Alta | Revogar chaves Firebase antigas | console.firebase.google.com |
-| C | 🟠 Alta | Configurar env vars da função `notify`: `RESEND_API_KEY`, `ADMIN_EMAIL`, `SITE_URL` | Supabase Dashboard → Edge Functions → notify |
+| C | ✅ Resolvido | Env vars da `notify` **configuradas** (2026-10-10) — `RESEND_API_KEY`, `ADMIN_EMAIL=espinozatecnico@gmail.com`, `SITE_URL=https://adaspro.com.br` (domínio verificado no Resend; teste `delivered`) | Supabase → Project Settings → Edge Functions → Secrets |
 | D | 🟡 Médio | Ativar TOTP obrigatório para admin/superadmin no Supabase Dashboard — código já pronto. **Estado 2026-08-29:** 4 contas de staff com 0 fatores TOTP (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` — todas `@adaspro.com.br`); config MFA não é automatizável via código | Supabase Dashboard → Auth → MFA Policy → Enforce for roles |
 | F | 🟠 Alta | Trocar senhas de produção no Supabase Auth (AutoTech@ADAS2026! e Admin@ADAS2026! foram expostas no histórico do código) | Supabase Dashboard → Authentication → Users |
 | E | 🟡 Médio | Implementar UI de upload de PDFs no `admin.html` | Código — próxima sessão |
@@ -423,13 +423,13 @@
   | `ticket_reply` | Usuário do ticket | `[ADAS PRO] Resposta no ticket: {título}` |
 
   **Pendências para ativar:**
-  - [ ] Criar conta Resend em resend.com e gerar `RESEND_API_KEY`
-  - [ ] Verificar domínio `adaspro.com.br` no Resend (DNS TXT/DKIM)
-  - [ ] Configurar 3 env vars no Supabase Dashboard → Edge Functions → notify:
-    - `RESEND_API_KEY` = chave gerada no Resend
-    - `ADMIN_EMAIL` = superadmin@adaspro.com.br
+  - [x] Criar conta Resend em resend.com e gerar `RESEND_API_KEY` ✅ 2026-10-10
+  - [x] Verificar domínio `adaspro.com.br` no Resend (DNS TXT/DKIM) ✅ 2026-10-10 — envio de teste retornou **HTTP 200 / `delivered`**
+  - [x] Configurar 3 env vars via `supabase secrets set` (Project Settings → Edge Functions → Secrets) ✅ 2026-10-10:
+    - `RESEND_API_KEY` = chave `re_*` (Resend)
+    - `ADMIN_EMAIL` = espinozatecnico@gmail.com
     - `SITE_URL` = https://adaspro.com.br
-  - [ ] Testar evento `new_user`: fazer cadastro demo → verificar inbox admin
+  - [ ] Testar evento `new_user`: fazer cadastro demo → verificar inbox admin (desbloqueado — secrets ativos)
   - [ ] Testar evento `user_approved`: aprovar usuário demo → verificar inbox usuário
   - [ ] Testar evento `ticket_reply`: responder ticket → verificar inbox membro
   - [ ] Confirmar que `approve-user` Edge Function dispara `notify` ao aprovar usuário

@@ -46,7 +46,7 @@ supabase functions deploy <nome-da-função>
 | `get-download-url/` | Valida JWT + permissões + `moduleAccess` + `accessLevel`/`downloadLevel` por item (CONTENT_MAP), retorna URL assinada (1h) e registra em `audit_logs` |
 | `notify/` | Dispara emails via Resend API — events: `new_user \| user_approved \| ticket_reply` |
 
-A função `notify` requer env vars no Supabase Dashboard → Edge Functions → notify: `RESEND_API_KEY`, `ADMIN_EMAIL`, `SITE_URL`. Ver pendências abertas em `bug.md` (#24).
+A função `notify` usa env vars configuradas no projeto (Supabase → Project Settings → Edge Functions → Secrets): `RESEND_API_KEY`, `ADMIN_EMAIL` (= `espinozatecnico@gmail.com`) e `SITE_URL`. **Já configuradas (2026-10-10)** — pendência C de `bug.md` resolvida; o `capture-lead` usa as mesmas. Secrets são lidos em runtime → não exigem redeploy da função.
 
 **CORS:** `approve-user` e `get-download-url` têm CORS hardcoded para `https://adaspro.com.br` — chamadas de `localhost:3000` são bloqueadas pelo browser. Testar via URL de preview do Vercel ou com um proxy. A função `notify` lê o CORS origin do env var `SITE_URL`.
 

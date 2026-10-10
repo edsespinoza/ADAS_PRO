@@ -140,7 +140,6 @@
     gtag('js', new Date());
     gtag('config', 'G-WZG3PQE3G1');
   </script>
-  <script src="/_vercel/insights/script.js" defer></script>
 
   <script src="js/supabase.min.js"></script>
   <script src="js/supabase-config.js"></script>
@@ -216,8 +215,8 @@
               }
             </div>
             ${status === 'active'
-              ? `<button class="cert-card-cta cert-cta-done" onclick="CERT_PAGE.viewCert('${certData.certId}')">✅ Concluído — Ver Certificado</button>`
-              : `<button class="cert-card-cta" onclick="CERT_PAGE.startQuiz('${c.id}')">Iniciar Quiz</button>`
+              ? `<button class="cert-card-cta cert-cta-done" data-act="viewCert" data-cert="${certData.certId}">✅ Concluído — Ver Certificado</button>`
+              : `<button class="cert-card-cta" data-act="startQuiz" data-cert="${c.id}">Iniciar Quiz</button>`
             }
           </div>`;
       }).join('');
@@ -259,8 +258,8 @@
               <strong>Expira:</strong> ${CERTIFICATIONS.formatDate(cert.expiresAt)}${active?` (${days} dias)`:' (expirado)'}
             </div>
             <div class="cert-dash-actions">
-              <button class="cert-dash-btn cert-dash-btn-download" onclick="CERTIFICATIONS.downloadCert('${cert.certId}')">📥 Baixar</button>
-              <button class="cert-dash-btn cert-dash-btn-view" onclick="CERTIFICATIONS.viewCert('${cert.certId}')">👁️ Visualizar</button>
+              <button class="cert-dash-btn cert-dash-btn-download" data-act="downloadCert" data-cert="${cert.certId}">📥 Baixar</button>
+              <button class="cert-dash-btn cert-dash-btn-view" data-act="viewCert" data-cert="${cert.certId}">👁️ Visualizar</button>
             </div>
           </div>`;
       }).join('');
@@ -311,6 +310,18 @@
     function viewCert(certId){
       CERTIFICATIONS.viewCert(certId);
     }
+
+    /* Delegação CSP-safe para handlers dinâmicos dos cards (data-act) */
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const certId = btn.dataset.cert;
+      switch (btn.dataset.act){
+        case 'startQuiz':    CERTIFICATIONS.startQuiz(certId);    break;
+        case 'viewCert':     CERTIFICATIONS.viewCert(certId);     break;
+        case 'downloadCert': CERTIFICATIONS.downloadCert(certId); break;
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', init);
 

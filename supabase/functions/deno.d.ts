@@ -4,6 +4,9 @@ declare namespace Deno {
   };
 }
 
+// Global do Supabase Edge Runtime — permite trabalho pós-resposta (ex.: envio de e-mail)
+declare var EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
+
 declare module 'https://deno.land/std@0.224.0/http/server.ts' {
   export function serve(
     handler: (request: Request) => Response | Promise<Response>

@@ -76,9 +76,9 @@ supabase db query --linked -f sql/<arquivo>.sql
 
 HTML/CSS/JS estático · Vercel (static hosting)  
 Supabase como backend (anon key exposta por design — segurança via RLS obrigatório)  
-Vercel Analytics e Speed Insights via `/_vercel/insights/script.js` (presente em todas as páginas, incluindo `email-config.html`)
+Vercel Analytics/Speed Insights **desabilitados** — as tags `<script src="/_vercel/insights/script.js">` foram removidas de todas as páginas em 2026-10-10 (retornavam **404 / MIME `text/plain`** no console, pois o recurso nunca foi habilitado no projeto). Para reativar: habilitar "Web Analytics" no painel Vercel **e** readicionar a tag `defer` em cada página.
 
-`vercel.json` aplica redirects 308 e rewrites para todas as páginas (sem extensão `.html`). Também define 7 headers de segurança globais: CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security` e `X-XSS-Protection`. O CSP **hardcoda** `zqydyyticvtmirjzskly.supabase.co` — qualquer troca de projeto Supabase exige atualizar o CSP também.
+`vercel.json` aplica redirects 308 e rewrites para todas as páginas (sem extensão `.html`). Também define headers de segurança globais: CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: credentialless` e `Cross-Origin-Resource-Policy: same-origin`. (`X-XSS-Protection` foi omitido de propósito — header obsoleto e desaconselhado pelos navegadores modernos.) O CSP **hardcoda** `zqydyyticvtmirjzskly.supabase.co` — qualquer troca de projeto Supabase exige atualizar o CSP também.
 
 **Nota:** `email-config.html` não está na lista de redirects/rewrites do `vercel.json` — acessada com extensão `.html` ou pelo link no sidebar dos painéis.
 

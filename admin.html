@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://zqydyyticvtmirjzskly.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css?v=20260815" integrity="sha384-AxgvIDyrJlL2nqpGzhXvkmYI7mA2WTAEUUpQn6t+rAAKczm1dqMH/6qTcH/mhCu8" />
+  <link rel="stylesheet" href="css/style.css?v=20260815" integrity="sha384-Di7SRRlyBP2toC2zDodx2EJP1Q/RBTE6/IEA5/3IwvQD9vgKCs7U7b2DAgvvos+I" />
   <link rel="stylesheet" href="css/auth.css?v=20260815" integrity="sha384-ej7SvI5Zp6TDU+QfkaFsiSSG0xknpzNaXmQWhIb2dlQp7d0BL1cR+zVQNzM5xB12" />
   <link rel="stylesheet" href="css/marketplace.css" integrity="sha384-7hUfuvGXAjtLT4VHb/WlM1ElwpD7HmtO1TGY3R53K1nxZ+WJMtcALM7NHhcgr0WH" />
   <link rel="stylesheet" href="css/whatsapp.css" integrity="sha384-R5JE6Ik1NR+WOPYFgqrYH2UIv+CpaOBtM4Oi8w4bmTt/RgokVOu9qBCZTHe9Kv0Z" />
@@ -198,7 +198,6 @@
     }
   </style>
   <!-- Vercel Analytics & Speed Insights -->
-  <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <link rel="manifest" href="/manifest.json" integrity="sha384-13ljjGgvMl87cgEDu5SKXxARQDMu1+6e58mTYeRlx6pdngKw63Tj25Ty5G5I9/jG" />
   <meta name="theme-color" content="#FF6B35" />
@@ -232,6 +231,10 @@
     <a class="sidebar-nav-item" onclick="showPage('suporte',this)">
       <span class="nav-icon">🎫</span>Suporte
       <span class="nav-badge" id="ticketBadge" style="display:none">0</span>
+    </a>
+    <a class="sidebar-nav-item" onclick="showPage('leads',this)">
+      <span class="nav-icon">🎯</span>Leads
+      <span class="nav-badge" id="leadsBadge" style="display:none">0</span>
     </a>
 
     <div class="sidebar-nav-section">Conteúdo</div>
@@ -557,6 +560,30 @@
 </div>
 
 <!-- Botão mobile -->
+<!-- ─── LEADS ─── -->
+<div class="page" id="pageLeads">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="leadSearch" placeholder="Buscar por nome, e-mail ou telefone..." oninput="filterLeads()"/></div>
+    <select id="leadStatusFilter" class="cat-filter-select" onchange="filterLeads()">
+      <option value="">Todos os status</option>
+      <option value="new">🆕 Novos</option>
+      <option value="contacted">📞 Contatados</option>
+      <option value="qualified">✅ Qualificados</option>
+      <option value="won">🏆 Ganhos</option>
+      <option value="lost">❌ Perdidos</option>
+      <option value="spam">🚫 Spam</option>
+    </select>
+    <button onclick="loadLeads()" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">🔄 Atualizar</button>
+    <button onclick="exportLeadsCsv()" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">⬇️ Exportar CSV</button>
+  </div>
+  <div class="table-card">
+    <div class="table-card-header">
+      <div><div class="table-card-title">Leads capturados na landing page</div><div class="table-card-sub" id="leadCountLbl">—</div></div>
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Data</th><th>Nome</th><th>Contato</th><th>Perfil</th><th>Origem</th><th>Status</th><th>Ações</th></tr></thead><tbody id="leadsTbody"></tbody></table></div>
+  </div>
+</div>
+
 <!-- ─── AUDITORIA ─── -->
 <div class="page" id="pageAuditoria">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
@@ -706,6 +733,35 @@
   </div>
 </div>
 
+<!-- ─── Modal lead ─── -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="leadModalTitle">Detalhes do lead</div>
+      <button class="modal-close" onclick="closeModal('leadModal')">✕</button>
+    </div>
+    <div id="leadModalBody"></div>
+    <div class="modal-section-title">Status</div>
+    <select class="config-input" id="leadModalStatus" style="width:100%">
+      <option value="new">🆕 Novo</option>
+      <option value="contacted">📞 Contatado</option>
+      <option value="qualified">✅ Qualificado</option>
+      <option value="won">🏆 Ganho</option>
+      <option value="lost">❌ Perdido</option>
+      <option value="spam">🚫 Spam</option>
+    </select>
+    <div class="modal-section-title">Notas internas</div>
+    <textarea id="leadModalNotes" class="config-input" rows="3" style="width:100%;resize:vertical" placeholder="Anotações sobre o contato..."></textarea>
+    <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <button class="modal-btn modal-btn-warn" id="btnDeleteLead" onclick="deleteLead()">🗑 Excluir</button>
+      <div style="display:flex;gap:10px">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal('leadModal')">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveLead()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ─── Toast ─── -->
 <div id="toast" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:10px 24px;font-size:.85rem;color:#fff;transition:transform .3s ease;z-index:9999;opacity:0"></div>
 
@@ -713,7 +769,7 @@
 <script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <!-- ─── ADAS PRO Scripts ─── -->
 <script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
-<script src="js/auth.js?v=20260815" integrity="sha384-s6E/IppvglfuiCGDS2YEm4onozVC5OspLc7WGJ1ErFwMw/sqT/YS5dZi7sgoYlGY"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-ROHp9eZs84Q8o84My9O5QYmRn7p3vqgYbI/z5etVmbLKDuT4smgYAl7ZSbUNKr0v"></script>
 
 <!-- Overlay de carregamento -->
 <div id="authLoading" style="position:fixed;inset:0;background:#0f1923;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
@@ -747,6 +803,7 @@ window.__acts = {
   setModuleLevel: el => setModuleLevel(el.dataset.id, el.value),
   toggleAccEdit:  el => toggleAccEdit(el.dataset.id),
   saveAccEdit:    el => saveAccEdit(el.dataset.id),
+  openLead:       el => openLead(el.dataset.id),
 };
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
@@ -830,7 +887,7 @@ function showToast(msg, dur=3000) {
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
-['permModal','contentModal','confirmModal'].forEach(id => {
+['permModal','contentModal','confirmModal','leadModal'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(id); });
 });
 
@@ -845,6 +902,10 @@ function updateBadges() {
 
   const tb = document.getElementById('ticketBadge');
   tb.textContent = open; tb.style.display = open > 0 ? 'inline-block' : 'none';
+
+  const newLeads = window._leadsNewCount || 0;
+  const lb = document.getElementById('leadsBadge');
+  if (lb) { lb.textContent = newLeads; lb.style.display = newLeads > 0 ? 'inline-block' : 'none'; }
 
   document.getElementById('notifDot').classList.toggle('active', unrd > 0);
 
@@ -1626,6 +1687,178 @@ function switchMembrosTab(tab, el) {
   if (tab === 'equipe')     loadGestores();
 }
 
+/* ─── Leads ─── */
+const LEAD_STATUS_META = {
+  new:       ['🆕 Novo',        'rgba(0,180,216,.15)',   '#00B4D8'],
+  contacted: ['📞 Contatado',   'rgba(139,92,246,.15)',  '#a78bfa'],
+  qualified: ['✅ Qualificado', 'rgba(46,204,113,.15)',  '#2ecc71'],
+  won:       ['🏆 Ganho',       'rgba(244,162,97,.15)',  '#f4a261'],
+  lost:      ['❌ Perdido',     'rgba(255,255,255,.08)', 'rgba(255,255,255,.5)'],
+  spam:      ['🚫 Spam',        'rgba(220,53,69,.15)',   '#ff6b7a'],
+};
+const LEAD_PROFILE_LABELS = { tecnico:'Técnico', oficina:'Oficina', autocenter:'Auto center', parabrisa:'Parabrisa', gestor:'Gestor', outro:'Outro' };
+
+function _leadsClient() {
+  const cfg = (typeof SUPABASE_CONFIG !== 'undefined') ? SUPABASE_CONFIG : null;
+  if (!cfg || !cfg.url || !cfg.anonKey) return null;
+  if (window._leadsSb) return window._leadsSb;
+  const s = AUTH.getSession();
+  const headers = (s && s.token) ? { Authorization: 'Bearer ' + s.token } : {};
+  window._leadsSb = supabase.createClient(cfg.url, cfg.anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers },
+  });
+  return window._leadsSb;
+}
+
+function leadStatusBadge(st) {
+  const [label, bg, color] = LEAD_STATUS_META[st] || LEAD_STATUS_META.new;
+  return `<span style="font-size:.72rem;background:${bg};color:${color};padding:2px 10px;border-radius:50px;white-space:nowrap">${label}</span>`;
+}
+
+async function loadLeads() {
+  const tbody = document.getElementById('leadsTbody');
+  const countEl = document.getElementById('leadCountLbl');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.4);padding:24px">Carregando…</td></tr>';
+
+  const sb = _leadsClient();
+  if (!sb) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ff6b7a;padding:24px">Supabase indisponível — não foi possível carregar os leads.</td></tr>';
+    return;
+  }
+  try {
+    const { data, error } = await sb.from('leads').select('*').order('created_at', { ascending: false }).limit(300);
+    if (error) throw error;
+    window._leadsAll = data || [];
+    window._leadsNewCount = window._leadsAll.filter(l => l.status === 'new').length;
+    updateBadges();
+    if (countEl) countEl.textContent = window._leadsAll.length + ' lead' + (window._leadsAll.length !== 1 ? 's' : '');
+    filterLeads();
+  } catch (e) {
+    window._leadsAll = [];
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ff6b7a;padding:24px">Erro ao carregar leads: ${esc(e.message || '')}</td></tr>`;
+  }
+}
+
+async function refreshLeadsBadge() {
+  const sb = _leadsClient();
+  if (!sb) return;
+  try {
+    const { count } = await sb.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new');
+    window._leadsNewCount = count || 0;
+    updateBadges();
+  } catch (_) { /* best-effort */ }
+}
+
+function filterLeads() {
+  const q  = (document.getElementById('leadSearch')?.value || '').toLowerCase().trim();
+  const st = document.getElementById('leadStatusFilter')?.value || '';
+  let list = window._leadsAll || [];
+  if (st) list = list.filter(l => l.status === st);
+  if (q)  list = list.filter(l =>
+    (l.name || '').toLowerCase().includes(q) ||
+    (l.email || '').toLowerCase().includes(q) ||
+    (l.phone || '').toLowerCase().includes(q));
+  renderLeads(list);
+}
+
+function renderLeads(list) {
+  const tbody = document.getElementById('leadsTbody');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.35);padding:24px">Nenhum lead encontrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(l => {
+    const dt = new Date(l.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const origem = l.utm_source
+      ? esc(l.utm_source) + (l.utm_campaign ? ' / ' + esc(l.utm_campaign) : '')
+      : (l.referrer ? 'referrer' : 'direto');
+    const wa = (l.phone || '').replace(/\D/g, '');
+    return `<tr>
+      <td style="font-size:.74rem;color:rgba(255,255,255,.45);white-space:nowrap">${dt}</td>
+      <td style="font-size:.82rem;color:rgba(255,255,255,.85)">${esc(l.name)}</td>
+      <td style="font-size:.78rem;color:rgba(255,255,255,.6)">${esc(l.email)}<div style="font-size:.72rem;color:rgba(255,255,255,.4)">${esc(l.phone || '')}</div></td>
+      <td style="font-size:.74rem;color:rgba(255,255,255,.5)">${esc(LEAD_PROFILE_LABELS[l.profile] || l.profile || '—')}</td>
+      <td style="font-size:.74rem;color:rgba(255,255,255,.5)">${origem}<div style="font-size:.68rem;color:rgba(255,255,255,.3)">${esc(l.device || '')}</div></td>
+      <td>${leadStatusBadge(l.status)}</td>
+      <td style="white-space:nowrap">
+        ${wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" class="action-btn action-btn-edit" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;text-decoration:none" title="WhatsApp">💬</a> ` : ''}
+        <button class="action-btn action-btn-edit" style="width:auto;padding:5px 12px;border-radius:6px" data-act="openLead" data-id="${l.id}">Abrir</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openLead(id) {
+  const l = (window._leadsAll || []).find(x => x.id === id);
+  if (!l) return;
+  window._leadBeingEdited = id;
+  document.getElementById('leadModalTitle').textContent = l.name || 'Lead';
+  const rows = [
+    ['E-mail',       l.email],
+    ['WhatsApp',     l.phone || '—'],
+    ['Perfil',       LEAD_PROFILE_LABELS[l.profile] || l.profile || '—'],
+    ['Mensagem',     l.message || '—'],
+    ['UTM',          [l.utm_source, l.utm_medium, l.utm_campaign, l.utm_term, l.utm_content].filter(Boolean).join(' / ') || '—'],
+    ['Referrer',     l.referrer || '—'],
+    ['Página',       l.landing_page || '/'],
+    ['Dispositivo',  l.device || '—'],
+    ['Recebido em',  new Date(l.created_at).toLocaleString('pt-BR')],
+  ];
+  document.getElementById('leadModalBody').innerHTML = rows.map(([k, v]) =>
+    `<div style="display:flex;gap:12px;margin-bottom:8px"><div style="min-width:110px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.35)">${k}</div><div style="font-size:.84rem;color:rgba(255,255,255,.8);word-break:break-word">${esc(String(v))}</div></div>`
+  ).join('');
+  document.getElementById('leadModalStatus').value = l.status || 'new';
+  document.getElementById('leadModalNotes').value  = l.notes || '';
+  openModal('leadModal');
+}
+
+async function saveLead() {
+  const id = window._leadBeingEdited;
+  if (!id) return;
+  const sb = _leadsClient();
+  if (!sb) { showToast('Supabase indisponível.'); return; }
+  const status = document.getElementById('leadModalStatus').value;
+  const notes  = document.getElementById('leadModalNotes').value.trim() || null;
+  const { error } = await sb.from('leads').update({ status, notes }).eq('id', id);
+  if (error) { showToast('Erro ao salvar: ' + error.message); return; }
+  closeModal('leadModal');
+  showToast('Lead atualizado!');
+  AUTH.logAudit?.('update_lead', id, { status });
+  loadLeads();
+}
+
+function deleteLead() {
+  const id = window._leadBeingEdited;
+  if (!id) return;
+  closeModal('leadModal');
+  confirmAction('Excluir lead?', 'O contato será removido permanentemente (direito ao esquecimento — LGPD).', async () => {
+    const sb = _leadsClient();
+    if (!sb) return;
+    const { error } = await sb.from('leads').delete().eq('id', id);
+    if (error) { showToast('Erro ao excluir: ' + error.message); return; }
+    AUTH.logAudit?.('delete_lead', id, {});
+    showToast('Lead excluído.');
+    loadLeads();
+  });
+}
+
+function exportLeadsCsv() {
+  const list = window._leadsAll || [];
+  if (!list.length) { showToast('Nenhum lead para exportar.'); return; }
+  const cols = ['created_at','name','email','phone','profile','status','message','utm_source','utm_medium','utm_campaign','utm_term','utm_content','referrer','landing_page','device','notes'];
+  const cell = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const csv = '\uFEFF' + [cols.join(','), ...list.map(l => cols.map(c => cell(l[c])).join(','))].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `leads-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
 /* ─── Navegação ─── */
 function showPage(page, navEl) {
   currentPage = page;
@@ -1635,6 +1868,7 @@ function showPage(page, navEl) {
     dashboard:      ['pageDashboard',    'Painel de Controle',       'Visão geral do sistema'],
     usuarios:       ['pageUsuarios',     'Membros',                  'Contas, aprovações e equipe'],
     suporte:        ['pageSuport',       'Suporte & Atendimento',    'Gerencie tickets e mentorias'],
+    leads:          ['pageLeads',        'Leads',                    'Contatos capturados na landing page'],
     biblioteca:     ['pageBiblioteca',   'Biblioteca de Conteúdo',   'Adicione e organize os materiais'],
     acesso:         ['pageAcesso',       'Controle de Acesso',       'Gerencie módulos e permissões de conteúdo'],
     configuracoes:  ['pageConfiguracoes','Configurações',            'Configure o sistema completo'],
@@ -1646,7 +1880,7 @@ function showPage(page, navEl) {
   document.getElementById('tbSub').textContent   = sub;
   navEl?.classList.add('active');
 
-  const loaders = { dashboard:loadDashboard, usuarios:loadUsuarios, suporte:loadSuporte, biblioteca:loadBiblioteca, acesso:loadAcesso, configuracoes:loadConfiguracoes, auditoria:loadAuditoria };
+  const loaders = { dashboard:loadDashboard, usuarios:loadUsuarios, suporte:loadSuporte, leads:loadLeads, biblioteca:loadBiblioteca, acesso:loadAcesso, configuracoes:loadConfiguracoes, auditoria:loadAuditoria };
   loaders[page]?.();
   updateBadges();
 }
@@ -1824,6 +2058,7 @@ AUTH.init().then(() => {
 
   updateBadges();
   loadDashboard();
+  if (!AUTH.isOfflineMode()) refreshLeadsBadge();
   setInterval(updateBadges, 15000);
 }).catch(err => {
   const el = document.getElementById('authLoadingMsg');

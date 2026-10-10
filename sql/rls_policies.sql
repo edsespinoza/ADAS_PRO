@@ -333,16 +333,43 @@ CREATE POLICY "settings_delete" ON public.settings
 
 
 -- ────────────────────────────────────────────────
--- 6. VERIFICAÇÃO FINAL
+-- 6. TABELA: public.leads (captura na landing page)
+--    DDL completa em sql/leads.sql (e migration 20261010).
+--    Aqui ficam apenas as políticas canônicas.
+--    Gravação só via Edge Function capture-lead (service_role):
+--    NÃO existe policy de INSERT de propósito.
 -- ────────────────────────────────────────────────
 
--- Confirma que RLS está ativo nas 4 tabelas
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "leads_select" ON public.leads;
+DROP POLICY IF EXISTS "leads_update" ON public.leads;
+DROP POLICY IF EXISTS "leads_delete" ON public.leads;
+
+-- SELECT/UPDATE/DELETE: apenas admin staff (admin/superadmin)
+CREATE POLICY "leads_select" ON public.leads
+  FOR SELECT USING (public.is_admin_staff());
+
+CREATE POLICY "leads_update" ON public.leads
+  FOR UPDATE
+  USING (public.is_admin_staff())
+  WITH CHECK (public.is_admin_staff());
+
+CREATE POLICY "leads_delete" ON public.leads
+  FOR DELETE USING (public.is_admin_staff());
+
+
+-- ────────────────────────────────────────────────
+-- 7. VERIFICAÇÃO FINAL
+-- ────────────────────────────────────────────────
+
+-- Confirma que RLS está ativo nas tabelas
 SELECT
   tablename,
   rowsecurity AS rls_enabled
 FROM pg_tables
 WHERE schemaname = 'public'
-  AND tablename IN ('users', 'tickets', 'notifications', 'settings')
+  AND tablename IN ('users', 'tickets', 'notifications', 'settings', 'leads')
 ORDER BY tablename;
 
 -- Lista todas as políticas criadas
@@ -354,5 +381,5 @@ SELECT
   with_check AS check_expr
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename IN ('users', 'tickets', 'notifications', 'settings')
+  AND tablename IN ('users', 'tickets', 'notifications', 'settings', 'leads')
 ORDER BY tablename, policyname;

@@ -139,15 +139,17 @@ const AUTH = (function () {
 
   async function _sbLoadAll() {
     try {
-      const [u, t, n, s] = await Promise.all([
+      const [u, t, n, s, b] = await Promise.all([
         _sb.from('users').select('*'),
         _sb.from('tickets').select('*').order('updatedAt', { ascending: false }),
         _sb.from('notifications').select('*').order('createdAt', { ascending: false }).limit(50),
         _sb.from('settings').select('*'),
+        _sb.from('bulletins').select('*'),
       ]);
       if (!u.error && u.data) _users         = Object.fromEntries(u.data.map(x => [x.id, x]));
       if (!t.error && t.data) _tickets       = Object.fromEntries(t.data.map(x => [x.id, x]));
       if (!n.error && n.data) _notifications = n.data;
+      if (!b.error && b.data) _mergeBulletins(b.data.map(_rowToBulletin).filter(Boolean));
       if (!s.error && s.data && s.data.length) {
         const app = s.data.find(x => x.key === 'app');
         if (app && app.value && typeof app.value === 'object') {
@@ -170,13 +172,15 @@ const AUTH = (function () {
 
   async function _sbLoadMemberData(userId) {
     try {
-      const [t, n, s] = await Promise.all([
+      const [t, n, s, b] = await Promise.all([
         _sb.from('tickets').select('*').eq('userId', userId).order('updatedAt', { ascending: false }),
         _sb.from('notifications').select('*').eq('userId', userId).order('createdAt', { ascending: false }).limit(50),
         _sb.from('settings').select('*'),
+        _sb.from('bulletins').select('*'),
       ]);
       if (!t.error && t.data) t.data.forEach(tk => _tickets[tk.id] = tk);
       if (!n.error && n.data) _notifications = n.data;
+      if (!b.error && b.data) _mergeBulletins(b.data.map(_rowToBulletin).filter(Boolean));
       if (!s.error && s.data && s.data.length) {
         const app = s.data.find(x => x.key === 'app');
         if (app && app.value && typeof app.value === 'object') {
@@ -221,6 +225,94 @@ const AUTH = (function () {
     _sb.from('tickets').delete().eq('id', id).then(({ error }) => {
       if (error) console.error('[AUTH] deleteTicket:', error.message);
     });
+  }
+
+  /* ─── Boletins: persistência no Supabase (compartilhamento entre usuários) ───
+     O objeto de boletim inteiro vai em `payload` (fonte de verdade do
+     renderer); as colunas reais são derivadas para RLS/consulta. Sem isso,
+     um boletim criado no painel editorial só existiria no localStorage de
+     quem o criou. */
+
+  function _numOr0(v)    { const n = +v; return Number.isFinite(n) ? n : 0; }
+  function _isoOrNull(v) { if (v === null || v === undefined || v === '') return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.toISOString(); }
+  function _msFromIso(v) { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.getTime(); }
+
+  function _bulletinRow(b) {
+    const lvl = Number.isFinite(+b.accessLevel) ? Math.min(4, Math.max(1, Math.trunc(+b.accessLevel))) : 1;
+    return {
+      id:               b.id,
+      icon:             b.icon || '📋',
+      title:            b.title || '(sem título)',
+      content:          b.content || b.summary || '',
+      cat:              b.cat || '',
+      type:             b.type || 'novidade',
+      severity:         b.severity || 'info',
+      bulletin_number:  b.bulletinNumber || ('BT-' + new Date().getFullYear() + '-000'),
+      tags:             Array.isArray(b.tags) ? b.tags : [],
+      access_level:     lvl,
+      vehicle_models:   Array.isArray(b.vehicleModels) ? b.vehicleModels
+                        : (Array.isArray(b.appliedVehicles) ? b.appliedVehicles : []),
+      systems_affected: Array.isArray(b.systemsAffected) ? b.systemsAffected
+                        : (Array.isArray(b.appliedSystems) ? b.appliedSystems : []),
+      author:           b.author || '',
+      author_id:        b.authorId || '',
+      version:          b.version || 'v1.0',
+      status:           b.status || 'draft',
+      published_at:     _isoOrNull(b.publishedAt),
+      expires_at:       _isoOrNull(b.expiresAt),
+      payload:          b,
+    };
+  }
+
+  function _rowToBulletin(row) {
+    if (!row || !row.id) return null;
+    if (row.payload && typeof row.payload === 'object') return { ...row.payload, id: row.id };
+    return {
+      id: row.id, icon: row.icon, title: row.title, content: row.content,
+      cat: row.cat, type: row.type, severity: row.severity,
+      bulletinNumber: row.bulletin_number, tags: row.tags || [],
+      accessLevel: row.access_level, vehicleModels: row.vehicle_models || [],
+      systemsAffected: row.systems_affected || [], author: row.author,
+      authorId: row.author_id, version: row.version, status: row.status,
+      publishedAt: _msFromIso(row.published_at), expiresAt: _msFromIso(row.expires_at),
+      createdAt: _msFromIso(row.created_at) || Date.now(),
+      updatedAt: _msFromIso(row.updated_at) || Date.now(),
+    };
+  }
+
+  // Merge remoto→local preservando itens locais (ex.: seeds ainda não
+  // publicados). Em conflito de id, vence o `updatedAt` mais recente.
+  function _mergeBulletins(remoteList) {
+    const byId = new Map(_getItems(BULLETINS_KEY).map(b => [b.id, b]));
+    for (const r of (remoteList || [])) {
+      if (!r || !r.id) continue;
+      const cur = byId.get(r.id);
+      if (!cur || _numOr0(r.updatedAt) >= _numOr0(cur.updatedAt)) byId.set(r.id, r);
+    }
+    _saveItems(BULLETINS_KEY, [...byId.values()]);
+  }
+
+  function _sbUpsertBulletin(b) {
+    if (_mode !== 'supabase' || _demo || !_sb || !b || !b.id) return;
+    _sb.from('bulletins').upsert(_bulletinRow(b), { onConflict: 'id' }).then(({ error }) => {
+      if (error) console.error('[AUTH] upsertBulletin:', error.message);
+    });
+  }
+
+  function _sbDeleteBulletin(id) {
+    if (_mode !== 'supabase' || _demo || !_sb) return;
+    _sb.from('bulletins').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('[AUTH] deleteBulletin:', error.message);
+    });
+  }
+
+  async function _sbLoadBulletins() {
+    if (_mode !== 'supabase' || _demo || !_sb) return;
+    try {
+      const { data, error } = await _sb.from('bulletins').select('*');
+      if (error || !data) return;
+      _mergeBulletins(data.map(_rowToBulletin).filter(Boolean));
+    } catch(e) { console.warn('[AUTH] _sbLoadBulletins:', e.message); }
   }
 
   /* ════════════════════════════════════════════
@@ -1466,23 +1558,32 @@ const AUTH = (function () {
       createdAt: Date.now(), updatedAt: Date.now(),
     };
     const list = _getItems(BULLETINS_KEY); list.unshift(bulletin); _saveItems(BULLETINS_KEY, list);
+    _sbUpsertBulletin(bulletin);
     return id;
   }
   function editBulletin(id, updates) {
     const list = _getItems(BULLETINS_KEY); const i = list.findIndex(b => b.id === id);
     if (i < 0) return false;
     list[i] = { ...list[i], ...updates, updatedAt: Date.now() };
-    _saveItems(BULLETINS_KEY, list); return true;
+    _saveItems(BULLETINS_KEY, list);
+    _sbUpsertBulletin(list[i]);
+    return true;
   }
   function publishBulletin(id) { return editBulletin(id, { status:'published', publishedAt: Date.now() }); }
   function archiveBulletin(id) { return editBulletin(id, { status:'archived' }); }
   function deleteBulletin(id) {
     const item = getBulletinById(id);
     if (item && item.status !== 'archived') return false;
-    _saveItems(BULLETINS_KEY, _getItems(BULLETINS_KEY).filter(b => b.id !== id)); return true;
+    _saveItems(BULLETINS_KEY, _getItems(BULLETINS_KEY).filter(b => b.id !== id));
+    _sbDeleteBulletin(id); return true;
   }
   function replaceArticles(items)  { const s=getSession(); if(!s||!hasRole(s.role,'superadmin'))return false; _saveItems(ARTICLES_KEY,   items || []); return true; }
-  function replaceBulletins(items) { const s=getSession(); if(!s||!hasRole(s.role,'superadmin'))return false; _saveItems(BULLETINS_KEY, items || []); return true; }
+  function replaceBulletins(items) {
+    const s=getSession(); if(!s||!hasRole(s.role,'superadmin'))return false;
+    _saveItems(BULLETINS_KEY, items || []);
+    (items || []).forEach(_sbUpsertBulletin);
+    return true;
+  }
 
   /* ─── Tickets ─── */
   function createTicket(userId, data) {

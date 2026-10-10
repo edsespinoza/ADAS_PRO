@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-10-08  
+**Última atualização:** 2026-10-10  
 **Responsável:** AutoTech Service
 
 ---
@@ -37,17 +37,80 @@
   - **Fix:** `git mv supabase/migrations/20260828_api_keys.sql → 20260827_api_keys.sql` (versão única; conteúdo inalterado, já estava live) e `supabase migration repair --status applied 20260827 20260829 20260830 --linked`. **Verificado:** `migration list` agora mostra 4↔4 (`20260827`,`20260828`,`20260829`,`20260830`).
   - **Arquivos:** `supabase/migrations/20260827_api_keys.sql`, `20260828_rate_limits.sql`, `20260829_security_fixes.sql`, `20260830_revoke_api_keys_on_block.sql`
 
+- [x] **#105 — Vercel: conta, vínculo do projeto e plano (auditado via CLI)** ✅ 2026-10-10
+  - **Vínculo:** projeto `landing-page` (`prj_KAyGYw0mtBOivEUw39sMpVGNUHGc`) pertence ao Team **`autotech-projects`** (`team_giYgntMI9e9xaAXvsXA757SR`, role OWNER). Conta dona: usuário **`espinozatecnico`** / **`espinozatecnico@gmail.com`** (user id `Kr2nLp9KHbxKZ709eusCJsTj`).
+  - **Plano:** **Hobby** (gratuito) na conta **e** no Team — confirmado em `GET /v2/user` e `GET /v2/teams/team_giYgnt…` (`billing.plan: "hobby"`). `platform: stripe`, `status: active`, **sem endereço/forma de pagamento cadastrados**; `vercel contract` = "No contract commitments found"; `vercel usage` = 404 (sem custos).
+  - **Risco (licença):** o ADAS PRO é produto comercial (assinaturas R$47–197) e o plano Hobby é restrito a uso **não comercial** pela ToS da Vercel → **regularizar subindo o Team para Pro** (ver pendência I).
+  - **Autenticação CLI:** reautenticada via `vercel login` (device flow) — credencial válida em `~/.local/share/com.vercel.cli/auth.json`. A CLI volta a operar sem depender do `VERCEL_TOKEN` do `~/.bashrc` (que segue inválido/comentado).
+
+- [x] **#106 — Pendência G: demo desativado em produção + deploy** ✅ 2026-10-10
+  - **Achado:** produção servia `demoEnabled: true` em `js/supabase-config.js` (habilita o bloco demo/admin no login), apesar do fail-closed do `scripts/build-config.js`.
+  - **Fix:** `vercel env rm DEMO_ENABLED production -y` + `vercel env add DEMO_ENABLED production` (valor `false`); deploy `vercel --prod --yes` (aliased `https://adaspro.com.br`).
+  - **Verificado (prod):** `GET /js/supabase-config.js` → `demoEnabled: false`; `GET /` → 200; 7 headers de segurança presentes (CSP com SHA-256, X-Frame-Options `DENY`, X-Content-Type-Options `nosniff`, Referrer-Policy, Permissions-Policy, HSTS).
+  - **Observação:** `DEMO_ENABLED` e `SITE_URL` são do tipo *Sensitive* — `vercel env pull` retorna valor vazio; conferir sempre pela fonte servida em produção.
+
+- [x] **#107 — FEATURE: captura de leads da landing page → `public.leads` + aba "Leads" no admin** ✅ 2026-10-10
+  - **Frontend:** o formulário `#contactForm` (`index.html`) agora persiste o lead + origem (UTM, referrer, página, dispositivo) via Edge Function pública `capture-lead`. Chamada **best-effort** (`keepalive`, `.catch()`), nunca bloqueia o handoff do WhatsApp. Adicionados honeypot anti-bot (`#cWebsite`/`company_website`, escondido) e checkbox de consentimento LGPD (`#cConsent` → `/lgpd`). Novo `js/supabase-config.js` (só config) carregado no `index.html`.
+  - **Admin:** nova aba **Leads** em `admin.html` — busca (nome/e-mail/telefone), filtro por status, badge de novos, modal de detalhe com edição de **status** + **notas**, export CSV (16 colunas, BOM UTF-8) e **exclusão** (direito ao esquecimento). Client Supabase autenticado via `Authorization: Bearer <AUTH.getSession().token>` (a RLS de `leads` é admin-only).
+  - **Banco:** `public.leads` (`sql/leads.sql` espelho + `supabase/migrations/20261010_leads.sql`). RLS: `leads_select`/`leads_update`/`leads_delete` via `public.is_admin_staff()` e **sem policy de INSERT** — gravação exclusiva via `service_role` na função. Índices `created_at`, `(status, created_at)`, `lower(email)`; trigger `trg_leads_updated_at`.
+  - **Edge Function `capture-lead`** (pública, deploy `--no-verify-jwt`): honeypot `company_website`; validação (nome≥2, e-mail, perfil ∈ `tecnico|oficina|autocenter|parabrisa|gestor|outro`, telefone 10–13 dígitos); teto de 8 KB; rate limit **IP 5/min** + **e-mail 3/h** (RPC `increment_rate_limit`, fail-open); **dedup** e-mail <24h → UPDATE; `ip_hash` sha256 (LGPD, nunca o IP cru); aviso por e-mail best-effort via Resend com `EdgeRuntime.waitUntil`.
+  - **Segurança:** novo secret **`LEAD_IP_SALT`** definido no projeto (`supabase secrets set`). A função `notify` ganhou o evento **`new_lead`** (template; disparo por fluxos admin).
+  - **CSP (item crítico resolvido):** mudanças de script inline em `admin.html`/`index.html` invalidam os hashes SHA-256 commitados em `vercel.json`. Rodado `node scripts/generate-csp.js` **localmente** antes do deploy. O botão "Abrir" do lead usava `onclick="openLead('${...}')"` → **não hasheável**; migrado para `data-act="openLead" data-id`. **CSP servido em produção = `vercel.json`** (11396 chars, match exato).
+  - **Verificado (produção, 2026-10-10):** E2E por curl na `capture-lead` — lead válido `200 {ok:true}`; honeypot `200` sem insert; e-mail inválido `400`; duplicado <24h `200 {dedup:true}` (uma única linha, `profile` atualizado); burst → `429`. Preflight CORS `https://adaspro.com.br` OK; 5 headers de segurança presentes. Endpoint `/` serve `js/supabase-config.js?v=20261010` e o honeypot. **Linhas de teste removidas** (`leads` = 0). Deploy `vercel --prod --yes` aliased `https://adaspro.com.br`.
+  - **Pendência relacionada:** o aviso por e-mail de novo lead só passa a funcionar após resolver **C** (`RESEND_API_KEY`/`ADMIN_EMAIL`); sem isso o lead ainda é gravado normalmente.
+
+- [x] **#108 — MIGRAÇÃO: boletins `localStorage` → Supabase (`public.bulletins.payload` + dual-write)** ✅ 2026-10-10
+  - **Contexto/autorização:** o **freeze de `js/auth.js`** (seção "versão antiga" no fim deste arquivo) foi **sobreposto por diretiva explícita do usuário** ("destrave a migração dos boletins e faça o deploy para o sistema online"). Antes, um boletim criado no painel editorial só existia no `localStorage` de quem o criou.
+  - **Banco:** `public.bulletins` ganhou a coluna **`payload jsonb`** (fonte de verdade — objeto completo do boletim) + trigger `trg_bulletins_updated_at` (`public.set_bulletins_updated_at()`, BEFORE UPDATE). Aplicado em produção via `supabase db query --linked -f sql/bulletins_payload.sql` (espelho idempotente; migration `supabase/migrations/20261010_bulletins_payload.sql`). As colunas relacionais existentes são **derivadas** do objeto para RLS/consulta (CHECK `access_level` 1–4 respeitado por *clamp*).
+  - **`js/auth.js` (dual-write):** helpers `_numOr0`/`_isoOrNull`/`_msFromIso`, `_bulletinRow` (objeto→linha, `payload: b`, clampa `access_level`), `_rowToBulletin` (prefere `payload`), `_mergeBulletins` (merge por id; vence `updatedAt` mais recente; **preserva locais/seeds**), `_sbUpsertBulletin`/`_sbDeleteBulletin`/`_sbLoadBulletins`. **Leituras:** `bulletins` adicionado ao `Promise.all` de `_sbLoadAll` e `_sbLoadMemberData`. **Escritas:** `addBulletin`/`editBulletin`/`deleteBulletin`/`replaceBulletins` fazem upsert/delete no Supabase quando `_mode==='supabase'` (RLS `bulletins_write_admin` via `is_admin()`).
+  - **`membros.html`:** removidos os **4 cards fictícios hardcoded** (BYD Seal, Honda LKAS, Toyota Techstream, Nissan LKA) — tarefa 1280 da seção "versão antiga". `#bltGrid` recebeu um **estado vazio explícito** ("Nenhum boletim publicado ainda") como markup estático (visível se o boot morrer antes do render) e `renderBulletinsDynamic()` o reproduz quando `published.length === 0` (regra `.blt-grid > .empty-state { grid-column:1/-1 }`). Conteúdo de demonstração não é mais indistinguível do real.
+  - **Não alterado:** `DEFAULT_BULLETINS` (seeds) permanecem — são boletins de *referência* com *disclaimer* (valores típicos do setor), publicados por design; discussão de produto separada. `CONTENT_MAP`/`get-download-url` não afetados (boletins ≠ PDFs).
+  - **Deploy:** `npm run build` (SRI + CSP; handlers 245→241, hashes inalterados, CSP 11396 chars) + `vercel --prod --yes` → **`https://adaspro.com.br`**.
+  - **Verificado (produção, 2026-10-10):** `/membros` = 0 cards fictícios + `bltEmptyState` presente; `js/auth.js` = 10 marcadores de dual-write; `js/supabase-config.js` = `demoEnabled:false`; SRI de `auth.js` servido == declarado; **CSP servido == `vercel.json` (match exato, 11396 chars)**.
+  - **⚠️ Requer verificação manual (sessão autenticada, não testável por curl):** round-trip real de escrita/leitura — em `superadmin.html` criar/publicar um boletim e conferir a linha em `public.bulletins` + a aparição em `/membros`.
+  - **⛔ BLOQUEADO (2026-10-10):** a validação manual (acima) **não pôde ser feita** — o login staff falhou na auditoria funcional (**#109/P1**: todas as credenciais documentadas retornam HTTP 400). Só será possível após obter a senha atual do superadmin.
+
+- [~] **#109 — AUDITORIA FUNCIONAL (browser headless, 2026-10-10) — 7 achados em produção**
+  - **Contexto:** tentativa de validar o **#108** (round-trip de boletins) logando como superadmin. O **login falhou** (P1), então a varredura foi ampliada para todas as páginas públicas e protegidas. Método: Chromium headless (Playwright) sobre `https://adaspro.com.br`.
+  - **Achados:**
+
+    | # | Sev | Achado | Causa / Efeito | Fix proposto |
+    |---|---|---|---|---|
+    | P1 | 🔴 Crítico | **Login staff indisponível** — todas as credenciais documentadas retornam **HTTP 400** "E-mail ou senha incorretos": `superadmin@`+`AutoTech@ADAS2026!`; `admin@`+`AutoTech@…` e `+Admin@ADAS2026!`; `superadmin@`+`Admin@…`; `testesa@`+ambos | Provável **rotação de senhas** (pendência F) ou a senha forte criada no **#91** nunca foi registrada | usuário fornecer a senha atual |
+    | P2 | 🔴 Crítico | **`/certifications` e `/membros` quebradas** — `window.CERTIFICATIONS === undefined`; `/certifications` renderiza **0 cards** (corpo ~645 bytes) | `js/certifications.js:586-587` exporta os **shorthands** `getCertStatus,`/`getMyCerts,`, mas o módulo define `_certStatus`/`_getMyCerts` → **`ReferenceError`** ao montar o objeto público → `window.CERTIFICATIONS` nunca é atribuído. **Pré-existente** (commit `6bb3961`, 2026-08-25) | `getCertStatus: _certStatus,` e `getMyCerts: _getMyCerts,` |
+    | P3 | 🟠 Alto | **CSP bloqueia scripts inline de `lgpd`/`certifications`/`api-docs`/`verificar`** — `/verificar` **não funciona** (`doVerify`/`CERT_PROGRAM.init` bloqueados), `/api-docs` sem interações (`toggleEndpoint`/`copyCode` bloqueados) | `scripts/generate-csp.js` `HTML_FILES` (l.23-25) **não inclui** essas 4 páginas → seus inline nunca são hasheados | adicionar as 4 ao `HTML_FILES` + re-rodar `node scripts/generate-csp.js` |
+    | P4 | 🟠 Alto | **GA4 `G-WZG3PQE3G1` bloqueado** pela CSP em `lgpd`/`certifications` | `script-src` sem `https://www.googletagmanager.com` e sem o hash do snippet inline do gtag | adicionar o host + hash do inline, **ou** remover o GTM dessas páginas |
+    | P5 | 🟡 Médio | **`/_vercel/insights/script.js` → 404 (MIME `text/plain`)** em **10 páginas**; tag **ausente** em `superadmin.html` e `verificar.html` | Vercel Analytics/Speed Insights não provisionado no projeto (ou tags adicionadas à mão) | habilitar "Web Analytics" no Vercel **ou** remover as tags |
+    | P6 | 🟡 Médio | **Refresh do login cai na landing** — `/login` reescreve a URL para `/` sem reload; o **F5** passa a servir `index.html` (confirmado: o `<title>` muda de "Login" para "Mentoria") | `js/login.js:146` — `history.replaceState({}, document.title, '/')` | remover/ajustar o `replaceState` |
+    | P7 | ⚪ Baixo | **`X-XSS-Protection` ausente** (o `CLAUDE.md` lista 7 headers; só **6** são servidos) | header deprecado / removido | atualizar a doc (ou readicionar, se desejado) |
+
+  - **Correções aplicadas + verificadas em produção (deploy 2026-10-10):**
+    - **P2 ✅** `js/certifications.js:586-587` → `getCertStatus: _certStatus,` / `getMyCerts: _getMyCerts,`. Verificado: `/certifications` renderiza **4 cards** e o quiz abre (`#certQuizOverlay` display `flex`).
+    - **P3 ✅** `scripts/generate-csp.js` `HTML_FILES` agora inclui `lgpd.html`, `certifications.html`, `api-docs.html`, `verificar.html`; CSP regenerado (11396 → **12973** chars). Verificado: **0 erros de CSP**; `/verificar` executa `doVerify()` (resultado exibido); `/api-docs` alterna `.endpoint-card.open`.
+    - **P4 ✅** `EXTRA_SCRIPT_SRC = ['https://www.googletagmanager.com']` em `script-src` + hosts GA em `img-src`/`connect-src`. Verificado: `gtag` é função, `dataLayer` populado; sem violação de CSP (o `/g/collect` aborta por teardown/egress, não por CSP). Hash do snippet inline agora incluído.
+    - **P5 ✅** (opção "remover as tags"): as tags `<script src="/_vercel/insights/script.js">` foram **removidas de todas as 12 páginas** → console limpo (fim do 404/MIME). Para reativar no futuro: habilitar Web Analytics no Vercel **e** readicionar a tag.
+    - **P6 ✅** `js/login.js:146` → `history.replaceState({}, document.title, window.location.pathname)`. Verificado: `/login` mantém `pathname=/login` após load.
+    - **P7 ✅** `CLAUDE.md` doc de headers corrigida (6 core + 3 CORP; `X-XSS-Protection` documentado como omitido de propósito).
+    - **P1 🔴 ainda bloqueado** — requer a senha atual do superadmin (**pendência K**).
+    - Nota: os 4 handlers inline **interpolados** de `certifications.html` (linhas 219/220/262/263) foram convertidos para `data-act`/`data-cert` + listener delegado (não hasheáveis com `${...}`).
+  - **✅ Confirmado OK:** guard de auth redireciona `/admin`, `/membros`, `/superadmin`, `/email-config`, `/mfa-verify` → `/` (login); **CORS** das 5 Edge Functions funciona a partir do origin de produção (fetch cross-origin retorna 200/corpo — `Access-Control-Allow-Origin` não é legível por JS, então `null` é esperado); `capture-lead` honeypot → `{"ok":true}` (sem insert) e validação → `400`; **CSP servido (11396 chars) == `vercel.json`**; 6 headers de segurança presentes.
+  - **Não reproduzido:** um `503` pontual visto na 1ª passada (provável `fonts.googleapis.com`) — ausente na 2ª.
+  - **Bloqueia:** verificação manual do **#108** (round-trip de boletins) — ver marcador no item acima.
+
 **Pendências manuais confirmadas nesta auditoria (não automatizáveis por código):**
 
 | # | Prioridade | Achado | Ação | Onde |
 |---|---|---|---|---|
-| C | 🟠 Alta | `supabase secrets list` **não contém** `RESEND_API_KEY`, `ADMIN_EMAIL` nem `SITE_URL` (só os secrets default do projeto) → função `notify` não envia email | Criar conta em resend.com, gerar `RESEND_API_KEY`, verificar domínio `adaspro.com.br` (DNS TXT/DKIM) e cadastrar os 3 secrets | Supabase Dashboard → Edge Functions → Secrets |
+| C | 🟠 Alta | `supabase secrets list` **não contém** `RESEND_API_KEY`, `ADMIN_EMAIL` nem `SITE_URL` (só os secrets default do projeto) → função `notify` não envia email; **também bloqueia o aviso de novo lead** (`capture-lead`, ver #107) | Criar conta em resend.com, gerar `RESEND_API_KEY`, verificar domínio `adaspro.com.br` (DNS TXT/DKIM) e cadastrar os 3 secrets | Supabase Dashboard → Edge Functions → Secrets |
 | D | 🟡 Médio | 4 contas staff (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` `@adaspro.com.br`) com **0 fatores TOTP**; código MFA pronto | Ativar "TOTP obrigatório" e configurar autenticador (ver #36) | Supabase Dashboard → Auth → MFA Policy |
 | F | 🟠 Alta | Senhas de produção (`AutoTech@ADAS2026!` / `Admin@ADAS2026!`) expostas no histórico do código | Trocar as senhas no Supabase Auth | Supabase Dashboard → Authentication → Users |
-| G | 🟠 Alta | `DEMO_ENABLED=true` ativo em produção (bloco "Entrar como Admin — DEMO" no login) | Definir `DEMO_ENABLED=false` | Vercel Dashboard → Project → Settings → Environment Variables |
-| H | 🟠 Alta | `VERCEL_TOKEN` em `~/.bashrc:133` **inválido** (HTTP 403 em `api.vercel.com/v2/user`) → CLI Vercel inoperante (env/deploy/projeto) | Gerar token novo em vercel.com/account/tokens, exportar `VERCEL_TOKEN` e revalidar | Terminal / `~/.bashrc` |
+| G | ✅ Resolvido | `DEMO_ENABLED=true` ativo em produção → **corrigido** (ver #106) | — | Vercel Dashboard → Project → Settings → Environment Variables |
+| H | 🟡 Médio | `VERCEL_TOKEN` em `~/.bashrc:133` **inválido** (HTTP 403 em `api.vercel.com/v2/user`) — **contornado**: CLI reautenticada via `vercel login` (device flow, credencial em `auth.json`, ver #105) | (Opcional) gerar token novo e exportar `VERCEL_TOKEN` apenas p/ CI/deploy não-interativo | Terminal / `~/.bashrc` |
+| I | 🟠 Alta | Plano Vercel = **Hobby** (não comercial) num produto comercial → viola a ToS da Vercel | Subir o Team `autotech-projects` para **Pro** (`vercel buy pro --scope autotech-projects`, US$20/seat/mês) e cadastrar forma de pagamento | Vercel Dashboard → Team Settings → Billing (ou `vercel buy pro`) |
+| J | ✅ Resolvido | Vercel Analytics/Speed Insights **404** (`/_vercel/insights/script.js`, MIME `text/plain`) — ver #109/P5 | Tags insights **removidas de todas as páginas** (opção escolhida). Se quiser reativar: habilitar Web Analytics **e** readicionar as tags | Vercel Dashboard → Project → Analytics |
+| K | 🔴 Crítico | **Login staff indisponível** — senhas documentadas retornam 400 (ver #109/P1); trava a validação do #108 | Informar a senha atual do superadmin **ou** resetá-la em Supabase Auth | Supabase Dashboard → Authentication → Users |
 
-> **Nota boletins ("versão antiga"):** permanece **pausado** aguardando a leitura de console do usuário (ver seção no fim deste arquivo). Não editar `js/auth.js` antes de confirmar o estado real do cliente.
+> **Nota boletins ("versão antiga"):** o **freeze de `js/auth.js` foi levantado em 2026-10-10** por diretiva explícita do usuário; a migração de boletins para Supabase (`public.bulletins.payload` + dual-write) e a remoção dos 4 cards fictícios foram concluídas — ver **#108**. O diagnóstico original por leitura de console (seção no fim deste arquivo) permanece sem confirmação do lado do cliente, mas os dois vetores conhecidos de "conteúdo fictício/antigo" já foram eliminados.
 
 ---
 
@@ -1254,8 +1317,9 @@ JSON.stringify({
 
 ### Tarefas para a próxima sessão
 
-- [ ] **Remover os 4 cards estáticos** e substituir por estado vazio explícito ("Nenhum boletim publicado") — conteúdo de demonstração não deve ser indistinguível do real.
+- [x] **Remover os 4 cards estáticos** e substituir por estado vazio explícito ("Nenhum boletim publicado") — conteúdo de demonstração não deve ser indistinguível do real. ✅ 2026-10-10 — feito junto com a migração de boletins para Supabase (ver **#108**); `#bltGrid` agora tem estado vazio e `renderBulletinsDynamic()` o reproduz quando não há publicados.
 - [ ] **Fechar o diagnóstico** com a leitura de console acima **antes** de editar `auth.js` de novo.
+  - **Atualização 2026-10-10:** o freeze foi **levantado por diretiva do usuário** e `auth.js` foi editado (dual-write de boletins, #108) **sem** a leitura de console. Os dois vetores conhecidos de conteúdo fictício/antigo foram eliminados (cards hardcoded + ausência de persistência online), mas a leitura de console continua sendo o único teste definitivo do cliente.
 - [ ] **Repro headless** do caminho `getBulletins → renderBulletinsDynamic` — `jsdom` não está instalado e o Firefox falha com `RenderCompositorSWGL failed mapping default framebuffer`, então não há validação visual automatizada neste projeto.
 
 > ⚠️ **Lição do caso:** três rodadas de correção por suposição (SW → seed → SRI) falharam em acertar o alvo. O sintoma nunca foi confirmado por observação do lado do cliente. Diagnosticar por leitura de estado real antes de editar.

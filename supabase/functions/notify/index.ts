@@ -124,6 +124,17 @@ serve(async (req) => {
       subject = `[ADAS PRO] Resposta no suporte — ${esc(data.ticketTitle)}`;
       html    = templateTicketReply(data, SITE_URL);
 
+    } else if (event === 'new_lead') {
+      // Nota: a Edge Function pública `capture-lead` envia o aviso de novo lead
+      // diretamente (não pode chamar esta função — exige JWT de admin). Este
+      // evento existe para disparo por fluxos administrativos (reuso do template).
+      if (!data.leadName || typeof data.leadName !== 'string') return json({ error: 'leadName obrigatório.' }, 400);
+      if (!data.leadEmail || typeof data.leadEmail !== 'string') return json({ error: 'leadEmail obrigatório.' }, 400);
+      if (!emailRegex.test(data.leadEmail.trim())) return json({ error: 'Formato de e-mail inválido.' }, 400);
+      to      = ADMIN_EMAIL;
+      subject = `[ADAS PRO] Novo lead — ${esc(data.leadName)}`;
+      html    = templateNewLead(data, SITE_URL);
+
     } else {
       return json({ error: 'Evento inválido.' }, 400);
     }
@@ -547,4 +558,64 @@ function templateTicketReply(data: Record<string, string>, siteUrl: string) {
   `;
 
   return baseWrapper('#00B4D8', 'SUPORTE TÉCNICO', `Resposta no ticket: ${data.ticketTitle}`, body);
+}
+
+// ─── Template: novo lead capturado (para admin) ───────────────────────────────
+// Acento: #00B4D8 (tech cyan) — tom informativo/comercial
+
+function templateNewLead(data: Record<string, string>, siteUrl: string) {
+  const row = (label: string, value: string, mono = false) => value ? `
+            <tr class="data-row">
+              <td style="padding:5px 0;width:120px;vertical-align:top;">
+                <span style="font-family:'Courier New',Courier,monospace;font-size:10px;letter-spacing:1.5px;color:#9AA0B0;text-transform:uppercase;">${label}</span>
+              </td>
+              <td style="padding:5px 0;">
+                <span style="font-family:${mono ? "'Courier New',Courier,monospace;font-size:12px" : "Georgia,'Times New Roman',serif;font-size:14px;font-weight:700"};color:#1B2B4D;">${esc(value)}</span>
+              </td>
+            </tr>` : '';
+
+  const body = `
+    <!-- Título -->
+    <h1 style="margin:0 0 6px;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0D1821;letter-spacing:-0.3px;">
+      Novo lead capturado
+    </h1>
+    <p style="margin:0 0 28px;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#6B7385;line-height:1.5;">
+      Um visitante enviou o formulário de contato da landing page.
+    </p>
+
+    <!-- Card de dados do lead -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background-color:#F4FAFD;border-left:3px solid #00B4D8;border-radius:0 4px 4px 0;margin-bottom:28px;">
+      <tr>
+        <td style="padding:20px 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            ${row('NOME', data.leadName)}
+            ${row('E-MAIL', data.leadEmail, true)}
+            ${row('WHATSAPP', data.leadPhone, true)}
+            ${row('PERFIL', data.leadProfile, true)}
+            ${row('NECESSIDADE', data.leadMessage)}
+            ${row('ORIGEM', data.leadOrigin, true)}
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- CTA -->
+    <table role="presentation" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="border-radius:3px;background-color:#00B4D8;">
+          <a href="${siteUrl}/admin"
+             style="display:inline-block;padding:14px 28px;font-family:'Courier New',Courier,monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#ffffff;text-decoration:none;text-transform:uppercase;">
+            Ver Leads no Painel &rarr;
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:20px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:12px;color:#9AA0B0;line-height:1.6;">
+      Acesse o painel de administração, seção <strong>Leads</strong>, para acompanhar e marcar o andamento do contato.
+    </p>
+  `;
+
+  return baseWrapper('#00B4D8', 'NOVO LEAD', `${data.leadName} enviou o formulário de contato`, body);
 }

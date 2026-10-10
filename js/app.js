@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
   );
   document.querySelectorAll('.hero-stats, .about-systems-count').forEach(el => counterObserver.observe(el));
 
-  /* ─── Formulário de contato → WhatsApp ─── */
+  /* ─── Formulário de contato → captura de lead + WhatsApp ─── */
   const contactForm = document.getElementById('contactForm');
   contactForm?.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -98,6 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const email   = document.getElementById('cEmail')?.value.trim() || '';
     const level   = document.getElementById('cLevel')?.value || '';
     const message = document.getElementById('cMessage')?.value.trim() || '';
+    const hp      = document.getElementById('cWebsite')?.value.trim() || '';
+
+    // Persiste o lead no backend (best-effort — nunca bloqueia o WhatsApp)
+    captureLead({ name, email, phone, profile: level, message, company_website: hp });
 
     const levelMap = {
       tecnico: 'Técnico automotivo', oficina: 'Proprietário de oficina',
@@ -120,6 +124,42 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.disabled = false;
     showFormSuccess();
   });
+
+  /* ─── Captura de lead (Edge Function capture-lead) ─── */
+  function captureLead(data) {
+    try {
+      if (typeof SUPABASE_CONFIG === 'undefined' || !SUPABASE_CONFIG.url) return;
+      const url = `${SUPABASE_CONFIG.url}/functions/v1/capture-lead`;
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_CONFIG.anonKey,
+          'Authorization': `Bearer ${SUPABASE_CONFIG.anonKey}`,
+        },
+        body: JSON.stringify({ ...data, ...collectTracking() }),
+        keepalive: true,
+      }).catch(() => { /* best-effort */ });
+    } catch (_) { /* never break the form */ }
+  }
+
+  /* ─── Origem/visitante: UTM + referrer + página + dispositivo ─── */
+  function collectTracking() {
+    const p = new URLSearchParams(window.location.search);
+    const ua = navigator.userAgent || '';
+    const isTablet = /iPad|Tablet/i.test(ua);
+    const isMobile = /Mobi|Android|iPhone/i.test(ua) && !isTablet;
+    return {
+      utm_source:   p.get('utm_source')   || '',
+      utm_medium:   p.get('utm_medium')   || '',
+      utm_campaign: p.get('utm_campaign') || '',
+      utm_term:     p.get('utm_term')     || '',
+      utm_content:  p.get('utm_content')  || '',
+      referrer:     document.referrer || '',
+      landing_page: window.location.pathname || '/',
+      device:       isTablet ? 'tablet' : (isMobile ? 'mobile' : 'desktop'),
+    };
+  }
 
   function showFormSuccess() {
     let msg = document.getElementById('formSuccess');

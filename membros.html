@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://zqydyyticvtmirjzskly.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css?v=20260815" integrity="sha384-AxgvIDyrJlL2nqpGzhXvkmYI7mA2WTAEUUpQn6t+rAAKczm1dqMH/6qTcH/mhCu8" />
+  <link rel="stylesheet" href="css/style.css?v=20260815" integrity="sha384-Di7SRRlyBP2toC2zDodx2EJP1Q/RBTE6/IEA5/3IwvQD9vgKCs7U7b2DAgvvos+I" />
   <link rel="stylesheet" href="css/auth.css?v=20260815" integrity="sha384-ej7SvI5Zp6TDU+QfkaFsiSSG0xknpzNaXmQWhIb2dlQp7d0BL1cR+zVQNzM5xB12" />
   <link rel="stylesheet" href="css/gamification.css" integrity="sha384-NWRQeZ+htS+kYYerkaHgxhuhgbsbY4lvwNiq8YNT/IzDb2Nao/NZ0cujI+VlWA9T" />
   <link rel="stylesheet" href="css/recommendations.css" integrity="sha384-ez4rQqQkDScTov70jp0Z/G0yCnoUWGMl02QgxDfSwgSR28pS4nZ8VjB1HECY66iL" />
@@ -321,6 +321,7 @@
   .blt-filter-chip.type-alerta.active      { background:rgba(255,59,59,.1); border-color:rgba(255,59,59,.4); color:#FF3B3B; }
   .blt-filter-chip.type-procedimento.active{ background:rgba(139,92,246,.1);border-color:rgba(139,92,246,.4);color:#8B5CF6; }
   .blt-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px; }
+  .blt-grid > .empty-state { grid-column:1/-1; }
   .blt-card { position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;transition:all .25s;cursor:pointer;animation:tkt-entry .35s ease both;display:flex;flex-direction:column; }
   .blt-card:hover { border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.055);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4); }
   .blt-card-stripe { height:3px;width:100%;flex-shrink:0; }
@@ -560,7 +561,6 @@
   }
   </style>
   <!-- Vercel Analytics & Speed Insights -->
-  <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
   <link rel="manifest" href="/manifest.json" integrity="sha384-13ljjGgvMl87cgEDu5SKXxARQDMu1+6e58mTYeRlx6pdngKw63Tj25Ty5G5I9/jG" />
   <meta name="theme-color" content="#FF6B35" />
@@ -1003,83 +1003,11 @@
 
     <!-- Grid de boletins -->
     <div class="blt-grid" id="bltGrid">
-
-      <div class="blt-card type-novidade">
-        <div class="blt-card-stripe"></div>
-        <div class="blt-card-body">
-          <div class="blt-card-top">
-            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
-            <div class="blt-card-header">
-              <div class="blt-card-tags"><span class="blt-type-tag">Novidade</span><span class="blt-new-badge">NOVO</span></div>
-              <div class="blt-card-title">Novo padrão AVM para BYD Seal 2025</div>
-            </div>
-          </div>
-          <div class="blt-card-desc">Target tipo D revisado com dimensões atualizadas para o BYD Seal 2025. Impressão em papel fotográfico fosco recomendada.</div>
-          <div class="blt-brands"><span class="blt-brand-chip">BYD Seal</span><span class="blt-brand-chip">BYD Atto 3</span></div>
-          <div class="blt-card-foot">
-            <span class="blt-card-date">29/04/2026</span>
-            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-          </div>
-        </div>
+      <div class="empty-state" id="bltEmptyState">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">Nenhum boletim publicado ainda</div>
+        <div class="empty-state-sub">Assim que a equipe técnica publicar um boletim, ele aparece aqui.</div>
       </div>
-
-      <div class="blt-card type-alerta">
-        <div class="blt-card-stripe"></div>
-        <div class="blt-card-body">
-          <div class="blt-card-top">
-            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-            <div class="blt-card-header">
-              <div class="blt-card-tags"><span class="blt-type-tag">Alerta Técnico</span></div>
-              <div class="blt-card-title">Honda LKAS — erro C1B00 após troca de parabrisa</div>
-            </div>
-          </div>
-          <div class="blt-card-desc">Falha identificada em modelos 2022+ após substituição de parabrisa. Procedimento de reset obrigatório antes da calibração estática.</div>
-          <div class="blt-brands"><span class="blt-brand-chip">Honda Civic</span><span class="blt-brand-chip">Honda CR-V</span><span class="blt-brand-chip">Honda HR-V</span></div>
-          <div class="blt-card-foot">
-            <span class="blt-card-date">22/04/2026</span>
-            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-          </div>
-        </div>
-      </div>
-
-      <div class="blt-card type-procedimento">
-        <div class="blt-card-stripe"></div>
-        <div class="blt-card-body">
-          <div class="blt-card-top">
-            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
-            <div class="blt-card-header">
-              <div class="blt-card-tags"><span class="blt-type-tag">Procedimento</span></div>
-              <div class="blt-card-title">Sequência correta: Toyota Techstream v17 + LDA Target 180°</div>
-            </div>
-          </div>
-          <div class="blt-card-desc">Guia revisado para sequência de ativação no Techstream v17. Alteração no menu ADAS a partir da versão 17.20.028.</div>
-          <div class="blt-brands"><span class="blt-brand-chip">Toyota RAV4</span><span class="blt-brand-chip">Corolla 2022+</span></div>
-          <div class="blt-card-foot">
-            <span class="blt-card-date">15/04/2026</span>
-            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-          </div>
-        </div>
-      </div>
-
-      <div class="blt-card type-atualizacao">
-        <div class="blt-card-stripe"></div>
-        <div class="blt-card-body">
-          <div class="blt-card-top">
-            <div class="blt-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg></div>
-            <div class="blt-card-header">
-              <div class="blt-card-tags"><span class="blt-type-tag">Atualização</span></div>
-              <div class="blt-card-title">Nissan LKA — 12 novos modelos adicionados (v5.1)</div>
-            </div>
-          </div>
-          <div class="blt-card-desc">Versão 5.1 do guia Nissan/Infiniti inclui Frontier 2025, Sentra facelift e 10 variantes regionais adicionais.</div>
-          <div class="blt-brands"><span class="blt-brand-chip">Nissan</span><span class="blt-brand-chip">Infiniti</span></div>
-          <div class="blt-card-foot">
-            <span class="blt-card-date">08/04/2026</span>
-            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -1150,7 +1078,7 @@
 <script src="js/supabase.min.js" integrity="sha384-sfbOag7cEcqn2DK53T/iBNAH/2cMCf7bSzJDwBhV117A0z/NIj9Usei1jKIBY1Ae" crossorigin="anonymous"></script>
 <!-- ─── ADAS PRO Scripts ─── -->
 <script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
-<script src="js/auth.js?v=20260815" integrity="sha384-s6E/IppvglfuiCGDS2YEm4onozVC5OspLc7WGJ1ErFwMw/sqT/YS5dZi7sgoYlGY"></script>
+<script src="js/auth.js?v=20260815" integrity="sha384-ROHp9eZs84Q8o84My9O5QYmRn7p3vqgYbI/z5etVmbLKDuT4smgYAl7ZSbUNKr0v"></script>
 <script src="js/purify.min.js?v=20260815" integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"></script>
 
 <!-- Overlay de carregamento -->
@@ -2379,7 +2307,20 @@ function renderBulletinsDynamic() {
   const grid = document.getElementById('bltGrid');
   if (!grid) return;
   const published = (AUTH.getBulletins ? AUTH.getBulletins({ status:'published' }) : []);
-  if (!published.length) return; // sem publicados → mantém cards estáticos como fallback
+  if (!published.length) {
+    // Estado vazio explícito — nunca exibir conteúdo de demonstração como se
+    // fosse real (os 4 cards fictícios hardcoded foram removidos).
+    grid.innerHTML = `<div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">Nenhum boletim publicado ainda</div>
+        <div class="empty-state-sub">Assim que a equipe técnica publicar um boletim, ele aparece aqui.</div>
+      </div>`;
+    const cnt0 = document.getElementById('bltCountAll');
+    if (cnt0) cnt0.textContent = '0';
+    const badge0 = document.getElementById('bltUnreadBadge');
+    if (badge0) badge0.style.display = 'none';
+    return;
+  }
 
   const typeMeta = {
     novidade:     { label:'Novidade',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>' },
@@ -2442,7 +2383,7 @@ if (_bltBadge && _bltNewCnt > 0) { _bltBadge.textContent = _bltNewCnt; _bltBadge
 </script>
 <script src="js/gamification.js" integrity="sha384-YIYM7It/CLFn+056Hwfz96l9xBTfdzr5SDllil/HalI3htdMqoaFwpCh1E1lgYvu"></script>
 <script src="js/recommendations.js" integrity="sha384-/dkxDxyJL5Zg7Rc8FLwhykS6gCwaICl2IAJMbEXXYKz/X4dmr9dcl7Px80WA/Xd1"></script>
-<script src="js/certifications.js" integrity="sha384-+gmz/KTp0aTwTBD/Fretf5x6xaAOLPzjCQkYoKx5v7ekjyeA6sEgwgU9hzYaz9uV"></script>
+<script src="js/certifications.js" integrity="sha384-I/9uDiKT9raQdQjPxhLryxTnDVBrvfgYlg4IYswKfNzmPM21teHwwN9TW4G6ISfG"></script>
 <script src="js/adaptive-quiz.js" integrity="sha384-S0Rr5QNPU/hL5bVmDCGwaQmVT+UXXZbg8e3JTZwzrvQdzaY1oIU+GVxgRnN4UEaY"></script>
 <script src="js/chatbot.js" integrity="sha384-B9hwcK8Yfufogz8YW5U3/eYtaW0CNoNfLfkR4Dz6k2GqCn9LhdzGht7TMikmunQE"></script>
 <script src="js/simulators.js" integrity="sha384-Wp3F1I7bjvwkwWz1pDsWLClcyeubCMiksU6u/g2Smz4o0jC6VoKYOEKh5wJuL4b8"></script>

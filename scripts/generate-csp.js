@@ -23,14 +23,18 @@ const ROOT = path.join(__dirname, '..');
 const HTML_FILES = [
   'index.html', 'login.html', 'reset-password.html', 'mfa-verify.html',
   'admin.html', 'membros.html', 'superadmin.html', 'email-config.html',
+  'lgpd.html', 'certifications.html', 'api-docs.html', 'verificar.html',
 ];
+
+/* Hosts externos permitidos em script-src (além de 'self' + hashes). */
+const EXTRA_SCRIPT_SRC = ['https://www.googletagmanager.com'];
 
 const BASE_DIRECTIVES = {
   'default-src': `'self'`,
   'style-src':   `'self' 'unsafe-inline' https://fonts.googleapis.com`,
   'font-src':    `'self' https://fonts.gstatic.com`,
-  'img-src':     `'self' data:`,
-  'connect-src': `'self' https://zqydyyticvtmirjzskly.supabase.co wss://zqydyyticvtmirjzskly.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com https://api.pwnedpasswords.com`,
+  'img-src':     `'self' data: https://www.googletagmanager.com https://www.google-analytics.com`,
+  'connect-src': `'self' https://zqydyyticvtmirjzskly.supabase.co wss://zqydyyticvtmirjzskly.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com https://api.pwnedpasswords.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com`,
   'object-src':  `'none'`,
   'base-uri':    `'self'`,
   'form-action': `'self'`,
@@ -122,6 +126,7 @@ function computeCsp() {
 
   const scriptSrc = [
     `'self'`,
+    ...EXTRA_SCRIPT_SRC,
     ...uScripts.map(h => `'${h}'`),
     `'unsafe-hashes'`,
     ...uHandlers.map(h => `'${h}'`),

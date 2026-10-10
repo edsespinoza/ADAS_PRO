@@ -999,6 +999,26 @@ input, textarea, select { font-family: inherit; }
 .form-input option { background: var(--primary-dark); }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* Honeypot anti-bot — invisível para humanos */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.form-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: .78rem;
+  color: rgba(255,255,255,.6);
+  margin: 4px 0 8px;
+  cursor: pointer;
+}
+.form-consent input { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+.form-consent a { color: var(--accent); text-decoration: underline; }
+
 .form-submit {
   width: 100%;
   padding: 14px;

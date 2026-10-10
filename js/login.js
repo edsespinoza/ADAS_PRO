@@ -143,7 +143,7 @@ async function enterDemoMode(role) {
 }
 
 // ── Initialization ──────────────────────────────────────────────────
-try { history.replaceState({}, document.title, '/'); } catch(e) {}
+try { history.replaceState({}, document.title, window.location.pathname); } catch(e) {}
 
 AUTH.init().then(() => {
   // MFA pendente (sessão aal1) já persistida — segue direto para a verificação

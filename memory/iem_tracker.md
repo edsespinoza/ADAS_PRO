@@ -23,6 +23,8 @@ Log acumulado de eficiência por tarefa. Atualizar ao final de cada tarefa signi
 | 2026-05-14 | Auditoria de segurança R1 — 22 vulnerabilidades OWASP (3 críticas XSS) | 85 | 90 | 5 | 🟢 EXCELENTE |
 | 2026-05-14 | Revisão UI/UX — 21 achados WCAG/consistência/responsividade | 80 | 86 | 6 | ✅ BOM |
 | 2026-05-14 | Auditoria de segurança R2 — 17 vulns novas (gestor=admin, downloadLevel teatro) | 87 | 91 | 4 | 🟢 EXCELENTE |
+| 2026-10-10 | #107 — Captura de leads (SQL+RLS · Edge Function `capture-lead` · frontend · aba Leads no admin · CSP) | 87 | 91 | 4 | 🟢 EXCELENTE |
+| 2026-10-10 | #108 — Migração de boletins `localStorage` → Supabase (`bulletins.payload` + dual-write) + remoção dos 4 cards fictícios | 86 | 90 | 4 | 🟢 EXCELENTE |
 
 ---
 
@@ -211,3 +213,44 @@ Gap           = 18
 | `adas-membros` | `membros.html` |
 | `adas-admin` | `admin.html` |
 | `adas-superadmin` | `superadmin.html` |
+
+---
+
+## Detalhes — #107 (2026-10-10)
+
+Captura de leads da landing page (7 fases), entregue em produção com verificação E2E.
+
+| Variável | Valor | Justificativa |
+|---|---|---|
+| Ts | 0,88 | Todas as fases concluídas (SQL+RLS, Edge Function, frontend, aba admin, evento `new_lead`); build/deploy e verificação em produção OK, sem regressões |
+| Qs | 0,90 | Achou e corrigiu um bug real de CSP (handler `onclick` com `${...}` não hasheável → migrado para `data-act`); CSP servido = `vercel.json`; dados de teste limpos; dedup/honeypot/rate-limit validados |
+| Cs | 0,80 | Sessão longa com idas e voltas (E2E de rate-limit precisou de 2 tentativas pela janela de 1 min; reconciliação de contexto entre janelas) |
+
+`IEM = (0,45×0,88 + 0,35×0,90 + 0,20×0,80) × 100 = 87` | IEM_pot = 91 | Gap = 4 → 🟢 EXCELENTE
+
+**Lições:**
+- HTML inline (`<script>` e handlers `on*`) é coberto por hash SHA-256 no CSP — **toda** mudança exige `node scripts/generate-csp.js` **local** antes do deploy (o Vercel lê `vercel.json` antes do build). Handlers dinâmicos devem usar `data-act` + `__acts` (nunca `onclick` com `${}`).
+- RLS admin-only: o painel precisa criar o client Supabase com `Authorization: Bearer <session.token>` (o `_sb` de `auth.js` é privado).
+- `admin.html` bootstrap: `AUTH.init().then(...)` → atualizar badges (`refreshLeadsBadge()`) após `loadDashboard()`.
+
+---
+
+## Detalhes — #108 (2026-10-10)
+
+Migração de boletins de `localStorage` → Supabase, com autorização explícita do usuário para levantar o freeze de `js/auth.js`. Entregue em produção.
+
+| Variável | Valor | Justificativa |
+|---|---|---|
+| Ts | 0,85 | Diagnóstico pré-existente (bug.md "versão antiga") + skills disponíveis; a leitura do schema RLS (`public.bulletins`) e dos seeds exigiu acesso bruto pontual |
+| Qs | 0,90 | Dual-write consistente (merge por `updatedAt` preservando seeds locais), coluna `payload jsonb` como fonte de verdade, trigger de `updated_at`; build/deploy/verificação E2E OK |
+| Cs | 0,85 | Cobriu SQL (migration + espelho), `js/auth.js`, `membros.html` (cards + empty-state), docs. Ficou **fora** a confirmação do round-trip de escrita autenticada (não testável por curl) e a decisão de produto sobre os seeds |
+
+`IEM = (0,45×0,85 + 0,35×0,90 + 0,20×0,85) × 100 = 86` | IEM_pot = 90 | Gap = 4 → 🟢 EXCELENTE
+
+**Lições:**
+- **RLS como gate de escrita sem Edge Function:** o client `_sb` de `auth.js` (com `persistSession`) carrega o JWT autenticado → `is_admin()` satisfaz a policy `bulletins_write_admin` diretamente; não foi preciso criar uma Edge Function para boletins (diferente de leads, cujo INSERT é admin-only via service_role).
+- **Coluna `payload jsonb` = fonte de verdade** para objetos grandes com muitos campos; as colunas relacionais viram derivadas (úteis para RLS/consulta/`CHECK`). O `_rowToBulletin` prefere `payload` e cai nas colunas como *fallback*.
+- **`display:flex` vence o atributo `hidden`** (estilo de autor sobrepõe o UA stylesheet) — por isso o estado vazio foi desenhado como markup estático visível + substituição via `innerHTML`, em vez de alternar `hidden`.
+- **Conteúdo fictício ≠ conteúdo real:** os 4 cards hardcoded do `membros.html` (BYD Seal etc.) eram indistinguíveis de boletins reais — removidos. Os seeds `DEFAULT_BULLETINS` **não** são fictícios: são referência técnica com *disclaimer* explícito.
+
+

@@ -6,11 +6,13 @@
     "build": "node scripts/build-config.js && node scripts/sri-inject.js",
     "dev": "node scripts/build-config.js --dev && node scripts/sri-inject.js && npx serve .",
     "security": "node scripts/security-audit.js",
-    "security:db": "bash scripts/security-audit-db.sh"
+    "security:db": "bash scripts/security-audit-db.sh",
+    "test": "node --test tests/"
   },
   "devDependencies": {
     "deno": "^2.9.6",
     "dotenv": "^16.4.5",
+    "jsdom": "^29.1.1",
     "typescript": "^5.9.3"
   }
 }

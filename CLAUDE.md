@@ -9,6 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run build        # Gera js/supabase-config.js a partir de .env.local (obrigatório antes de abrir no browser)
 npm run dev          # Gera config + inicia servidor estático em http://localhost:3000
+npm test             # Testes headless (node:test + jsdom) — ex.: tests/bulletins.headless.test.js
+npm run security     # Auditoria de segurança do frontend (script local, gitignored)
 ```
 
 **Primeiro uso:** copiar `.env.example` para `.env.local` e preencher:
@@ -238,5 +240,10 @@ Fórmula e thresholds definidos no global `CLAUDE.md`. Salvar resultados em `mem
 
 ## Testes
 
-Não há testes automatizados neste projeto. Verificação manual via browser (dev server em `localhost:3000`) ou URL de preview do Vercel.
+Existe uma suíte headless mínima: `npm test` (`node --test tests/`, Node 20+ com `node:test` + `jsdom`).
+
+- `tests/bulletins.headless.test.js` — repro do caminho `getBulletins → renderBulletinsDynamic`: carrega o `js/auth.js` **real** num DOM jsdom (modo offline) e a `renderBulletinsDynamic` **real** extraída de `membros.html`, cobrindo seed/substituição de seed obsoleto/preservação de edição humana/render/empty-state. Ver `bug.md` para o achado de `_isStaleSeed`.
+- `jsdom` é `devDependency` (instalado via `npm install`); `node_modules/` é gitignored.
+
+Fora isso, a verificação é manual via browser (dev server em `localhost:3000`) ou URL de preview do Vercel. As Edge Functions têm testes Deno próprios: `npx deno test --allow-all supabase/functions/`.
 

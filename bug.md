@@ -1327,8 +1327,45 @@ JSON.stringify({
 ### Tarefas para a próxima sessão
 
 - [x] **Remover os 4 cards estáticos** e substituir por estado vazio explícito ("Nenhum boletim publicado") — conteúdo de demonstração não deve ser indistinguível do real. ✅ 2026-10-10 — feito junto com a migração de boletins para Supabase (ver **#108**); `#bltGrid` agora tem estado vazio e `renderBulletinsDynamic()` o reproduz quando não há publicados.
-- [ ] **Fechar o diagnóstico** com a leitura de console acima **antes** de editar `auth.js` de novo.
+- [x] **Fechar o diagnóstico** com a leitura de console acima **antes** de editar `auth.js` de novo. ✅ 2026-10-11 — diagnóstico fechado **por repro headless** (`tests/bulletins.headless.test.js`), não por leitura de console: a causa aritmética do "texto antigo" ficou **reproduzida** e **corrigida** (`_isStaleSeed` — ver seção ✅ RESOLVIDO abaixo). A leitura de console do cliente segue opcional, agora como confirmação, não como bloqueio.
   - **Atualização 2026-10-10:** o freeze foi **levantado por diretiva do usuário** e `auth.js` foi editado (dual-write de boletins, #108) **sem** a leitura de console. Os dois vetores conhecidos de conteúdo fictício/antigo foram eliminados (cards hardcoded + ausência de persistência online), mas a leitura de console continua sendo o único teste definitivo do cliente.
-- [ ] **Repro headless** do caminho `getBulletins → renderBulletinsDynamic` — `jsdom` não está instalado e o Firefox falha com `RenderCompositorSWGL failed mapping default framebuffer`, então não há validação visual automatizada neste projeto.
+- [x] **Repro headless** do caminho `getBulletins → renderBulletinsDynamic` — ✅ 2026-10-11: `tests/bulletins.headless.test.js` (jsdom 29 + `node:test`) carrega o `js/auth.js` **real** e a `renderBulletinsDynamic` **real** extraída de `membros.html` num DOM jsdom e cobre: materialização do seed, substituição de seed obsoleto (sem `_seedVersion` / com versão anterior), preservação de edição humana, preservação de boletim criado pelo usuário, filtro de status, render com/sem publicados (empty-state) e ordenação. **10/10 passam** (`npm test`). O Firefox headless continua indisponível, mas o jsdom fecha o caminho de dados/render. Ver **🔴 ACHADO** abaixo.
 
 > ⚠️ **Lição do caso:** três rodadas de correção por suposição (SW → seed → SRI) falharam em acertar o alvo. O sintoma nunca foi confirmado por observação do lado do cliente. Diagnosticar por leitura de estado real antes de editar.
+
+---
+
+## ✅ RESOLVIDO (repro headless) — `_isStaleSeed` não renovava seed cujo `updatedAt` mudou 2026-10-11
+
+> Descoberto ao construir o repro headless acima (`tests/bulletins.headless.test.js`). **Reproduzido**, não suposto. **Corrigido em 2026-10-11.**
+
+**Sintoma lógico original.** `_isStaleSeed` (`js/auth.js`) renovava a cópia no storage **apenas quando `stored.updatedAt === seed.updatedAt`**:
+
+```js
+if (stored.updatedAt === seed.updatedAt) return stored._seedVersion !== SEED_VERSION;
+return false;  // qualquer updatedAt diferente => intocável
+```
+
+**Consequência:** ao editar o **texto** de um seed em `DEFAULT_BULLETINS` **e** seu `updatedAt` (natural), quem já visitou antes ficava com a cópia antiga **para sempre** — mesmo com `SEED_VERSION` bumpado (é o sintoma histórico "versão antiga do boletim"). O fix anterior (dual-write #108 + `SEED_VERSION`) só funcionava se edições de seed mantivessem o `updatedAt` **inalterado** — fácil de violar e não documentado.
+
+**Fix aplicado (`js/auth.js`):** a renovação passou a depender **só da versão**, e edição humana virou flag explícita.
+
+```js
+function _isStaleSeed(stored, seed) {
+  if (stored._userEdited) return false;          // painel: nunca sobrescrever
+  return stored._seedVersion !== SEED_VERSION;   // código: renova por versão
+}
+```
+
+`editBulletin` agora grava `_userEdited: true` (cobre `publishBulletin`/`archiveBulletin`, que o chamam). Assim: **editar seed no código = só bumpar `SEED_VERSION`** (não importa mais o `updatedAt`); edição/arquivamento de painel fica protegida para sempre, inclusive em bump de versão.
+
+**Migração: sem risco para os dados atuais.** `SEED_VERSION` só existiu como `'v1.1'` (verificado por `git log -S`), então toda cópia editada no painel está em `'v1.1'` → não é obsoleta → preservada. Cópias pré-versionamento (sem `_seedVersion`) continuam sendo renovadas, como antes. **Comportamento idêntico para todos os dados existentes**; a mudança só elimina o footgun para o futuro.
+
+**Repro/regressão:** `tests/bulletins.headless.test.js` — testes *"footgun corrigido: seed com texto novo E updatedAt novo + versão antiga → renovado"* e *"edição no painel (editBulletin) → marcada _userEdited e NUNCA sobrescrita, nem em bump"*.
+
+| Verificação | Resultado |
+|---|---|
+| `node --check js/auth.js` | OK |
+| `npm test` | 10/10 ok |
+| `npm run security` | OK — handlers inline: 0 |
+| SRI de `js/auth.js` (7 páginas) | regenerado no `npm run build`; hash real == injetado |

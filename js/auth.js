@@ -1487,23 +1487,26 @@ const AUTH = (function () {
 
   /* Hidratação do seed.
 
-     Idempotente por id, mas versionada: um seed nunca é reescrito se o
-     usuário o editou ou arquivou no painel (esses casos carregam
-     `_seedVersion` divergente ou um `updatedAt` humano). Quando o storage
-     tem um seed de uma versão ANTERIOR do DEFAULT_BULLETINS, a cópia é
-     substituída — sem isso, quem já tinha visitado antes do fix continuava
-     vendo o texto antigo indefinidamente, porque a busca por id nunca erra,
-     só nunca acha. Materializa também os defaults do addBulletin, para o
-     seed passar pelo mesmo formato. */
+     Idempotente por id, mas versionada. Regra de ouro:
+       • Cópia SEM `_userEdited` → pertence ao código; renova sempre que o
+         storage estiver numa `_seedVersion` diferente da vigente. Isso vale
+         inclusive quando o TEXTO e o `updatedAt` do seed mudam no código —
+         antes, um `updatedAt` divergente era confundido com edição humana e a
+         cópia velha ficava presa para sempre (sintoma "versão antiga do
+         boletim"). Logo, editar um seed exige apenas bumpar SEED_VERSION.
+       • Cópia COM `_userEdited` (gravada pelo `editBulletin`) → editada ou
+         arquivada no painel; NUNCA sobrescrever, nem em bump de versão.
+
+     Cópias legadas sem `_seedVersion` (pré-versionamento) continuam sendo
+     renovadas, pois `undefined !== SEED_VERSION`. Materializa também os
+     defaults do addBulletin, para o seed passar pelo mesmo formato. */
   const SEED_VERSION = 'v1.1';
 
   function _isStaleSeed(stored, seed) {
-    // Seed nunca editado pelo painel: atualiza sempre que a versão do
-    // código for mais nova que a do storage.
-    if (stored.updatedAt === seed.updatedAt) return stored._seedVersion !== SEED_VERSION;
-    // Editado/arquivado no painel (updatedAt humano, com ou sem semântica
-    // de seed) — nunca sobrescrever.
-    return false;
+    // Preserva edição/arquivamento explícito do painel.
+    if (stored._userEdited) return false;
+    // Cópia gerenciada pelo código: obsoleta se a versão do seed mudou.
+    return stored._seedVersion !== SEED_VERSION;
   }
 
   function _ensureBulletinsSeeded() {
@@ -1565,7 +1568,7 @@ const AUTH = (function () {
   function editBulletin(id, updates) {
     const list = _getItems(BULLETINS_KEY); const i = list.findIndex(b => b.id === id);
     if (i < 0) return false;
-    list[i] = { ...list[i], ...updates, updatedAt: Date.now() };
+    list[i] = { ...list[i], ...updates, updatedAt: Date.now(), _userEdited: true };
     _saveItems(BULLETINS_KEY, list);
     _sbUpsertBulletin(list[i]);
     return true;

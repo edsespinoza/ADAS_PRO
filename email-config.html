@@ -270,16 +270,16 @@
     </div>
     <nav class="ec-sidebar-nav">
       <div class="ec-snav-section">E-mails</div>
-      <a class="ec-snav-item active" onclick="scrollTo(0,0)">
+      <a class="ec-snav-item active" data-act="scrollTop">
         <span>⚙️</span>Configuração
       </a>
-      <a class="ec-snav-item" onclick="document.getElementById('sec-events').scrollIntoView({behavior:'smooth'})">
+      <a class="ec-snav-item" data-act="goSection" data-tgt="sec-events">
         <span>📨</span>Eventos
       </a>
-      <a class="ec-snav-item" onclick="document.getElementById('sec-test').scrollIntoView({behavior:'smooth'})">
+      <a class="ec-snav-item" data-act="goSection" data-tgt="sec-test">
         <span>🧪</span>Testes
       </a>
-      <a class="ec-snav-item" onclick="document.getElementById('sec-deploy').scrollIntoView({behavior:'smooth'})">
+      <a class="ec-snav-item" data-act="goSection" data-tgt="sec-deploy">
         <span>🚀</span>Deploy
       </a>
       <div class="ec-snav-section" style="margin-top:12px">Navegar</div>
@@ -322,7 +322,7 @@
           <div class="field-row">
             <input class="ec-input key" type="password" id="cfgApiKey"
                    placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-            <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="toggleKey()">👁</button>
+            <button class="btn-ec btn-ec-ghost btn-ec-sm" data-act="toggleKey">👁</button>
           </div>
           <p class="ec-input-hint">Gerar em: resend.com/api-keys — nunca exposta no frontend de produção</p>
           <p class="ec-input-hint" style="color:var(--danger);border:1px solid rgba(239,68,68,.25);background:rgba(239,68,68,.06);padding:8px 10px;border-radius:6px;margin-top:6px;">
@@ -342,8 +342,8 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;margin-top:20px;">
-          <button class="btn-ec btn-ec-primary" onclick="saveConfig()">💾 Salvar configuração</button>
-          <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="clearConfig()">Limpar</button>
+          <button class="btn-ec btn-ec-primary" data-act="saveConfig">💾 Salvar configuração</button>
+          <button class="btn-ec btn-ec-ghost btn-ec-sm" data-act="clearConfig">Limpar</button>
           <span class="save-status" id="saveStatus"></span>
         </div>
       </div>
@@ -369,8 +369,8 @@
               <div class="event-card-desc">Notifica admin quando um novo usuário se cadastra</div>
               <div class="event-card-dest">➜ ADMIN_EMAIL</div>
               <div class="event-card-actions">
-                <button class="btn-ec btn-ec-tech btn-ec-sm" onclick="previewEmail('new_user')">👁 Pré-visualizar</button>
-                <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="openTest('new_user')">🧪 Testar</button>
+                <button class="btn-ec btn-ec-tech btn-ec-sm" data-act="previewEmail" data-ev="new_user">👁 Pré-visualizar</button>
+                <button class="btn-ec btn-ec-ghost btn-ec-sm" data-act="openTest" data-ev="new_user">🧪 Testar</button>
               </div>
             </div>
           </div>
@@ -383,8 +383,8 @@
               <div class="event-card-desc">Notifica membro quando sua conta é aprovada</div>
               <div class="event-card-dest">➜ e-mail do usuário</div>
               <div class="event-card-actions">
-                <button class="btn-ec btn-ec-tech btn-ec-sm" onclick="previewEmail('user_approved')">👁 Pré-visualizar</button>
-                <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="openTest('user_approved')">🧪 Testar</button>
+                <button class="btn-ec btn-ec-tech btn-ec-sm" data-act="previewEmail" data-ev="user_approved">👁 Pré-visualizar</button>
+                <button class="btn-ec btn-ec-ghost btn-ec-sm" data-act="openTest" data-ev="user_approved">🧪 Testar</button>
               </div>
             </div>
           </div>
@@ -397,8 +397,8 @@
               <div class="event-card-desc">Notifica membro quando mentor responde seu ticket</div>
               <div class="event-card-dest">➜ e-mail do usuário</div>
               <div class="event-card-actions">
-                <button class="btn-ec btn-ec-tech btn-ec-sm" onclick="previewEmail('ticket_reply')">👁 Pré-visualizar</button>
-                <button class="btn-ec btn-ec-ghost btn-ec-sm" onclick="openTest('ticket_reply')">🧪 Testar</button>
+                <button class="btn-ec btn-ec-tech btn-ec-sm" data-act="previewEmail" data-ev="ticket_reply">👁 Pré-visualizar</button>
+                <button class="btn-ec btn-ec-ghost btn-ec-sm" data-act="openTest" data-ev="ticket_reply">🧪 Testar</button>
               </div>
             </div>
           </div>
@@ -421,7 +421,7 @@
         <!-- Seletor de evento -->
         <div class="ec-field">
           <label>Evento a testar</label>
-          <select class="ec-input" id="testEvent" onchange="updateTestForm()" style="font-family:'Poppins',sans-serif;">
+          <select class="ec-input" id="testEvent" data-act="updateTestForm" style="font-family:'Poppins',sans-serif;">
             <option value="new_user">new_user — Novo cadastro</option>
             <option value="user_approved">user_approved — Acesso aprovado</option>
             <option value="ticket_reply">ticket_reply — Resposta no ticket</option>
@@ -433,8 +433,8 @@
 
         <!-- Ações -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
-          <button class="btn-ec btn-ec-tech" onclick="runPreview()">👁 Pré-visualizar email</button>
-          <button class="btn-ec btn-ec-success" id="btnSendReal" onclick="runSendReal()" disabled>
+          <button class="btn-ec btn-ec-tech" data-act="runPreview">👁 Pré-visualizar email</button>
+          <button class="btn-ec btn-ec-success" id="btnSendReal" data-act="runSendReal" disabled>
             📤 Enviar email real
           </button>
           <span id="realHint" style="font-size:.74rem;color:var(--muted);align-self:center;">
@@ -520,7 +520,7 @@
 
         <!-- Botão de modo online -->
         <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <button class="btn-ec btn-ec-success" onclick="toggleOnlineMode()" id="btnToggleMode">
+          <button class="btn-ec btn-ec-success" data-act="toggleOnlineMode" id="btnToggleMode">
             ▶ Ativar Modo Online
           </button>
           <span style="font-size:.78rem;color:var(--muted);">Requer credenciais salvas e Supabase configurado</span>
@@ -532,11 +532,11 @@
 </div><!-- /ec-layout -->
 
 <!-- ─── Preview modal ─────────────────────────────────────── -->
-<div class="preview-overlay" id="previewOverlay" onclick="closePreview(event)">
+<div class="preview-overlay" id="previewOverlay" data-act="overlayClose">
   <div class="preview-box">
     <div class="preview-header">
       <span class="preview-title" id="previewTitle">Pré-visualização</span>
-      <button class="preview-close" onclick="closePreview()">✕</button>
+      <button class="preview-close" data-act="closePreview">✕</button>
     </div>
     <div class="preview-iframe-wrap">
       <iframe id="previewFrame" title="Email preview" sandbox="allow-same-origin"></iframe>
@@ -917,6 +917,27 @@ function tplTicketReply(d, siteUrl) {
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:3px;background:#00B4D8;"><a href="${siteUrl}/membros.html" style="display:inline-block;padding:14px 28px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff;text-decoration:none;text-transform:uppercase;">Ver Ticket Completo &rarr;</a></td></tr></table>`;
   return baseWrapper('#00B4D8', 'SUPORTE TÉCNICO', `Resposta no ticket: ${d.ticketTitle}`, body);
 }
+
+// ── Delegação de eventos (data-act → __acts) ────────────────────────────────
+// CSP: remove 'unsafe-hashes' — handlers migrados para este registro.
+window.__acts = {
+  scrollTop:    () => window.scrollTo(0, 0),
+  goSection:    (el) => document.getElementById(el.dataset.tgt).scrollIntoView({ behavior: 'smooth' }),
+  toggleKey:    () => toggleKey(),
+  saveConfig:   () => saveConfig(),
+  clearConfig:  () => clearConfig(),
+  previewEmail: (el) => previewEmail(el.dataset.ev),
+  openTest:     (el) => openTest(el.dataset.ev),
+  updateTestForm: () => updateTestForm(),
+  runPreview:   () => runPreview(),
+  runSendReal:  () => runSendReal(),
+  toggleOnlineMode: () => toggleOnlineMode(),
+  overlayClose: (el, e) => closePreview(e),
+  closePreview: () => closePreview(),
+};
+document.addEventListener('click',  (e) => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
+document.addEventListener('change', (e) => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
+document.addEventListener('input',  (e) => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
 </script>
 </body>
 </html>

@@ -236,6 +236,7 @@ const AUTH = (function () {
   function _numOr0(v)    { const n = +v; return Number.isFinite(n) ? n : 0; }
   function _isoOrNull(v) { if (v === null || v === undefined || v === '') return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.toISOString(); }
   function _msFromIso(v) { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.getTime(); }
+  function ts(v)         { const n = +v; return n > 0 ? n : (v ? new Date(v).getTime() : 0); }
 
   function _bulletinRow(b) {
     const lvl = Number.isFinite(+b.accessLevel) ? Math.min(4, Math.max(1, Math.trunc(+b.accessLevel))) : 1;
@@ -1600,7 +1601,6 @@ const AUTH = (function () {
     return { ok:true, id };
   }
   function getAllTickets() {
-    const ts = (x) => { const n = +x; return n > 0 ? n : (x ? new Date(x).getTime() : 0); };
     return Object.values(_tickets).sort((a,b) => ts(b.updatedAt) - ts(a.updatedAt));
   }
   function getUserTickets(userId)  { return getAllTickets().filter(t => t.userId === userId); }

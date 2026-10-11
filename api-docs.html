@@ -113,8 +113,8 @@
       <p>A API suporta dois métodos de autenticação. Passe um deles no cabeçalho de cada requisição.</p>
 
       <div class="auth-tabs">
-        <button class="auth-tab active" onclick="showAuthTab('apikey')">API Key</button>
-        <button class="auth-tab" onclick="showAuthTab('jwt')">JWT Token</button>
+        <button class="auth-tab active" data-act="authTab" data-arg="apikey">API Key</button>
+        <button class="auth-tab" data-act="authTab" data-arg="jwt">JWT Token</button>
       </div>
 
       <div id="authTabApikey" class="auth-tab-content">
@@ -122,7 +122,7 @@
         <div class="code-block">
           <div class="code-header">
             <span class="code-lang">HTTP Header</span>
-            <button class="code-copy-btn" onclick="copyCode(this)">
+            <button class="code-copy-btn" data-act="copyCode">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               Copiar
             </button>
@@ -136,7 +136,7 @@
         <div class="code-block">
           <div class="code-header">
             <span class="code-lang">HTTP Header</span>
-            <button class="code-copy-btn" onclick="copyCode(this)">
+            <button class="code-copy-btn" data-act="copyCode">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               Copiar
             </button>
@@ -160,7 +160,7 @@
       <div class="code-block">
         <div class="code-header">
           <span class="code-lang">Response Headers</span>
-          <button class="code-copy-btn" onclick="copyCode(this)">
+          <button class="code-copy-btn" data-act="copyCode">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copiar
           </button>
@@ -246,7 +246,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
       <h2>Conteúdo</h2>
 
       <div class="endpoint-card open">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/content</span>
           <span class="endpoint-summary">Listar todo o conteúdo disponível</span>
@@ -287,7 +287,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
             <div class="code-block">
               <div class="code-header">
                 <span class="code-lang">JSON</span>
-                <button class="code-copy-btn" onclick="copyCode(this)">
+                <button class="code-copy-btn" data-act="copyCode">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                   Copiar
                 </button>
@@ -333,7 +333,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
                 <input class="try-it-input" type="text" id="tryCategory" placeholder="honda, toyota..." />
               </div>
             </div>
-            <button class="try-it-btn" onclick="tryItOut('content')">
+            <button class="try-it-btn" data-act="tryItOut" data-arg="content">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Enviar Requisição
             </button>
@@ -342,7 +342,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
               <div class="code-block">
                 <div class="code-header">
                   <span class="code-lang">Response</span>
-                  <button class="code-copy-btn" onclick="copyCode(this)">
+                  <button class="code-copy-btn" data-act="copyCode">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                     Copiar
                   </button>
@@ -358,7 +358,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /content/:id -->
     <section class="docs-section" id="ep-content-detail">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/content/:id</span>
           <span class="endpoint-summary">Detalhes de um material específico</span>
@@ -400,7 +400,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /content/:id/download -->
     <section class="docs-section" id="ep-content-download">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/content/:id/download</span>
           <span class="endpoint-summary">Obter URL de download temporária</span>
@@ -451,7 +451,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /categories -->
     <section class="docs-section" id="ep-categories">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/categories</span>
           <span class="endpoint-summary">Listar todas as categorias</span>
@@ -489,7 +489,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /users/me -->
     <section class="docs-section" id="ep-user-me">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/users/me</span>
           <span class="endpoint-summary">Dados do usuário autenticado</span>
@@ -522,7 +522,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- POST /users/me/progress -->
     <section class="docs-section" id="ep-user-progress">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-post">POST</span>
           <span class="endpoint-path">/api/v1/users/me/progress</span>
           <span class="endpoint-summary">Atualizar progresso de aprendizado</span>
@@ -551,7 +551,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
           <div class="code-block">
             <div class="code-header">
               <span class="code-lang">cURL</span>
-              <button class="code-copy-btn" onclick="copyCode(this)">
+              <button class="code-copy-btn" data-act="copyCode">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 Copiar
               </button>
@@ -573,7 +573,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /bulletins -->
     <section class="docs-section" id="ep-bulletins">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/bulletins</span>
           <span class="endpoint-summary">Listar boletins técnicos</span>
@@ -617,7 +617,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /articles -->
     <section class="docs-section" id="ep-articles">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/articles</span>
           <span class="endpoint-summary">Listar artigos editoriais</span>
@@ -650,7 +650,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- GET /certifications -->
     <section class="docs-section" id="ep-certifications">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-get">GET</span>
           <span class="endpoint-path">/api/v1/certifications</span>
           <span class="endpoint-summary">Listar programas de certificação</span>
@@ -700,7 +700,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
     <!-- POST /certifications/:id/quiz -->
     <section class="docs-section" id="ep-quiz-start">
       <div class="endpoint-card">
-        <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <div class="endpoint-header" data-act="toggleEndpoint">
           <span class="endpoint-method method-post">POST</span>
           <span class="endpoint-path">/api/v1/certifications/:id/quiz</span>
           <span class="endpoint-summary">Iniciar/enviar quiz de certificação</span>
@@ -724,7 +724,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
           <div class="code-block">
             <div class="code-header">
               <span class="code-lang">cURL</span>
-              <button class="code-copy-btn" onclick="copyCode(this)">
+              <button class="code-copy-btn" data-act="copyCode">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                 Copiar
               </button>
@@ -807,7 +807,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
       <div class="code-block">
         <div class="code-header">
           <span class="code-lang">JavaScript</span>
-          <button class="code-copy-btn" onclick="copyCode(this)">
+          <button class="code-copy-btn" data-act="copyCode">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copiar
           </button>
@@ -841,7 +841,7 @@ X-RateLimit-Reset: 1703001660</pre></div>
       <div class="code-block">
         <div class="code-header">
           <span class="code-lang">Python</span>
-          <button class="code-copy-btn" onclick="copyCode(this)">
+          <button class="code-copy-btn" data-act="copyCode">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copiar
           </button>
@@ -866,7 +866,7 @@ API_KEY = <span class="str">"adas_live_xxx"</span>
       <div class="code-block">
         <div class="code-header">
           <span class="code-lang">bash</span>
-          <button class="code-copy-btn" onclick="copyCode(this)">
+          <button class="code-copy-btn" data-act="copyCode">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             Copiar
           </button>
@@ -972,6 +972,15 @@ async function tryItOut(type) {
   btn.disabled = false;
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Enviar Requisição';
 }
+
+/* ─── CSP-safe data-act delegation ─── */
+window.__acts = {
+  authTab:        (el) => showAuthTab(el.dataset.arg),
+  copyCode:       (el) => copyCode(el),
+  toggleEndpoint: (el) => toggleEndpoint(el),
+  tryItOut:       (el) => tryItOut(el.dataset.arg),
+};
+document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
 
 /* ─── Scroll spy ─── */
 const sections = document.querySelectorAll('.docs-section');

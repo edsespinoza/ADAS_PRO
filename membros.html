@@ -585,8 +585,8 @@
   </div>
   <nav class="sidebar-nav">
     <div class="sidebar-nav-section">Conteúdo</div>
-    <a class="sidebar-nav-item active" onclick="showPage('biblioteca',this)"><span class="nav-icon">📚</span>Biblioteca técnica</a>
-    <a class="sidebar-nav-item" onclick="showPage('favoritos',this)"><span class="nav-icon">⭐</span>Favoritos
+    <a class="sidebar-nav-item active" data-act="showPageNav" data-page="biblioteca"><span class="nav-icon">📚</span>Biblioteca técnica</a>
+    <a class="sidebar-nav-item" data-act="showPageNav" data-page="favoritos"><span class="nav-icon">⭐</span>Favoritos
       <span class="nav-badge" id="favBadge" style="display:none">0</span>
     </a>
 
@@ -594,16 +594,16 @@
     <div id="navCats"></div>
 
     <div class="sidebar-nav-section" style="margin-top:12px">Comunicados</div>
-    <a class="sidebar-nav-item" onclick="showPage('boletins',this)"><span class="nav-icon">📡</span>Boletins técnicos</a>
+    <a class="sidebar-nav-item" data-act="showPageNav" data-page="boletins"><span class="nav-icon">📡</span>Boletins técnicos</a>
 
     <div class="sidebar-nav-section" style="margin-top:12px">Suporte</div>
-    <a class="sidebar-nav-item" onclick="showPage('suporte',this)"><span class="nav-icon">🎫</span>Abrir ticket
+    <a class="sidebar-nav-item" data-act="showPageNav" data-page="suporte"><span class="nav-icon">🎫</span>Abrir ticket
       <span class="nav-badge" id="myTicketsBadge" style="display:none">0</span>
     </a>
-    <a class="sidebar-nav-item" onclick="showPage('meus-tickets',this)"><span class="nav-icon">📋</span>Meus tickets</a>
+    <a class="sidebar-nav-item" data-act="showPageNav" data-page="meus-tickets"><span class="nav-icon">📋</span>Meus tickets</a>
 
     <div class="sidebar-nav-section" style="margin-top:12px">Conta</div>
-    <a class="sidebar-nav-item" onclick="showPage('perfil',this)"><span class="nav-icon">👤</span>Meu perfil</a>
+    <a class="sidebar-nav-item" data-act="showPageNav" data-page="perfil"><span class="nav-icon">👤</span>Meu perfil</a>
 
     <div class="sidebar-nav-section" style="margin-top:12px">Navegação</div>
     <a id="adminBackLink" class="sidebar-nav-item" href="admin.html" style="display:none;color:rgba(0,180,216,.8);border:1px solid rgba(0,180,216,.15);border-radius:8px;background:rgba(0,180,216,.05)">
@@ -628,7 +628,7 @@
       <div style="font-size:.56rem;color:rgba(255,255,255,.18);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">AutoTech Service</div>
       <div id="sbVersionLabel" style="font-size:.58rem;color:rgba(255,255,255,.12);font-family:monospace;">v2.2.0 · build 20260813</div>
     </div>
-    <button class="sidebar-logout" onclick="AUTH.logout();location.href='login.html'"><span>🚪</span>Sair</button>
+    <button class="sidebar-logout" data-act="logout"><span>🚪</span>Sair</button>
   </div>
 </aside>
 
@@ -640,7 +640,7 @@
     <div style="min-width:0">
       <!-- Breadcrumb — "Painel" visível em páginas que não são a biblioteca -->
       <div id="tbBreadcrumb" style="display:none;align-items:center;gap:5px;margin-bottom:4px">
-        <button onclick="goHome()" style="display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:.75rem;font-family:inherit;padding:0;transition:color .2s" onmouseover="this.style.color='rgba(255,107,53,.8)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">
+        <button data-act="goHome" style="display:inline-flex;align-items:center;gap:5px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.35);font-size:.75rem;font-family:inherit;padding:0;transition:color .2s" data-mouseover="homeHoverIn" data-mouseout="homeHoverOut">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           Painel
         </button>
@@ -653,7 +653,7 @@
     <div class="topbar-right">
       <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 14px">
         <span style="font-size:.8rem">🔍</span>
-        <input type="text" placeholder="Buscar material..." id="searchInput" oninput="filterSearch()" style="background:none;border:none;outline:none;color:#fff;font-size:.85rem;width:150px"/>
+        <input type="text" placeholder="Buscar material..." id="searchInput" data-input="filterSearch" style="background:none;border:none;outline:none;color:#fff;font-size:.85rem;width:150px"/>
       </div>
     </div>
   </div>
@@ -667,7 +667,7 @@
 
     <!-- Filtros de categoria -->
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="catFilters">
-      <div class="cat-filter active" data-cat="all" onclick="filterCat('all',this)">Todos</div>
+      <div class="cat-filter active" data-cat="all" data-act="filterCat">Todos</div>
     </div>
     <div class="content-grid" id="contentGrid"></div>
   </div>
@@ -679,14 +679,14 @@
         <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1.1rem">⭐ Meus favoritos</div>
         <div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-top:4px">Materiais salvos para acesso rápido</div>
       </div>
-      <button onclick="showPage('biblioteca')" style="padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.8rem;cursor:pointer">Explorar biblioteca →</button>
+      <button data-act="navPage" data-page="biblioteca" style="padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:.8rem;cursor:pointer">Explorar biblioteca →</button>
     </div>
     <div class="content-grid" id="favGrid"></div>
     <div id="favEmpty" style="display:none;text-align:center;padding:60px 20px">
       <div style="font-size:3rem;margin-bottom:12px">⭐</div>
       <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem;margin-bottom:6px">Nenhum favorito ainda</div>
       <div style="font-size:.85rem;color:rgba(255,255,255,.35);margin-bottom:20px">Clique na estrela ⭐ nos materiais da biblioteca para adicionar aqui</div>
-      <button onclick="showPage('biblioteca')" style="padding:10px 20px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer">Ir para biblioteca</button>
+      <button data-act="navPage" data-page="biblioteca" style="padding:10px 20px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer">Ir para biblioteca</button>
     </div>
   </div>
 
@@ -712,7 +712,7 @@
 
         <div id="ticketAlert" class="alert" style="margin-bottom:14px"></div>
 
-        <form id="ticketForm" onsubmit="submitTicket(event)">
+        <form id="ticketForm" data-act="submitTicket">
 
           <!-- Assunto -->
           <div class="tkt-group">
@@ -757,28 +757,28 @@
             <label class="tkt-label">Prioridade</label>
             <input type="hidden" id="tktPrio" value="medium"/>
             <div class="prio-chips">
-              <button type="button" class="prio-chip" data-val="low" onclick="selectPrio(this)">
+              <button type="button" class="prio-chip" data-val="low" data-act="selectPrio">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
                 </svg>
                 Baixa
                 <span class="prio-chip-sub">consulta geral</span>
               </button>
-              <button type="button" class="prio-chip active" data-val="medium" onclick="selectPrio(this)">
+              <button type="button" class="prio-chip active" data-val="medium" data-act="selectPrio">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
                 Média
                 <span class="prio-chip-sub">em atendimento</span>
               </button>
-              <button type="button" class="prio-chip" data-val="high" onclick="selectPrio(this)">
+              <button type="button" class="prio-chip" data-val="high" data-act="selectPrio">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
                 Alta
                 <span class="prio-chip-sub">veículo parado</span>
               </button>
-              <button type="button" class="prio-chip" data-val="urgent" onclick="selectPrio(this)">
+              <button type="button" class="prio-chip" data-val="urgent" data-act="selectPrio">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>
                 </svg>
@@ -897,7 +897,7 @@
           </div>
           <div class="diag-page-sub"><span class="sys-id">SYS:TKT</span>Histórico de suporte técnico</div>
         </div>
-        <button class="tkt-empty-cta" onclick="showPage('suporte')" style="padding:8px 16px;font-size:.77rem">
+        <button class="tkt-empty-cta" data-act="navPage" data-page="suporte" style="padding:8px 16px;font-size:.77rem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Novo ticket
         </button>
@@ -905,10 +905,10 @@
 
       <!-- Filtros -->
       <div class="diag-filter-bar" id="tktFilterBar">
-        <div class="diag-filter-chip active" data-filter="all" onclick="filterTickets('all',this)">Todos <span class="chip-count" id="tktCountAll">0</span></div>
-        <div class="diag-filter-chip" data-filter="open" onclick="filterTickets('open',this)">Abertos <span class="chip-count" id="tktCountOpen">0</span></div>
-        <div class="diag-filter-chip" data-filter="in-progress" onclick="filterTickets('in-progress',this)">Em andamento <span class="chip-count" id="tktCountProgress">0</span></div>
-        <div class="diag-filter-chip" data-filter="resolved" onclick="filterTickets('resolved',this)">Resolvidos <span class="chip-count" id="tktCountResolved">0</span></div>
+        <div class="diag-filter-chip active" data-filter="all" data-act="filterTickets">Todos <span class="chip-count" id="tktCountAll">0</span></div>
+        <div class="diag-filter-chip" data-filter="open" data-act="filterTickets">Abertos <span class="chip-count" id="tktCountOpen">0</span></div>
+        <div class="diag-filter-chip" data-filter="in-progress" data-act="filterTickets">Em andamento <span class="chip-count" id="tktCountProgress">0</span></div>
+        <div class="diag-filter-chip" data-filter="resolved" data-act="filterTickets">Resolvidos <span class="chip-count" id="tktCountResolved">0</span></div>
       </div>
 
       <div id="myTicketsList"></div>
@@ -927,7 +927,7 @@
           <div id="tvTitle"></div>
           <div id="tvStatus"></div>
         </div>
-        <button class="tv-close" onclick="closeTicketViewer()">
+        <button class="tv-close" data-act="closeTicketViewer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -936,10 +936,10 @@
       </div>
       <div class="tv-footer" id="tvInput">
         <div class="tv-reply-wrap">
-          <textarea id="tvReply" placeholder="Adicionar informação ou comentário..." rows="2" maxlength="800" oninput="document.getElementById('tvCharCount').textContent=this.value.length+'/800'"></textarea>
+          <textarea id="tvReply" placeholder="Adicionar informação ou comentário..." rows="2" maxlength="800" data-input="tvCharCount"></textarea>
           <span class="tv-char-count" id="tvCharCount">0/800</span>
         </div>
-        <button class="tv-send-btn" onclick="sendReply()">
+        <button class="tv-send-btn" data-act="sendReply">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           Enviar
         </button>
@@ -994,11 +994,11 @@
 
     <!-- Filtros por tipo -->
     <div class="diag-filter-bar" id="bltFilterBar">
-      <div class="diag-filter-chip blt-filter-chip active" data-blt-filter="all" onclick="filterBulletins('all',this)">Todos <span class="chip-count" id="bltCountAll">0</span></div>
-      <div class="diag-filter-chip blt-filter-chip type-novidade" data-blt-filter="novidade" onclick="filterBulletins('novidade',this)">Novidade</div>
-      <div class="diag-filter-chip blt-filter-chip type-atualizacao" data-blt-filter="atualizacao" onclick="filterBulletins('atualizacao',this)">Atualização</div>
-      <div class="diag-filter-chip blt-filter-chip type-alerta" data-blt-filter="alerta" onclick="filterBulletins('alerta',this)">Alerta Técnico</div>
-      <div class="diag-filter-chip blt-filter-chip type-procedimento" data-blt-filter="procedimento" onclick="filterBulletins('procedimento',this)">Procedimento</div>
+      <div class="diag-filter-chip blt-filter-chip active" data-blt-filter="all" data-act="filterBulletins">Todos <span class="chip-count" id="bltCountAll">0</span></div>
+      <div class="diag-filter-chip blt-filter-chip type-novidade" data-blt-filter="novidade" data-act="filterBulletins">Novidade</div>
+      <div class="diag-filter-chip blt-filter-chip type-atualizacao" data-blt-filter="atualizacao" data-act="filterBulletins">Atualização</div>
+      <div class="diag-filter-chip blt-filter-chip type-alerta" data-blt-filter="alerta" data-act="filterBulletins">Alerta Técnico</div>
+      <div class="diag-filter-chip blt-filter-chip type-procedimento" data-blt-filter="procedimento" data-act="filterBulletins">Procedimento</div>
     </div>
 
     <!-- Grid de boletins -->
@@ -1015,7 +1015,7 @@
 </div>
 
 <!-- Botão mobile -->
-<button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+<button class="sidebar-toggle-mobile" data-act="toggleSidebar">☰</button>
 
 <!-- ─── MODAL DE LEITURA DE BOLETIM ─── -->
 <div id="bltModal" style="display:none">
@@ -1026,7 +1026,7 @@
         <span class="blt-new-badge" id="bltModalNew" style="display:none">NOVO</span>
       </div>
       <div class="blt-modal-title" id="bltModalTitle"></div>
-      <button class="blt-modal-close" onclick="closeBulletin()">
+      <button class="blt-modal-close" data-act="closeBulletin">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -1042,7 +1042,7 @@
     </div>
     <div class="blt-modal-footer">
       <span class="blt-modal-pub-date" id="bltModalDate"></span>
-      <button class="blt-mark-read-btn" id="bltMarkReadBtn" onclick="markBulletinRead()">
+      <button class="blt-mark-read-btn" id="bltMarkReadBtn" data-act="markBulletinRead">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Marcar como lido
       </button>
@@ -1058,7 +1058,7 @@
         <div class="upgrade-modal-title">Desbloquear acesso</div>
         <div class="upgrade-modal-sub" id="upgradeModalSub">Escolha seu plano de acesso</div>
       </div>
-      <button class="upgrade-modal-close" onclick="closeUpgradeModal()">
+      <button class="upgrade-modal-close" data-act="closeUpgradeModal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -1066,7 +1066,7 @@
     <div class="upgrade-modal-footer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Dúvidas? <strong>Fale pelo WhatsApp</strong> com seu mentor para escolher o melhor plano.</span>
-      <button class="upgrade-whatsapp-btn" onclick="openWhatsApp()">Falar agora</button>
+      <button class="upgrade-whatsapp-btn" data-act="openWhatsApp">Falar agora</button>
     </div>
   </div>
 </div>
@@ -1102,10 +1102,56 @@ window.__acts = {
   requestPlan:     el => requestPlan(el.dataset.pid, el.dataset.cat),
   scrollToBltSec:  el => scrollToBltSec(Number(el.dataset.i)),
   scrollNlSection: el => { const s = document.getElementById('nl-sec-' + el.dataset.section); if (s) s.scrollIntoView({ behavior: 'smooth' }); },
+  showPageNav:     el => showPage(el.dataset.page, el),
+  navPage:         el => showPage(el.dataset.page),
+  logout:          () => { AUTH.logout(); location.href='login.html'; },
+  goHome:          () => goHome(),
+  homeHoverIn:     el => { el.style.color = 'rgba(255,107,53,.8)'; },
+  homeHoverOut:    el => { el.style.color = 'rgba(255,255,255,.35)'; },
+  filterCat:       el => filterCat(el.dataset.cat, el),
+  filterSearch:    () => filterSearch(),
+  selectPrio:      el => selectPrio(el),
+  filterTickets:   el => filterTickets(el.dataset.filter, el),
+  filterBulletins: el => filterBulletins(el.dataset.bltFilter, el),
+  closeTicketViewer: () => closeTicketViewer(),
+  tvCharCount:     el => { document.getElementById('tvCharCount').textContent = el.value.length + '/800'; },
+  sendReply:       () => sendReply(),
+  submitTicket:    (el, e) => { if (e.type === 'submit') return submitTicket(e); },
+  toggleSidebar:   () => { document.getElementById('sidebar').classList.toggle('open'); },
+  closeBulletin:   () => closeBulletin(),
+  markBulletinRead:() => markBulletinRead(),
+  closeUpgradeModal: () => closeUpgradeModal(),
+  openWhatsApp:    () => openWhatsApp(),
+  closeModal:      el => { const m = el.closest('[data-modal]'); if (m) m.remove(); },
+  closeContentSupport: el => { const m = el.closest('[data-modal]'); if (m) m.remove(); showPage('suporte'); },
+  updateBltStepProgress: el => updateBltStepProgress(el),
+  copyBulletinSummary: el => copyBulletinSummary(el),
+  printBulletin:   () => printBulletin(),
+  openBulletin:    el => openBulletin(el),
 };
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
   if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
+document.addEventListener('change', e => {
+  const t = e.target.closest('[data-change]');
+  if (t && window.__acts[t.dataset.change]) window.__acts[t.dataset.change](t, e);
+});
+document.addEventListener('input', e => {
+  const t = e.target.closest('[data-input]');
+  if (t && window.__acts[t.dataset.input]) window.__acts[t.dataset.input](t, e);
+});
+document.addEventListener('submit', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) { if (window.__acts[t.dataset.act](t, e) === false) e.preventDefault(); }
+});
+document.addEventListener('mouseover', e => {
+  const t = e.target.closest('[data-mouseover]');
+  if (t && window.__acts[t.dataset.mouseover]) window.__acts[t.dataset.mouseover](t, e);
+});
+document.addEventListener('mouseout', e => {
+  const t = e.target.closest('[data-mouseout]');
+  if (t && window.__acts[t.dataset.mouseout]) window.__acts[t.dataset.mouseout](t, e);
 });
 /* ─── Auth — aguarda init do Supabase antes de verificar sessão ─── */
 let session = null;
@@ -1427,7 +1473,7 @@ function openContent(id) {
             <div style="font-family:var(--font-h);font-weight:700;color:#fff;font-size:1rem;line-height:1.3">${esc(item.title)}</div>
           </div>
         </div>
-        <button onclick="this.closest('[data-modal]').remove()" style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);cursor:pointer;font-size:.85rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:none">✕</button>
+        <button data-act="closeModal" style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);cursor:pointer;font-size:.85rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:none">✕</button>
       </div>
       <!-- Meta chips -->
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1462,7 +1508,7 @@ function openContent(id) {
 
       <!-- Suporte -->
       <div style="text-align:center;padding-top:2px">
-        <button onclick="this.closest('[data-modal]').remove();showPage('suporte')" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.76rem;cursor:pointer;text-decoration:underline">Dúvidas sobre este material? Abrir ticket de suporte →</button>
+        <button data-act="closeContentSupport" style="background:none;border:none;color:rgba(255,255,255,.28);font-size:.76rem;cursor:pointer;text-decoration:underline">Dúvidas sobre este material? Abrir ticket de suporte →</button>
       </div>
     </div>
   </div>
@@ -1646,7 +1692,7 @@ function loadMeusTickets() {
       </div>
       <div class="tkt-empty-title">Nenhum ticket aberto</div>
       <div class="tkt-empty-sub">Encontrou alguma dúvida técnica? Nosso mentor responde em até 24h.</div>
-      <button class="tkt-empty-cta" onclick="showPage('suporte')">
+      <button class="tkt-empty-cta" data-act="navPage" data-page="suporte">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Abrir primeiro ticket
       </button>
@@ -1765,7 +1811,7 @@ function loadPerfil() {
 
 /* ─── Navegação ─── */
 function goHome() {
-  const homeNavEl = document.querySelector('.sidebar-nav-item[onclick*="biblioteca"]');
+  const homeNavEl = document.querySelector('.sidebar-nav-item[data-act="showPageNav"][data-page="biblioteca"]');
   showPage('biblioteca', homeNavEl);
 }
 
@@ -2028,7 +2074,7 @@ function _renderBulletin(b) {
 
   // 11. Procedimento
   if (b.steps && b.steps.length) {
-    const steps = b.steps.map((s,i)=>`<label class="blt-step" data-idx="${i}"><input type="checkbox" onchange="updateBltStepProgress(this)"/><span class="blt-step-n">${String(i+1).padStart(2,'0')}</span><span class="blt-step-txt">${esc(typeof s==='string' ? s : (s.desc||''))}</span></label>`).join('');
+    const steps = b.steps.map((s,i)=>`<label class="blt-step" data-idx="${i}"><input type="checkbox" data-change="updateBltStepProgress"/><span class="blt-step-n">${String(i+1).padStart(2,'0')}</span><span class="blt-step-txt">${esc(typeof s==='string' ? s : (s.desc||''))}</span></label>`).join('');
     S.push({t:'Procedimento de calibração', h:`<div class="blt-progress"><div class="blt-progress-bar"><div class="blt-progress-fill" id="bltStepFill"></div></div><span class="blt-progress-txt" id="bltStepCount">0/${b.steps.length}</span></div><div id="bltStepList">${steps}</div>`});
   }
 
@@ -2068,8 +2114,8 @@ function _renderBulletin(b) {
 
   // Ações
   const htmlX = html + `<div class="blt-actions">
-    <button class="blt-act-btn" onclick="copyBulletinSummary(this)">📋 Copiar resumo</button>
-    <button class="blt-act-btn" onclick="printBulletin()">🖨️ Imprimir</button>
+    <button class="blt-act-btn" data-act="copyBulletinSummary">📋 Copiar resumo</button>
+    <button class="blt-act-btn" data-act="printBulletin">🖨️ Imprimir</button>
   </div>`;
 
   document.getElementById('bltModalContent').innerHTML = htmlX;
@@ -2183,8 +2229,8 @@ function _renderNewsletterBulletin(b) {
   const html = `<div class="nl-toc">${toc}</div>${sections.map((s,i) => `<div class="nl-section" id="nl-sec-${i}">${s.h}</div>`).join('')}`;
 
   document.getElementById('bltModalContent').innerHTML = html + `<div class="blt-actions">
-    <button class="blt-act-btn" onclick="copyBulletinSummary(this)">📋 Copiar resumo</button>
-    <button class="blt-act-btn" onclick="printBulletin()">🖨️ Imprimir</button>
+    <button class="blt-act-btn" data-act="copyBulletinSummary">📋 Copiar resumo</button>
+    <button class="blt-act-btn" data-act="printBulletin">🖨️ Imprimir</button>
   </div>`;
   document.getElementById('bltModalAffected').style.display = 'none';
   document.getElementById('bltModalDate').textContent = 'Publicado em ' + (b.publishedAt || b.createdAt ? fmtDate(b.publishedAt || b.createdAt) : '—');
@@ -2360,7 +2406,7 @@ function renderBulletinsDynamic() {
           ${infoChips.length ? `<div class="blt-info-row">${infoChips.join('')}</div>` : ''}
           <div class="blt-card-foot">
             <span class="blt-card-date">${fmtDate(b.publishedAt || b.createdAt)}</span>
-            <button class="blt-read-btn" onclick="openBulletin(this)">Ler boletim ${readIcon}</button>
+            <button class="blt-read-btn" data-act="openBulletin">Ler boletim ${readIcon}</button>
           </div>
         </div>
       </div>`;

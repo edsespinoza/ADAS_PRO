@@ -49,8 +49,7 @@
          style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:8px 16px;
                 background:rgba(37,211,102,.12);color:#25d366;border:1px solid rgba(37,211,102,.25);
                 border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;transition:all .2s"
-         onmouseover="this.style.background='rgba(37,211,102,.2)'"
-         onmouseout="this.style.background='rgba(37,211,102,.12)'">
+         data-act="waHover">
         💬 Falar no WhatsApp para agilizar →
       </a>
     </div>
@@ -176,6 +175,15 @@
 <script src="js/supabase-config.js?v=20260815" integrity="sha384-/fDwQ9GeMITLZQdWK6fEGcHNV7mrxDwmDfnSF5edS3zFzyjQwH/av08r639qWCFX"></script>
 <script src="js/auth.js?v=20260815" integrity="sha384-Ihm8S+O/23l/trHCBnWOkFOHQ/kUzxcAS81MgkDrHeYhBUw59VVYg0GCrSSyvqsZ"></script>
 <script src="js/login.js?v=20260815" integrity="sha384-csvnEJSWoVE6S8xVoZ6FSX6ebjA90OuNH95FP2Ev9qjwKmpdmOaIGCtoL4g9FkCv"></script>
+
+<script>
+/* ─── CSP-safe data-act delegation (hover styles) ─── */
+window.__acts = {
+  waHover: (el, e) => { el.style.background = e.type === 'mouseover' ? 'rgba(37,211,102,.2)' : 'rgba(37,211,102,.12)'; },
+};
+document.addEventListener('mouseover', e => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
+document.addEventListener('mouseout',  e => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
+</script>
 
 </body>
 </html>

@@ -80,7 +80,7 @@
 
       <div class="input-group">
         <input type="text" id="certIdInput" placeholder="Ex: ADAS-1-O5A3K7X2" autocomplete="off" spellcheck="false">
-        <button class="btn-verify" id="btnVerify" onclick="doVerify()">Verificar</button>
+        <button class="btn-verify" id="btnVerify" data-act="verify">Verificar</button>
       </div>
 
       <div class="result hidden" id="resultArea">
@@ -179,6 +179,12 @@
       d.textContent = s;
       return d.innerHTML;
     }
+
+    /* ─── CSP-safe data-act delegation ─── */
+    window.__acts = {
+      verify: () => doVerify(),
+    };
+    document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
   </script>
 </body>
 </html>

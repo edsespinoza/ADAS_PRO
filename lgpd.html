@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="ADAS PRO — Portal de conformidade LGPD. Política de Privacidade, Direitos dos Titulares e Gerenciamento de Cookies."/>
   <title>LGPD — ADAS PRO</title>
-  <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico"/>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
@@ -36,10 +36,10 @@
       <aside class="auth-sidebar auth-sidebar--lgpd">
         <div class="sidebar-brand">ADAS PRO</div>
         <nav class="sidebar-nav">
-          <a href="#politica"    class="sidebar-link active" onclick="LGPD_PAGE.nav('politica',this)">📜 Política de Privacidade</a>
-          <a href="#titulares"   class="sidebar-link"       onclick="LGPD_PAGE.nav('titulares',this)">👤 Direitos dos Titulares</a>
-          <a href="#cookies"     class="sidebar-link"       onclick="LGPD_PAGE.nav('cookies',this)">🍪 Cookies</a>
-          <a href="#contato-dpo" class="sidebar-link"       onclick="LGPD_PAGE.nav('contato-dpo',this)">✉️ Contato DPO</a>
+          <a href="#politica"    class="sidebar-link active" data-act="nav" data-section="politica">📜 Política de Privacidade</a>
+          <a href="#titulares"   class="sidebar-link"       data-act="nav" data-section="titulares">👤 Direitos dos Titulares</a>
+          <a href="#cookies"     class="sidebar-link"       data-act="nav" data-section="cookies">🍪 Cookies</a>
+          <a href="#contato-dpo" class="sidebar-link"       data-act="nav" data-section="contato-dpo">✉️ Contato DPO</a>
         </nav>
         <div class="sidebar-footer">
           <span class="badge-secure">🔒 Conformidade LGPD</span>
@@ -200,7 +200,7 @@
               <div style="position:absolute;left:-9999px" aria-hidden="true">
                 <input type="text" id="lgpdHp" name="website" tabindex="-1" autocomplete="off"/>
               </div>
-              <button id="lgpdReqBtn" class="lgpd-btn lgpd-btn-primary" onclick="LGPD_PAGE.submitRequest()">
+              <button id="lgpdReqBtn" class="lgpd-btn lgpd-btn-primary" data-act="submitRequest">
                 <span id="lgpdReqBtnText">Enviar Solicitação</span>
               </button>
               <div id="lgpdReqStatus" class="lgpd-status" style="display:none"></div>
@@ -245,7 +245,7 @@
                 </div>
                 <div class="lgpd-cookie-toggle">
                   <label class="lgpd-switch">
-                    <input type="checkbox" id="cookieAnalytics" onchange="LGPD_PAGE.toggleCookie('analytics',this.checked)"/>
+                    <input type="checkbox" id="cookieAnalytics" data-act="toggleCookieAnalytics"/>
                     <span class="lgpd-slider"></span>
                   </label>
                   <span class="lgpd-toggle-label">Ativar cookies analíticos</span>
@@ -265,8 +265,8 @@
             <h2>Cookie Consent Banner</h2>
             <p id="lgpd-consent-status">Status atual: <strong id="lgpdConsentText">Não definido</strong></p>
             <div class="lgpd-consent-actions">
-              <button class="lgpd-btn lgpd-btn-primary" onclick="LGPD_PAGE.showBannerManual()">Mostrar Banner de Consentimento</button>
-              <button class="lgpd-btn lgpd-btn-secondary" onclick="LGPD_PAGE.resetConsent()">Redefinir Preferências</button>
+              <button class="lgpd-btn lgpd-btn-primary" data-act="showBannerManual">Mostrar Banner de Consentimento</button>
+              <button class="lgpd-btn lgpd-btn-secondary" data-act="resetConsent">Redefinir Preferências</button>
             </div>
           </div>
         </section>
@@ -316,12 +316,12 @@
         <div class="cookie-banner-title">Este site utiliza cookies</div>
         <p class="cookie-banner-text">Utilizamos cookies essenciais para o funcionamento da plataforma e cookies analíticos opcionais para melhorar sua experiência. Ao continuar navegando, você concorda com o uso de cookies essenciais.</p>
         <div class="cookie-banner-actions">
-          <button class="cookie-btn cookie-btn-accept" onclick="LGPD_PAGE.consentAll()">Aceitar Todos</button>
-          <button class="cookie-btn cookie-btn-essential" onclick="LGPD_PAGE.consentEssential()">Apenas Essenciais</button>
+          <button class="cookie-btn cookie-btn-accept" data-act="consentAll">Aceitar Todos</button>
+          <button class="cookie-btn cookie-btn-essential" data-act="consentEssential">Apenas Essenciais</button>
           <a href="/lgpd#cookies" class="cookie-btn-link">Gerenciar Preferências</a>
         </div>
       </div>
-      <button class="cookie-banner-close" onclick="LGPD_PAGE.closeBanner()" title="Fechar">
+      <button class="cookie-banner-close" data-act="closeBanner" title="Fechar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -555,6 +555,20 @@
       showBannerManual
     };
   })();
+
+  /* ─── CSP-safe data-act delegation ─── */
+  window.__acts = {
+    nav:                   (el) => LGPD_PAGE.nav(el.dataset.section, el),
+    submitRequest:         () => LGPD_PAGE.submitRequest(),
+    toggleCookieAnalytics: (el) => LGPD_PAGE.toggleCookie('analytics', el.checked),
+    showBannerManual:      () => LGPD_PAGE.showBannerManual(),
+    resetConsent:          () => LGPD_PAGE.resetConsent(),
+    consentAll:            () => LGPD_PAGE.consentAll(),
+    consentEssential:      () => LGPD_PAGE.consentEssential(),
+    closeBanner:           () => LGPD_PAGE.closeBanner(),
+  };
+  document.addEventListener('click',  e => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
+  document.addEventListener('change', e => { const t = e.target.closest('[data-act]'); if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e); });
   </script>
 
   <style>

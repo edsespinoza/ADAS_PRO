@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="ADAS PRO — Sistema de Certificações. Valide seus conhecimentos em sistemas ADAS com quizzes e certificados oficiais."/>
   <title>Certificações — ADAS PRO</title>
-  <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico"/>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B2B4D'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Poppins,sans-serif' font-weight='800' font-size='14' fill='%23FF6B35'%3EAP%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
@@ -38,9 +38,9 @@
         <div class="sidebar-brand">ADAS PRO</div>
         <nav class="sidebar-nav">
           <div class="sidebar-section">
-            <a href="#catalog" class="sidebar-link active" onclick="CERT_PAGE.nav('catalog',this)">🏆 Catálogo de Certificações</a>
-            <a href="#dashboard" class="sidebar-link" onclick="CERT_PAGE.nav('dashboard',this)">📊 Meu Painel</a>
-            <a href="#history" class="sidebar-link" onclick="CERT_PAGE.nav('history',this)">📜 Histórico</a>
+            <a href="#catalog" class="sidebar-link active" data-act="nav" data-section="catalog">🏆 Catálogo de Certificações</a>
+            <a href="#dashboard" class="sidebar-link" data-act="nav" data-section="dashboard">📊 Meu Painel</a>
+            <a href="#history" class="sidebar-link" data-act="nav" data-section="history">📜 Histórico</a>
           </div>
         </nav>
         <div class="sidebar-footer">
@@ -311,16 +311,16 @@
       CERTIFICATIONS.viewCert(certId);
     }
 
-    /* Delegação CSP-safe para handlers dinâmicos dos cards (data-act) */
+    /* Delegação CSP-safe (data-act) — sidebar + cards dinâmicos */
+    window.__acts = {
+      nav:          (el) => CERT_PAGE.nav(el.dataset.section, el),
+      startQuiz:    (el) => CERTIFICATIONS.startQuiz(el.dataset.cert),
+      viewCert:     (el) => CERTIFICATIONS.viewCert(el.dataset.cert),
+      downloadCert: (el) => CERTIFICATIONS.downloadCert(el.dataset.cert),
+    };
     document.addEventListener('click', function(e){
       const btn = e.target.closest('[data-act]');
-      if (!btn) return;
-      const certId = btn.dataset.cert;
-      switch (btn.dataset.act){
-        case 'startQuiz':    CERTIFICATIONS.startQuiz(certId);    break;
-        case 'viewCert':     CERTIFICATIONS.viewCert(certId);     break;
-        case 'downloadCert': CERTIFICATIONS.downloadCert(certId); break;
-      }
+      if (btn && window.__acts[btn.dataset.act]) window.__acts[btn.dataset.act](btn, e);
     });
 
     document.addEventListener('DOMContentLoaded', init);

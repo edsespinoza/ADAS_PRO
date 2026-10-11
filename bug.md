@@ -552,13 +552,14 @@
   - `_localRegister`, `createUserDirect`, `seedDemoData` atualizados para `await hashPassword()`.
   - **Arquivo:** `js/auth.js`
 
-- [~] **#46 — [F-05 / L-05] CSP `unsafe-inline` — migrar event handlers inline para `addEventListener`** ⚠️ Parcial 2026-05-07
+- [x] **#46 — [F-05 / L-05] CSP `unsafe-inline` — migrar event handlers inline para `addEventListener`** ✅ 2026-10-11
   - **Validado por ambos os agents.**
   - `'unsafe-inline'` em `script-src` e `style-src` neutraliza toda proteção XSS da CSP.
-  - **Fase 1 concluída:** `login.html`, `mfa-verify.html`, `reset-password.html` migrados para `js/login.js`, `js/mfa-verify.js`, `js/reset-password.js`. Todos os inline handlers convertidos para `addEventListener`. CSS `.auth-back`, `.demo-btn-admin`, `.demo-btn-membro` adicionados a `auth.css`.
-  - **Fase 2 pendente:** `admin.html` (79 handlers, 54 em template strings), `membros.html` (51 handlers, 32 dinâmicos), `superadmin.html` (113 handlers, 51 dinâmicos), `email-config.html` (19 handlers, 9 dinâmicos). Handlers em strings JS exigem event delegation — refatoração de alta complexidade.
-  - **CSP update:** depende da conclusão da Fase 2. Atualizar `vercel.json` script-src para remover `'unsafe-inline'` apenas após migrar todos os 262 handlers restantes.
-  - **Arquivos Fase 2:** `admin.html` · `membros.html` · `superadmin.html` · `email-config.html` · `vercel.json:27`
+  - **Fase 1 concluída (2026-05-07):** `login.html`, `mfa-verify.html`, `reset-password.html` migrados para `js/login.js`, `js/mfa-verify.js`, `js/reset-password.js`. CSS `.auth-back`, `.demo-btn-admin`, `.demo-btn-membro` adicionados a `auth.css`.
+  - **Fase 2 concluída (2026-10-11):** todos os 279 handlers inline estáticos migrados para `data-act` + `window.__acts` + delegação document-level (`click`/`change`/`input`/`submit`/`mouseover`/`mouseout`): `email-config.html` (19), `superadmin.html` (111), `admin.html` (63), `membros.html` (46), `api-docs.html` (23), `lgpd.html` (11), `certifications.html` (3), `login.html` (2), `verificar.html` (1). **Handlers inline restantes: 0** (verificado por grep + `new Function()` em todos os blocos).
+  - **CSP hardened:** `scripts/generate-csp.js` não gera mais hashes de handlers nem `'unsafe-hashes'`; `script-src` = `'self'` + `googletagmanager` + 12 hashes de `<script>` inline (CSP ~1401 chars, −744). Mantida **guarda de regressão**: build FALHA (exitCode 1) se qualquer `on*="..."` inline reaparecer. `style-src` mantém `'unsafe-inline'` (necessário p/ `style=`).
+  - **Bugs pré-existentes corrigidos de passagem:** favicon `assets/img/favicon.ico` inexistente em `lgpd.html`/`certifications.html` → data-SVG inline (padrão das demais páginas); `membros.html` `goHome()` selecionava `.sidebar-nav-item[onclick*=...]` → `[data-act="showPageNav"][data-page="biblioteca"]`.
+  - **Pendente (separado — #110):** SRI ausente em `lgpd.html`, `certifications.html`, `api-docs.html`, `verificar.html` (fora de `scripts/sri-inject.js` HTML_FILES).
 
 - [x] **#47 — [F-06] `RESEND_API_KEY` armazenada em localStorage plaintext** ✅ 2026-06-09
   - Exfiltrável via XSS — permite spam e phishing via domínio `adaspro.com.br`.

@@ -221,29 +221,29 @@
     </div>
   </div>
   <nav class="sidebar-nav">
-    <a class="sidebar-nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</a>
+    <a class="sidebar-nav-item active" data-act="navPage" data-page="dashboard"><span class="nav-icon">📊</span>Dashboard</a>
 
     <div class="sidebar-nav-section">Gestão</div>
-    <a class="sidebar-nav-item" onclick="showPage('usuarios',this)">
+    <a class="sidebar-nav-item" data-act="navPage" data-page="usuarios">
       <span class="nav-icon">👥</span>Membros
       <span class="nav-badge" id="pendBadge" style="display:none">0</span>
     </a>
-    <a class="sidebar-nav-item" onclick="showPage('suporte',this)">
+    <a class="sidebar-nav-item" data-act="navPage" data-page="suporte">
       <span class="nav-icon">🎫</span>Suporte
       <span class="nav-badge" id="ticketBadge" style="display:none">0</span>
     </a>
-    <a class="sidebar-nav-item" onclick="showPage('leads',this)">
+    <a class="sidebar-nav-item" data-act="navPage" data-page="leads">
       <span class="nav-icon">🎯</span>Leads
       <span class="nav-badge" id="leadsBadge" style="display:none">0</span>
     </a>
 
     <div class="sidebar-nav-section">Conteúdo</div>
-    <a class="sidebar-nav-item" onclick="showPage('biblioteca',this)"><span class="nav-icon">📚</span>Biblioteca</a>
-    <a class="sidebar-nav-item" onclick="showPage('acesso',this)"><span class="nav-icon">🔐</span>Acesso & Módulos</a>
+    <a class="sidebar-nav-item" data-act="navPage" data-page="biblioteca"><span class="nav-icon">📚</span>Biblioteca</a>
+    <a class="sidebar-nav-item" data-act="navPage" data-page="acesso"><span class="nav-icon">🔐</span>Acesso & Módulos</a>
 
     <div class="sidebar-nav-section">Sistema</div>
-    <a class="sidebar-nav-item" onclick="showPage('configuracoes',this)"><span class="nav-icon">⚙️</span>Configurações</a>
-    <a class="sidebar-nav-item" onclick="showPage('auditoria',this)"><span class="nav-icon">📋</span>Auditoria</a>
+    <a class="sidebar-nav-item" data-act="navPage" data-page="configuracoes"><span class="nav-icon">⚙️</span>Configurações</a>
+    <a class="sidebar-nav-item" data-act="navPage" data-page="auditoria"><span class="nav-icon">📋</span>Auditoria</a>
     <a class="sidebar-nav-item" href="email-config.html" style="color:rgba(0,180,216,.8);"><span class="nav-icon">✉️</span>E-mails Transacionais<span style="font-size:.6rem;background:rgba(0,180,216,.2);color:#00B4D8;padding:1px 6px;border-radius:3px;margin-left:auto;">NOVO</span></a>
     <a class="sidebar-nav-item" href="membros.html"><span class="nav-icon">👤</span>Ver como membro</a>
     <a class="sidebar-nav-item" href="index.html"><span class="nav-icon">🌐</span>Landing page</a>
@@ -254,7 +254,7 @@
       <div style="font-size:.58rem;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;">AutoTech Service</div>
       <div id="sbVersionLabel" style="font-size:.6rem;color:rgba(255,255,255,.14);font-family:monospace;">v2.2.0 · build 20260813</div>
     </div>
-    <button class="sidebar-logout" onclick="AUTH.logout();location.href='login.html'"><span>🚪</span>Sair</button>
+    <button class="sidebar-logout" data-act="logout"><span>🚪</span>Sair</button>
   </div>
 </aside>
 
@@ -268,7 +268,7 @@
       <div class="topbar-sub" id="tbSub">Visão geral do sistema</div>
     </div>
     <div class="topbar-right">
-      <div class="notif-btn" onclick="toggleNotifPanel()" title="Notificações">
+      <div class="notif-btn" data-act="toggleNotif" title="Notificações">
         🔔<span class="notif-dot" id="notifDot"></span>
       </div>
       <div style="font-size:.8rem;color:rgba(255,255,255,.3);padding:0 8px" id="tbClock"></div>
@@ -279,7 +279,7 @@
   <div id="notifPanel" style="display:none;position:absolute;top:64px;right:16px;width:320px;background:#0a1019;border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);z-index:200;box-shadow:0 8px 40px rgba(0,0,0,.4)">
     <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">
       <span style="font-family:var(--font-h);font-weight:600;color:#fff;font-size:.88rem">Notificações</span>
-      <button onclick="AUTH.clearAllNotifs();renderNotifs();updateBadges()" style="font-size:.75rem;color:var(--accent);cursor:pointer">Limpar</button>
+      <button data-act="clearNotifs" style="font-size:.75rem;color:var(--accent);cursor:pointer">Limpar</button>
     </div>
     <div id="notifList" style="max-height:300px;overflow-y:auto"></div>
   </div>
@@ -296,11 +296,11 @@
       </div>
       <div>
         <div class="table-card" style="margin-bottom:16px">
-          <div class="table-card-header"><div class="table-card-title">Tickets abertos</div><div><button class="action-btn action-btn-edit" onclick="showPage('suporte')" style="width:auto;padding:5px 14px;border-radius:6px;font-size:.78rem">Ver todos</button></div></div>
+          <div class="table-card-header"><div class="table-card-title">Tickets abertos</div><div><button class="action-btn action-btn-edit" data-act="gotoPage" data-page="suporte" style="width:auto;padding:5px 14px;border-radius:6px;font-size:.78rem">Ver todos</button></div></div>
           <div id="dashTickets"></div>
         </div>
         <div class="table-card">
-          <div class="table-card-header"><div class="table-card-title">Usuários pendentes</div><div><button class="action-btn action-btn-edit" onclick="showPage('usuarios');setTimeout(()=>switchMembrosTab('aprovacoes',document.getElementById('tabAprovacoes')),50)" style="width:auto;padding:5px 14px;border-radius:6px;font-size:.78rem">Ver todos</button></div></div>
+          <div class="table-card-header"><div class="table-card-title">Usuários pendentes</div><div><button class="action-btn action-btn-edit" data-act="goApprovals" style="width:auto;padding:5px 14px;border-radius:6px;font-size:.78rem">Ver todos</button></div></div>
           <div id="dashPending"></div>
         </div>
       </div>
@@ -310,16 +310,16 @@
   <!-- ─── MEMBROS (Todos + Aprovações + Equipe) ─── -->
   <div class="page" id="pageUsuarios">
     <div class="page-tabs">
-      <div class="page-tab active" onclick="switchMembrosTab('todos',this)">👥 Todos os Membros</div>
-      <div class="page-tab" id="tabAprovacoes" onclick="switchMembrosTab('aprovacoes',this)">⏳ Aprovações <span id="pendTabCount" style="background:rgba(244,162,97,.25);color:var(--warning);padding:1px 7px;border-radius:50px;font-size:.65rem;margin-left:4px;font-weight:700"></span></div>
-      <div class="page-tab" onclick="switchMembrosTab('equipe',this)">🛡️ Equipe</div>
+      <div class="page-tab active" data-act="membrosTab" data-tab="todos">👥 Todos os Membros</div>
+      <div class="page-tab" id="tabAprovacoes" data-act="membrosTab" data-tab="aprovacoes">⏳ Aprovações <span id="pendTabCount" style="background:rgba(244,162,97,.25);color:var(--warning);padding:1px 7px;border-radius:50px;font-size:.65rem;margin-left:4px;font-weight:700"></span></div>
+      <div class="page-tab" data-act="membrosTab" data-tab="equipe">🛡️ Equipe</div>
     </div>
 
     <!-- Tab: Todos os Membros -->
     <div class="page-tab-content active" id="membrosTabTodos">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-        <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="userSearch" placeholder="Buscar por nome ou e-mail..." oninput="filterUsers()"/></div>
-        <select id="statusFilter" class="cat-filter-select" onchange="filterUsers()">
+        <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="userSearch" placeholder="Buscar por nome ou e-mail..." data-act="searchUsers"/></div>
+        <select id="statusFilter" class="cat-filter-select" data-act="searchUsers">
           <option value="">Todos os status</option>
           <option value="active">✅ Ativos</option>
           <option value="pending">⏳ Pendentes</option>
@@ -356,7 +356,7 @@
         <div class="config-section-sub">Selecione um membro ativo para conceder acesso administrativo.</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <select class="config-input" id="promoteSelect" style="flex:1;min-width:200px"></select>
-          <button onclick="promoteToGestor()" style="padding:10px 24px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap">Promover a Gestor →</button>
+          <button data-act="promoteGestor" style="padding:10px 24px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap">Promover a Gestor →</button>
         </div>
       </div>
     </div>
@@ -374,14 +374,14 @@
             <span id="ticketCountLabel" style="font-size:.72rem;color:rgba(255,255,255,.3)"></span>
           </div>
           <div style="display:flex;gap:6px">
-            <select id="ticketFilter" class="cat-filter-select" onchange="renderTicketList()" style="font-size:.75rem;padding:5px 10px;flex:1">
+            <select id="ticketFilter" class="cat-filter-select" data-act="ticketFilters" style="font-size:.75rem;padding:5px 10px;flex:1">
               <option value="all">Todos os status</option>
               <option value="open">🟠 Abertos</option>
               <option value="in-progress">🔵 Em andamento</option>
               <option value="resolved">✅ Resolvidos</option>
               <option value="closed">⬛ Fechados</option>
             </select>
-            <select id="ticketCatFilter" class="cat-filter-select" onchange="renderTicketList()" style="font-size:.75rem;padding:5px 10px;flex:1">
+            <select id="ticketCatFilter" class="cat-filter-select" data-act="ticketFilters" style="font-size:.75rem;padding:5px 10px;flex:1">
               <option value="all">Todas as categorias</option>
               <option value="duvida-tecnica">🔧 Dúvida técnica</option>
               <option value="solicitacao-material">📄 Material</option>
@@ -405,7 +405,7 @@
         <div class="ticket-chat" id="tvMessages" style="flex:1"></div>
         <div class="chat-input-area" id="tvInputArea" style="display:none">
           <textarea class="chat-input" id="tvReply" placeholder="Escreva sua resposta..." rows="1"></textarea>
-          <button class="chat-send" onclick="sendTicketReply()">Enviar →</button>
+          <button class="chat-send" data-act="sendReply">Enviar →</button>
         </div>
       </div>
     </div>
@@ -414,11 +414,11 @@
   <!-- ─── BIBLIOTECA ─── -->
   <div class="page" id="pageBiblioteca">
     <div class="content-filters">
-      <div class="content-search"><span>🔍</span><input type="text" id="contentSearch" placeholder="Buscar material..." oninput="filterContent()"/></div>
-      <select id="contentCatFilter" class="cat-filter-select" onchange="filterContent()">
+      <div class="content-search"><span>🔍</span><input type="text" id="contentSearch" placeholder="Buscar material..." data-act="searchContent"/></div>
+      <select id="contentCatFilter" class="cat-filter-select" data-act="searchContent">
         <option value="">Todas as categorias</option>
       </select>
-      <button onclick="openAddContentModal()" style="padding:9px 20px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;transition:var(--transition);margin-left:auto">+ Adicionar material</button>
+      <button data-act="openAddContent" style="padding:9px 20px;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;transition:var(--transition);margin-left:auto">+ Adicionar material</button>
     </div>
     <div class="table-card">
       <div class="table-card-header">
@@ -431,8 +431,8 @@
   <!-- ─── CONTROLE DE ACESSO ─── -->
   <div class="page" id="pageAcesso">
     <div class="page-tabs">
-      <div class="page-tab active" onclick="switchAcessoTab('modulos',this)">🗂 Módulos & Categorias</div>
-      <div class="page-tab" onclick="switchAcessoTab('conteudo',this)">📄 Acesso por Material</div>
+      <div class="page-tab active" data-act="acessoTab" data-tab="modulos">🗂 Módulos & Categorias</div>
+      <div class="page-tab" data-act="acessoTab" data-tab="conteudo">📄 Acesso por Material</div>
     </div>
 
     <!-- Sub-tab Módulos -->
@@ -463,10 +463,10 @@
   <!-- ─── CONFIGURAÇÕES ─── -->
   <div class="page" id="pageConfiguracoes">
     <div class="page-tabs">
-      <div class="page-tab active" onclick="switchConfigTab('geral',this)">🏠 Geral</div>
-      <div class="page-tab" onclick="switchConfigTab('planos',this)">💼 Planos</div>
-      <div class="page-tab" onclick="switchConfigTab('notificacoes',this)">🔔 Notificações</div>
-      <div class="page-tab" onclick="switchConfigTab('sistema',this)">🔧 Sistema</div>
+      <div class="page-tab active" data-act="configTab" data-tab="geral">🏠 Geral</div>
+      <div class="page-tab" data-act="configTab" data-tab="planos">💼 Planos</div>
+      <div class="page-tab" data-act="configTab" data-tab="notificacoes">🔔 Notificações</div>
+      <div class="page-tab" data-act="configTab" data-tab="sistema">🔧 Sistema</div>
     </div>
 
     <!-- Geral -->
@@ -532,10 +532,10 @@
         <div class="config-section-title">💾 Backup e Exportação</div>
         <div class="config-section-sub">Exporte todos os dados do sistema em formato JSON.</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button onclick="AUTH.exportData()" style="padding:10px 24px;background:rgba(0,180,216,.12);color:var(--tech);border:1px solid rgba(0,180,216,.25);border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer">⬇️ Exportar backup JSON</button>
+          <button data-act="exportData" style="padding:10px 24px;background:rgba(0,180,216,.12);color:var(--tech);border:1px solid rgba(0,180,216,.25);border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer">⬇️ Exportar backup JSON</button>
           <label style="padding:10px 24px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12);border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer">
             ⬆️ Importar backup
-            <input type="file" accept=".json" style="display:none" onchange="importBackup(this)"/>
+            <input type="file" accept=".json" style="display:none" data-act="importBackup"/>
           </label>
         </div>
       </div>
@@ -543,8 +543,8 @@
         <div class="danger-title">⚠️ Zona de perigo</div>
         <div class="danger-sub">Estas ações não podem ser desfeitas. Use com cuidado.</div>
         <div class="danger-btns">
-          <button class="danger-btn danger-btn-warn" onclick="confirmAction('Restaurar conteúdo padrão?','O conteúdo da biblioteca será restaurado para os 22 materiais originais. Conteúdos personalizados serão perdidos.',()=>{ AUTH.resetToDefaults(); showToast('Conteúdo restaurado!'); refresh(); })">🔄 Restaurar conteúdo padrão</button>
-          <button class="danger-btn danger-btn-red" onclick="confirmAction('Excluir todos os tickets?','Todos os tickets e histórico de suporte serão apagados permanentemente.',()=>{ AUTH.getAllTickets().forEach(t=>AUTH.deleteTicket(t.id)); showToast('Tickets apagados.'); refresh(); })">🗑 Limpar todos os tickets</button>
+          <button class="danger-btn danger-btn-warn" data-act="restoreDefaults">🔄 Restaurar conteúdo padrão</button>
+          <button class="danger-btn danger-btn-red" data-act="clearTickets">🗑 Limpar todos os tickets</button>
         </div>
       </div>
     </div>
@@ -552,7 +552,7 @@
     <!-- Save bar -->
     <div class="save-bar">
       <span class="save-msg" id="saveMsg">✅ Configurações salvas!</span>
-      <button class="save-btn" onclick="saveConfigurations()">Salvar configurações</button>
+      <button class="save-btn" data-act="saveConfig">Salvar configurações</button>
     </div>
   </div>
 
@@ -563,8 +563,8 @@
 <!-- ─── LEADS ─── -->
 <div class="page" id="pageLeads">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="leadSearch" placeholder="Buscar por nome, e-mail ou telefone..." oninput="filterLeads()"/></div>
-    <select id="leadStatusFilter" class="cat-filter-select" onchange="filterLeads()">
+    <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="leadSearch" placeholder="Buscar por nome, e-mail ou telefone..." data-act="searchLeads"/></div>
+    <select id="leadStatusFilter" class="cat-filter-select" data-act="searchLeads">
       <option value="">Todos os status</option>
       <option value="new">🆕 Novos</option>
       <option value="contacted">📞 Contatados</option>
@@ -573,8 +573,8 @@
       <option value="lost">❌ Perdidos</option>
       <option value="spam">🚫 Spam</option>
     </select>
-    <button onclick="loadLeads()" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">🔄 Atualizar</button>
-    <button onclick="exportLeadsCsv()" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">⬇️ Exportar CSV</button>
+    <button data-act="refreshLeads" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">🔄 Atualizar</button>
+    <button data-act="exportLeads" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">⬇️ Exportar CSV</button>
   </div>
   <div class="table-card">
     <div class="table-card-header">
@@ -587,7 +587,7 @@
 <!-- ─── AUDITORIA ─── -->
 <div class="page" id="pageAuditoria">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-    <select class="config-input" id="auditFilter" style="max-width:230px" onchange="loadAuditoria()">
+    <select class="config-input" id="auditFilter" style="max-width:230px" data-act="refreshAudit">
       <option value="">Todas as ações</option>
       <option value="approve_user">Aprovações</option>
       <option value="block_user">Bloqueios</option>
@@ -600,7 +600,7 @@
       <option value="reset_password_requested">Reset de senha</option>
       <option value="reply_ticket">Respostas de ticket</option>
     </select>
-    <button onclick="loadAuditoria()" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">🔄 Atualizar</button>
+    <button data-act="refreshAudit" class="action-btn action-btn-edit" style="width:auto;padding:8px 18px;border-radius:8px">🔄 Atualizar</button>
     <span id="auditCount" style="font-size:.75rem;color:rgba(255,255,255,.35);margin-left:auto"></span>
   </div>
   <div class="table-card">
@@ -611,14 +611,14 @@
   </div>
 </div>
 
-<button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+<button class="sidebar-toggle-mobile" data-act="toggleSidebar">☰</button>
 
 <!-- ─── Modal de permissões ─── -->
 <div class="modal-overlay" id="permModal">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">Gerenciar acesso do usuário</div>
-      <button class="modal-close" onclick="closeModal('permModal')">✕</button>
+      <button class="modal-close" data-act="closeModalAct" data-modal="permModal">✕</button>
     </div>
     <div id="permUserInfo" style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:20px"></div>
     <div class="modal-section-title">Plano rápido</div>
@@ -631,7 +631,7 @@
     <input type="date" class="config-input" id="pAccessExpires" style="margin-bottom:16px;max-width:220px"/>
     <div class="modal-section-title">Nível de acesso</div>
     <div class="role-ladder" id="roleLadder">
-      <div class="role-ladder-item rl-admin" data-role="admin" onclick="selectRole('admin')">
+      <div class="role-ladder-item rl-admin" data-role="admin" data-act="pickRole">
         <span class="role-ladder-icon">🛡️</span>
         <div class="role-ladder-info">
           <div class="role-ladder-name">Administrador</div>
@@ -639,7 +639,7 @@
         </div>
         <span class="role-ladder-level">Nível 3</span>
       </div>
-      <div class="role-ladder-item rl-gestor" data-role="gestor" onclick="selectRole('gestor')">
+      <div class="role-ladder-item rl-gestor" data-role="gestor" data-act="pickRole">
         <span class="role-ladder-icon">⚙️</span>
         <div class="role-ladder-info">
           <div class="role-ladder-name">Gestor</div>
@@ -647,7 +647,7 @@
         </div>
         <span class="role-ladder-level">Nível 2</span>
       </div>
-      <div class="role-ladder-item rl-membro" data-role="membro" onclick="selectRole('membro')">
+      <div class="role-ladder-item rl-membro" data-role="membro" data-act="pickRole">
         <span class="role-ladder-icon">👤</span>
         <div class="role-ladder-info">
           <div class="role-ladder-name">Membro</div>
@@ -660,17 +660,17 @@
     <div class="modal-section-title">Categorias liberadas</div>
     <div class="permissions-grid" id="pPerms"></div>
     <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.06);padding-top:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleUserDownloads()">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" data-act="toggleDownloads">
         <span style="font-size:.78rem;color:rgba(255,255,255,.5);font-weight:600;text-transform:uppercase;letter-spacing:.06em">📥 Histórico de downloads</span>
         <span id="downloadsToggleIcon" style="font-size:.72rem;color:rgba(255,255,255,.3)">▼ ver</span>
       </div>
       <div id="userDownloadsWrap" style="display:none;margin-top:10px"></div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <button class="modal-btn modal-btn-warn" id="btnResetPwd" onclick="sendPasswordResetToUser()">🔑 Reset de senha</button>
+      <button class="modal-btn modal-btn-warn" id="btnResetPwd" data-act="resetPwd">🔑 Reset de senha</button>
       <div style="display:flex;gap:10px">
-        <button class="modal-btn modal-btn-secondary" onclick="closeModal('permModal')">Cancelar</button>
-        <button class="modal-btn modal-btn-primary" id="btnSavePerms" onclick="saveUserPerms()">Salvar alterações</button>
+        <button class="modal-btn modal-btn-secondary" data-act="closeModalAct" data-modal="permModal">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" id="btnSavePerms" data-act="savePerms">Salvar alterações</button>
       </div>
     </div>
   </div>
@@ -681,7 +681,7 @@
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="contentModalTitle">Adicionar material</div>
-      <button class="modal-close" onclick="closeModal('contentModal')">✕</button>
+      <button class="modal-close" data-act="closeModalAct" data-modal="contentModal">✕</button>
     </div>
     <div class="config-row">
       <div class="config-field"><label>Título *</label><input class="config-input" id="cTitle" placeholder="Ex: Honda LKAS Tipo 3"/></div>
@@ -702,21 +702,21 @@
     <div class="config-field" style="margin-top:4px;margin-bottom:0">
       <label>Arquivo PDF <span style="font-size:.7rem;color:rgba(255,255,255,.3)">(opcional — enviar ao Supabase Storage)</span></label>
       <div class="upload-zone" id="uploadZone">
-        <input type="file" id="cFile" accept=".pdf,application/pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="onFileSelected(this)"/>
+        <input type="file" id="cFile" accept=".pdf,application/pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" data-act="fileSelected"/>
         <div class="upload-zone-icon">📁</div>
         <div class="upload-zone-label">Arraste o PDF ou <strong>clique para selecionar</strong></div>
       </div>
       <div class="upload-file-info" id="uploadFileInfo">
         <span>📄</span>
         <div class="upload-file-name" id="uploadFileName">—</div>
-        <div class="upload-remove-btn" onclick="clearFileInput()">✕ remover</div>
+        <div class="upload-remove-btn" data-act="clearFile">✕ remover</div>
       </div>
       <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
       <div class="upload-current-path" id="uploadCurrentPath"></div>
     </div>
     <div class="modal-footer">
-      <button class="modal-btn modal-btn-secondary" onclick="closeModal('contentModal')">Cancelar</button>
-      <button class="modal-btn modal-btn-primary" id="saveContentBtn" onclick="saveContent()">Salvar material</button>
+      <button class="modal-btn modal-btn-secondary" data-act="closeModalAct" data-modal="contentModal">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" id="saveContentBtn" data-act="saveContentAct">Salvar material</button>
     </div>
   </div>
 </div>
@@ -724,10 +724,10 @@
 <!-- ─── Modal confirmação ─── -->
 <div class="modal-overlay" id="confirmModal">
   <div class="modal" style="max-width:400px">
-    <div class="modal-header"><div class="modal-title" id="confTitle">Confirmar</div><button class="modal-close" onclick="closeModal('confirmModal')">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="confTitle">Confirmar</div><button class="modal-close" data-act="closeModalAct" data-modal="confirmModal">✕</button></div>
     <p id="confText" style="color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.7;margin-bottom:20px"></p>
     <div class="modal-footer">
-      <button class="modal-btn modal-btn-secondary" onclick="closeModal('confirmModal')">Cancelar</button>
+      <button class="modal-btn modal-btn-secondary" data-act="closeModalAct" data-modal="confirmModal">Cancelar</button>
       <button class="modal-btn modal-btn-primary" id="confBtn">Confirmar</button>
     </div>
   </div>
@@ -738,7 +738,7 @@
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="leadModalTitle">Detalhes do lead</div>
-      <button class="modal-close" onclick="closeModal('leadModal')">✕</button>
+      <button class="modal-close" data-act="closeModalAct" data-modal="leadModal">✕</button>
     </div>
     <div id="leadModalBody"></div>
     <div class="modal-section-title">Status</div>
@@ -753,10 +753,10 @@
     <div class="modal-section-title">Notas internas</div>
     <textarea id="leadModalNotes" class="config-input" rows="3" style="width:100%;resize:vertical" placeholder="Anotações sobre o contato..."></textarea>
     <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <button class="modal-btn modal-btn-warn" id="btnDeleteLead" onclick="deleteLead()">🗑 Excluir</button>
+      <button class="modal-btn modal-btn-warn" id="btnDeleteLead" data-act="deleteLeadAct">🗑 Excluir</button>
       <div style="display:flex;gap:10px">
-        <button class="modal-btn modal-btn-secondary" onclick="closeModal('leadModal')">Cancelar</button>
-        <button class="modal-btn modal-btn-primary" onclick="saveLead()">Salvar</button>
+        <button class="modal-btn modal-btn-secondary" data-act="closeModalAct" data-modal="leadModal">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" data-act="saveLeadAct">Salvar</button>
       </div>
     </div>
   </div>
@@ -804,6 +804,42 @@ window.__acts = {
   toggleAccEdit:  el => toggleAccEdit(el.dataset.id),
   saveAccEdit:    el => saveAccEdit(el.dataset.id),
   openLead:       el => openLead(el.dataset.id),
+  navPage:        el => showPage(el.dataset.page, el),
+  gotoPage:       el => showPage(el.dataset.page),
+  goApprovals:    () => { showPage('usuarios'); setTimeout(() => switchMembrosTab('aprovacoes', document.getElementById('tabAprovacoes')), 50); },
+  logout:         () => { AUTH.logout(); location.href = 'login.html'; },
+  toggleNotif:    () => toggleNotifPanel(),
+  clearNotifs:    () => { AUTH.clearAllNotifs(); renderNotifs(); updateBadges(); },
+  membrosTab:     el => switchMembrosTab(el.dataset.tab, el),
+  searchUsers:    () => filterUsers(),
+  promoteGestor:  () => promoteToGestor(),
+  ticketFilters:  () => renderTicketList(),
+  sendReply:      () => sendTicketReply(),
+  searchContent:  () => filterContent(),
+  openAddContent: () => openAddContentModal(),
+  acessoTab:      el => switchAcessoTab(el.dataset.tab, el),
+  configTab:      el => switchConfigTab(el.dataset.tab, el),
+  exportData:     () => AUTH.exportData(),
+  importBackup:   el => importBackup(el),
+  restoreDefaults:() => confirmAction('Restaurar conteúdo padrão?', 'O conteúdo da biblioteca será restaurado para os 22 materiais originais. Conteúdos personalizados serão perdidos.', () => { AUTH.resetToDefaults(); showToast('Conteúdo restaurado!'); refresh(); }),
+  clearTickets:   () => confirmAction('Excluir todos os tickets?', 'Todos os tickets e histórico de suporte serão apagados permanentemente.', () => { AUTH.getAllTickets().forEach(t => AUTH.deleteTicket(t.id)); showToast('Tickets apagados.'); refresh(); }),
+  saveConfig:     () => saveConfigurations(),
+  searchLeads:    () => filterLeads(),
+  refreshLeads:   () => loadLeads(),
+  exportLeads:    () => exportLeadsCsv(),
+  refreshAudit:   () => loadAuditoria(),
+  toggleSidebar:  () => document.getElementById('sidebar').classList.toggle('open'),
+  closeModalAct:  el => closeModal(el.dataset.modal),
+  pickRole:       el => selectRole(el.dataset.role),
+  toggleDownloads:() => toggleUserDownloads(),
+  resetPwd:       () => sendPasswordResetToUser(),
+  savePerms:      () => saveUserPerms(),
+  fileSelected:   el => onFileSelected(el),
+  clearFile:      () => clearFileInput(),
+  saveContentAct: () => saveContent(),
+  deleteLeadAct:  () => deleteLead(),
+  saveLeadAct:    () => saveLead(),
+  openEditContent:() => openEditContentModal(),
 };
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
@@ -812,6 +848,10 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const t = e.target.closest('[data-act]');
   if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
+document.addEventListener('input', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act] && !t.matches('select,input[type=checkbox],input[type=radio],input[type=file]')) window.__acts[t.dataset.act](t, e);
 });
 /* ─── Sanitização XSS — escapa HTML especial antes de inserir no innerHTML ─── */
 function esc(str) {
@@ -1184,7 +1224,7 @@ function filterContent() {
 
   document.getElementById('contentCountLbl').textContent = `${items.length} materiais`;
   if (!items.length) {
-    document.getElementById('contentTbody').innerHTML = `<tr><td colspan="5">${emptyState('📚', 'Nenhum material encontrado', 'Adicione conteúdos à biblioteca ou ajuste os filtros.', '<button class="empty-state-cta" onclick="openEditContentModal()">＋ Adicionar material</button>')}</td></tr>`;
+    document.getElementById('contentTbody').innerHTML = `<tr><td colspan="5">${emptyState('📚', 'Nenhum material encontrado', 'Adicione conteúdos à biblioteca ou ajuste os filtros.', '<button class="empty-state-cta" data-act="openEditContent">＋ Adicionar material</button>')}</td></tr>`;
     return;
   }
   document.getElementById('contentTbody').innerHTML = items.map(c => {
@@ -1370,7 +1410,7 @@ function loadGestores() {
 async function promoteToGestor() {
   const id = document.getElementById('promoteSelect').value;
   if (!id) { showToast('⚠️ Selecione um membro.'); return; }
-  const btn = document.querySelector('button[onclick="promoteToGestor()"]');
+  const btn = document.querySelector('button[data-act="promoteGestor"]');
   if (btn) { btn.disabled=true; btn.textContent='Promovendo...'; }
   const ok = await AUTH.updateUserRole(id, 'gestor');
   if (btn) { btn.disabled=false; btn.textContent='Promover a Gestor →'; }

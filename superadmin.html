@@ -1368,11 +1368,11 @@
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- Modal — Adicionar Admin -->
-<div class="modal-overlay" id="modalAddAdmin" role="dialog" aria-modal="true" aria-labelledby="modalAddAdminTitle" onclick="closeModal('modalAddAdmin')">
-  <div class="modal" onclick="event.stopPropagation()">
+<div class="modal-overlay" id="modalAddAdmin" role="dialog" aria-modal="true" aria-labelledby="modalAddAdminTitle" data-act="closeModal" data-modal="modalAddAdmin">
+  <div class="modal" data-act="stopPropagation">
     <div class="modal-title" id="modalAddAdminTitle">
       <span>Adicionar Novo Admin / Gestor</span>
-      <button class="modal-close" onclick="closeModal('modalAddAdmin')" aria-label="Fechar">&times;</button>
+      <button class="modal-close" data-act="closeModal" data-modal="modalAddAdmin" aria-label="Fechar">&times;</button>
     </div>
     <div class="modal-field">
       <label class="modal-label">Nome completo</label>
@@ -1390,18 +1390,18 @@
       </select>
     </div>
     <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeModal('modalAddAdmin')">Cancelar</button>
-      <button class="btn-primary-sm" onclick="addAdminUser()">Adicionar</button>
+      <button class="btn-modal-cancel" data-act="closeModal" data-modal="modalAddAdmin">Cancelar</button>
+      <button class="btn-primary-sm" data-act="addAdminUser">Adicionar</button>
     </div>
   </div>
 </div>
 
 <!-- Modal — Editar Plano -->
-<div class="modal-overlay" id="modalEditPlan" role="dialog" aria-modal="true" aria-labelledby="editPlanTitle" onclick="closeModal('modalEditPlan')">
-  <div class="modal" onclick="event.stopPropagation()">
+<div class="modal-overlay" id="modalEditPlan" role="dialog" aria-modal="true" aria-labelledby="editPlanTitle" data-act="closeModal" data-modal="modalEditPlan">
+  <div class="modal" data-act="stopPropagation">
     <div class="modal-title">
       <span id="editPlanTitle">Editar Plano</span>
-      <button class="modal-close" onclick="closeModal('modalEditPlan')" aria-label="Fechar">&times;</button>
+      <button class="modal-close" data-act="closeModal" data-modal="modalEditPlan" aria-label="Fechar">&times;</button>
     </div>
     <div class="modal-field">
       <label class="modal-label">Nome do plano</label>
@@ -1422,8 +1422,8 @@
       <textarea class="modal-input cfg-input" id="editPlanDesc" rows="3" style="resize:vertical"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeModal('modalEditPlan')">Cancelar</button>
-      <button class="btn-primary-sm" onclick="savePlan()">Salvar</button>
+      <button class="btn-modal-cancel" data-act="closeModal" data-modal="modalEditPlan">Cancelar</button>
+      <button class="btn-primary-sm" data-act="savePlan">Salvar</button>
     </div>
   </div>
 </div>
@@ -1451,40 +1451,40 @@
 
     <nav class="sidebar-nav">
       <div class="sidebar-nav-section">Painel</div>
-      <a class="sidebar-nav-item active" onclick="showPage('dashboard',this)">
+      <a class="sidebar-nav-item active" data-act="showPage" data-page="dashboard">
         <span class="nav-icon">🏠</span>Dashboard
       </a>
 
       <div class="sidebar-nav-section" style="margin-top:10px">Gestão</div>
-      <a class="sidebar-nav-item" onclick="showPage('admins',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="admins">
         <span class="nav-icon">👥</span>Gerenciar Admins
       </a>
-      <a class="sidebar-nav-item" onclick="showPage('security',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="security">
         <span class="nav-icon">🔐</span>Segurança
       </a>
 
       <div class="sidebar-nav-section" style="margin-top:10px">Negócio</div>
-      <a class="sidebar-nav-item" onclick="showPage('plans',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="plans">
         <span class="nav-icon">📦</span>Planos &amp; Módulos
       </a>
-      <a class="sidebar-nav-item" onclick="showPage('editorial',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="editorial">
         <span class="nav-icon">✏️</span>Conteúdo Editorial
         <span class="nav-badge" id="badgeDrafts" style="display:none;background:#F4A261;color:#000;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:auto">0</span>
       </a>
-      <a class="sidebar-nav-item" onclick="showPage('biblioteca',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="biblioteca">
         <span class="nav-icon">📚</span>Biblioteca de Materiais
       </a>
 
       <div class="sidebar-nav-section" style="margin-top:10px">Sistema</div>
-      <a class="sidebar-nav-item" onclick="showPage('system',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="system">
         <span class="nav-icon">⚙️</span>Sistema
       </a>
-      <a class="sidebar-nav-item" onclick="showPage('audit',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="audit">
         <span class="nav-icon">📋</span>Auditoria
       </a>
 
       <div class="sidebar-nav-section" style="margin-top:10px">Suporte</div>
-      <a class="sidebar-nav-item" onclick="showPage('ajuda',this)">
+      <a class="sidebar-nav-item" data-act="showPage" data-page="ajuda">
         <span class="nav-icon">❓</span>Ajuda
       </a>
       <a class="sidebar-nav-item" href="email-config.html" style="color:rgba(0,180,216,.85);margin-top:2px;">
@@ -1503,7 +1503,7 @@
 
     <div class="sidebar-footer">
       <div class="sidebar-version" id="sbVersion">v3.0.0 · build 20260813</div>
-      <button class="sidebar-logout" onclick="doLogout()">
+      <button class="sidebar-logout" data-act="doLogout">
         <span>🚪</span>Sair da sessão
       </button>
     </div>
@@ -1518,8 +1518,8 @@
       </div>
       <div class="topbar-right">
         <div class="tb-clock" id="tbClock">00:00:00</div>
-        <div class="tb-btn" title="Admin Panel" onclick="location.href='admin.html'">🛡️</div>
-        <div class="tb-btn" title="Recarregar" onclick="location.reload()">🔄</div>
+        <div class="tb-btn" title="Admin Panel" data-act="goAdmin">🛡️</div>
+        <div class="tb-btn" title="Recarregar" data-act="reloadPage">🔄</div>
       </div>
     </div>
 
@@ -1661,16 +1661,16 @@
         <div class="filters-bar">
           <div class="search-box">
             <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
-            <input type="text" id="adminsSearch" placeholder="Buscar por nome ou e-mail..." oninput="filterAdmins()"/>
+            <input type="text" id="adminsSearch" placeholder="Buscar por nome ou e-mail..." data-act="filterAdmins"/>
           </div>
-          <select class="filter-select" id="adminsRoleFilter" onchange="filterAdmins()">
+          <select class="filter-select" id="adminsRoleFilter" data-act="filterAdmins">
             <option value="">Todas as funções</option>
             <option value="superadmin">👑 Superadmin</option>
             <option value="admin">🛡️ Admin</option>
             <option value="gestor">⚙️ Gestor</option>
             <option value="membro">👤 Membro</option>
           </select>
-          <button class="btn-primary-sm" style="margin-left:auto" onclick="openDrawerNewUser()">
+          <button class="btn-primary-sm" style="margin-left:auto" data-act="openDrawerNewUser">
             + Novo Usuário
           </button>
         </div>
@@ -1728,7 +1728,7 @@
                 <div class="table-card-title">Sessões ativas</div>
                 <div class="table-card-sub">Dispositivos conectados agora</div>
               </div>
-              <button class="btn-danger-sm" onclick="terminateAllSessions()">Encerrar todas</button>
+              <button class="btn-danger-sm" data-act="terminateAllSessions">Encerrar todas</button>
             </div>
             <div class="sec-list" id="activeSessionsList"></div>
           </div>
@@ -1744,7 +1744,7 @@
               <div class="toggle-sub">Exigir segundo fator para todos os admins e gestores</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggle2FA" onchange="onSecurityToggle('2fa', this.checked)"/>
+              <input type="checkbox" id="toggle2FA" data-act="onSecurityToggle" data-key="2fa"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1754,7 +1754,7 @@
               <div class="toggle-sub">IP bloqueado por 15 minutos automaticamente</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggleRateLimit" checked onchange="onSecurityToggle('rateLimit', this.checked)"/>
+              <input type="checkbox" id="toggleRateLimit" checked data-act="onSecurityToggle" data-key="rateLimit"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1764,7 +1764,7 @@
               <div class="toggle-sub">Registrar todas as ações com IP e timestamp</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggleAuditLog" checked onchange="onSecurityToggle('auditLog', this.checked)"/>
+              <input type="checkbox" id="toggleAuditLog" checked data-act="onSecurityToggle" data-key="auditLog"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1774,7 +1774,7 @@
               <div class="toggle-sub">Sessões inativas são encerradas automaticamente</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggleSession4h" checked onchange="onSecurityToggle('session4h', this.checked)"/>
+              <input type="checkbox" id="toggleSession4h" checked data-act="onSecurityToggle" data-key="session4h"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1790,7 +1790,7 @@
             <div style="font-family:var(--font-h);font-size:1rem;font-weight:700;color:var(--text-primary)">Planos &amp; Módulos</div>
             <div style="font-size:.76rem;color:var(--text-muted);margin-top:2px">Edite preços, nomes e configurações de cada plano</div>
           </div>
-          <button class="btn-accent-sm" onclick="addNewModule()">+ Novo Módulo</button>
+          <button class="btn-accent-sm" data-act="addNewModule">+ Novo Módulo</button>
         </div>
 
         <div class="plans-grid" id="plansGrid">
@@ -1863,7 +1863,7 @@
               <div class="toggle-sub">Bloqueia acesso de todos os membros e exibe página de manutenção</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggleMaintenance" onchange="onMaintenanceToggle(this.checked)"/>
+              <input type="checkbox" id="toggleMaintenance" data-act="onMaintenanceToggle"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1873,7 +1873,7 @@
               <div class="toggle-sub">Permite que novos usuários se registrem na plataforma</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggleRegistrations" checked onchange="showToast('Configuração salva.','success')"/>
+              <input type="checkbox" id="toggleRegistrations" checked data-act="saveConfigToast"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1883,7 +1883,7 @@
               <div class="toggle-sub">Novos membros precisam de aprovação antes de acessar</div>
             </div>
             <span class="toggle-sw">
-              <input type="checkbox" id="toggleManualApproval" checked onchange="showToast('Configuração salva.','success')"/>
+              <input type="checkbox" id="toggleManualApproval" checked data-act="saveConfigToast"/>
               <div class="toggle-track"></div>
             </span>
           </label>
@@ -1897,7 +1897,7 @@
             <label>Mensagem de aviso (deixe em branco para desativar)</label>
             <textarea class="cfg-input" id="globalMessage" rows="3" placeholder="Ex: Novos materiais disponíveis! Acesse a Biblioteca para conferir."></textarea>
           </div>
-          <button class="btn-primary-sm" onclick="saveGlobalMessage()">Publicar mensagem</button>
+          <button class="btn-primary-sm" data-act="saveGlobalMessage">Publicar mensagem</button>
         </div>
 
         <!-- Webhook -->
@@ -1914,8 +1914,8 @@
               <input type="password" class="cfg-input" id="webhookSecret" placeholder="••••••••"/>
             </div>
           </div>
-          <button class="btn-accent-sm" onclick="saveWebhook()">Salvar webhook</button>
-          <button class="action-btn btn-promote" style="margin-left:10px" onclick="testWebhook()">Testar</button>
+          <button class="btn-accent-sm" data-act="saveWebhook">Salvar webhook</button>
+          <button class="action-btn btn-promote" style="margin-left:10px" data-act="testWebhook">Testar</button>
         </div>
 
         <!-- Informações de deploy -->
@@ -1958,9 +1958,9 @@
         <div class="filters-bar">
           <div class="search-box">
             <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
-            <input type="text" id="auditSearch" placeholder="Buscar usuário ou ação..." oninput="filterAudit()"/>
+            <input type="text" id="auditSearch" placeholder="Buscar usuário ou ação..." data-act="filterAudit"/>
           </div>
-          <select class="filter-select" id="auditTypeFilter" onchange="filterAudit()">
+          <select class="filter-select" id="auditTypeFilter" data-act="filterAudit">
             <option value="">Todos os tipos</option>
             <option value="login">Login</option>
             <option value="role">Alteração de role</option>
@@ -1968,7 +1968,7 @@
             <option value="access">Acesso negado</option>
             <option value="config">Configuração</option>
           </select>
-          <button class="btn-primary-sm" style="margin-left:auto" onclick="exportAudit()">
+          <button class="btn-primary-sm" style="margin-left:auto" data-act="exportAudit">
             ⬇ Exportar CSV
           </button>
         </div>
@@ -2021,12 +2021,12 @@
 
         <!-- Main tabs: Artigos | Boletins -->
         <div class="ed-tabs" id="edMainTabs">
-          <button class="ed-tab active" data-edtype="boletim" onclick="switchEdType('boletim',this)">
+          <button class="ed-tab active" data-edtype="boletim" data-act="switchEdType" data-type="boletim">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
             Boletins Técnicos
             <span class="ed-tab-count" id="edTabCountBoletim">0</span>
           </button>
-          <button class="ed-tab" data-edtype="artigo" onclick="switchEdType('artigo',this)">
+          <button class="ed-tab" data-edtype="artigo" data-act="switchEdType" data-type="artigo">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
             Artigos
             <span class="ed-tab-count" id="edTabCountArtigo">0</span>
@@ -2036,19 +2036,19 @@
         <!-- Sub-tabs: status -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div class="ed-subtabs" id="edSubTabs">
-            <button class="ed-subtab active" data-status="all"        onclick="switchEdStatus('all',this)">Todos</button>
-            <button class="ed-subtab"        data-status="draft"      onclick="switchEdStatus('draft',this)">Rascunhos</button>
-            <button class="ed-subtab"        data-status="published"  onclick="switchEdStatus('published',this)">Publicados</button>
-            <button class="ed-subtab"        data-status="archived"   onclick="switchEdStatus('archived',this)">Arquivados</button>
+            <button class="ed-subtab active" data-status="all"        data-act="switchEdStatus" data-status="all">Todos</button>
+            <button class="ed-subtab"        data-status="draft"      data-act="switchEdStatus" data-status="draft">Rascunhos</button>
+            <button class="ed-subtab"        data-status="published"  data-act="switchEdStatus" data-status="published">Publicados</button>
+            <button class="ed-subtab"        data-status="archived"   data-act="switchEdStatus" data-status="archived">Arquivados</button>
           </div>
           <div style="display:flex;gap:8px">
             <div class="search-box" style="width:200px">
               <span style="font-size:.85rem;color:var(--text-muted)">🔍</span>
-              <input type="text" id="edSearch" placeholder="Buscar..." oninput="renderEditorialTable()"/>
+              <input type="text" id="edSearch" placeholder="Buscar..." data-act="renderEditorialTable"/>
             </div>
-            <button style="padding:9px 14px;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:8px;font-weight:600;font-size:.78rem;cursor:pointer;white-space:nowrap" onclick="seedEditorialDemo()" title="Carrega boletins e artigos de exemplo para testar a plataforma">🧪 Exemplo</button>
+            <button style="padding:9px 14px;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:8px;font-weight:600;font-size:.78rem;cursor:pointer;white-space:nowrap" data-act="seedEditorialDemo" title="Carrega boletins e artigos de exemplo para testar a plataforma">🧪 Exemplo</button>
             <a href="membros.html?page=boletins" target="_blank" rel="noopener" style="padding:9px 14px;background:var(--tech-bg);border:1px solid var(--tech-border);color:var(--tech);border-radius:8px;font-weight:600;font-size:.78rem;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Abre a área do membro direto na aba de boletins publicados">👁 Ver publicações</a>
-            <button class="btn-primary-sm" onclick="openEditor()">+ Novo</button>
+            <button class="btn-primary-sm" data-act="openEditorNew">+ Novo</button>
           </div>
         </div>
 
@@ -2101,11 +2101,11 @@
 
         <!-- Filtros -->
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-          <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="saLibSearch" placeholder="Buscar material..." oninput="filterSaContent()"/></div>
-          <select id="saLibCatFilter" class="cat-filter-select" onchange="filterSaContent()">
+          <div class="content-search" style="flex:1;min-width:200px"><span>🔍</span><input type="text" id="saLibSearch" placeholder="Buscar material..." data-act="filterSaContent"/></div>
+          <select id="saLibCatFilter" class="cat-filter-select" data-act="filterSaContent">
             <option value="">Todas as categorias</option>
           </select>
-          <button onclick="openAddSaContent()" style="padding:9px 20px;background:var(--accent);color:var(--bg);border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap">+ Adicionar material</button>
+          <button data-act="openAddSaContent" style="padding:9px 20px;background:var(--accent);color:var(--bg);border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap">+ Adicionar material</button>
         </div>
 
         <!-- Tabela -->
@@ -2133,9 +2133,9 @@
       <div class="page" id="page-ajuda" style="padding-bottom:40px">
 
         <div class="ed-tabs" id="ajudaTabs" style="margin-bottom:18px">
-          <button class="ed-tab active" onclick="ajudaTab('guia',this)"><span style="font-size:.95rem">📖</span>&nbsp; Guia de Uso</button>
-          <button class="ed-tab" onclick="ajudaTab('versoes',this)"><span style="font-size:.95rem">🔄</span>&nbsp; Versões &amp; Changelog</button>
-          <button class="ed-tab" onclick="ajudaTab('orientacoes',this)"><span style="font-size:.95rem">🛡️</span>&nbsp; Orientações &amp; FAQ</button>
+          <button class="ed-tab active" data-act="ajudaTab" data-tab="guia"><span style="font-size:.95rem">📖</span>&nbsp; Guia de Uso</button>
+          <button class="ed-tab" data-act="ajudaTab" data-tab="versoes"><span style="font-size:.95rem">🔄</span>&nbsp; Versões &amp; Changelog</button>
+          <button class="ed-tab" data-act="ajudaTab" data-tab="orientacoes"><span style="font-size:.95rem">🛡️</span>&nbsp; Orientações &amp; FAQ</button>
         </div>
 
         <!-- ── SUBPASTA 1: GUIA DE USO ── -->
@@ -2181,7 +2181,7 @@
                   </ol>
                   <div class="help-dica">💡 <b>Dica:</b> o menu lateral esquerdo é o mapa completo do painel — cada item abre uma seção própria. Se você não encontrar algo, use a busca de cada tela (por exemplo, nome/e-mail na lista de usuários).</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/dashboard.png" alt="Tela inicial do painel superadmin" onclick="openShot(this,'Dashboard — visão geral com KPIs, atalhos e sidebar')"><figcaption>Dashboard — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/dashboard.png" alt="Tela inicial do painel superadmin" data-act="openShot" data-cap="Dashboard — visão geral com KPIs, atalhos e sidebar"><figcaption>Dashboard — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2206,7 +2206,7 @@
                   </ol>
                   <div class="help-dica">💡 <b>Boas práticas:</b> cada admin deve ter conta própria (auditável). Evite compartilhar credenciais — a auditoria registra quem fez cada ação.</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/admins.png" alt="Tela de gerenciamento de admins com hierarquia e filtros" onclick="openShot(this,'Gerenciar Admins — hierarquia, busca e ações por usuário')"><figcaption>Gerenciar Admins — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/admins.png" alt="Tela de gerenciamento de admins com hierarquia e filtros" data-act="openShot" data-cap="Gerenciar Admins — hierarquia, busca e ações por usuário"><figcaption>Gerenciar Admins — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2231,7 +2231,7 @@
                   </ol>
                   <div class="help-dica">🔒 <b>Importante:</b> MFA é obrigatório para roles privilegiadas. Se um admin desativar a TOTP e esquecer, a recuperação precisa ser feita no Supabase Dashboard.</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/security.png" alt="Tela de segurança com tentativas falhas, sessões ativas e políticas" onclick="openShot(this,'Segurança — sessões, tentativas falhas e políticas de acesso')"><figcaption>Segurança — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/security.png" alt="Tela de segurança com tentativas falhas, sessões ativas e políticas" data-act="openShot" data-cap="Segurança — sessões, tentativas falhas e políticas de acesso"><figcaption>Segurança — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2255,7 +2255,7 @@
                   </ol>
                   <div class="help-dica">💡 <b>Regra de ouro:</b> se um membro "não vê um material", cheque a cadeia: plano do membro → categoria no moduleAccess → accessLevel/downloadLevel do item → visibilidade (🙈/👁).</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/plans.png" alt="Tela de planos e módulos com grid de preços" onclick="openShot(this,'Planos & Módulos — preços, categorias e módulos avulsos')"><figcaption>Planos &amp; Módulos — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/plans.png" alt="Tela de planos e módulos com grid de preços" data-act="openShot" data-cap="Planos & Módulos — preços, categorias e módulos avulsos"><figcaption>Planos &amp; Módulos — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2279,7 +2279,7 @@
                   </ol>
                   <div class="help-dica">⚠️ <b>Pense antes de ativar o modo manutenção:</b> ele derruba o acesso de TODOS os membros na hora. Prefira avisar antes com a mensagem global.</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/system.png" alt="Tela de sistema com modo manutenção, mensagem global e webhook" onclick="openShot(this,'Sistema — manutenção, mensagem global e webhook')"><figcaption>Sistema — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/system.png" alt="Tela de sistema com modo manutenção, mensagem global e webhook" data-act="openShot" data-cap="Sistema — manutenção, mensagem global e webhook"><figcaption>Sistema — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2302,7 +2302,7 @@
                   </ol>
                   <div class="help-dica">🧾 <b>Dica:</b> a auditoria é a sua rede de segurança. Antes de investigar "quem mexeu em X", comece por aqui.</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/audit.png" alt="Tela de auditoria com log de ações e filtros por tipo" onclick="openShot(this,'Auditoria — log de ações, filtros e autor/alvo/data')"><figcaption>Auditoria — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/audit.png" alt="Tela de auditoria com log de ações e filtros por tipo" data-act="openShot" data-cap="Auditoria — log de ações, filtros e autor/alvo/data"><figcaption>Auditoria — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2326,7 +2326,7 @@
                   </ol>
                   <div class="help-dica">⚠️ <b>Não renomeie/deletar arquivos</b> em <code>assets/downloads/</code> sem atualizar os <code>filePath</code> correspondentes — quebra os downloads existentes.</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/biblioteca.png" alt="Tela da biblioteca de materiais com lista de PDFs" onclick="openShot(this,'Biblioteca — materiais, upload, visibilidade e níveis de download')"><figcaption>Biblioteca — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/biblioteca.png" alt="Tela da biblioteca de materiais com lista de PDFs" data-act="openShot" data-cap="Biblioteca — materiais, upload, visibilidade e níveis de download"><figcaption>Biblioteca — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2351,7 +2351,7 @@
                   </ol>
                   <div class="help-dica">📌 <b>Dica:</b> a apresentação no membro tem até 17 seções com sumário navegável (TOC). Se você não preencher um campo opcional, a seção correspondente é omitida automaticamente.</div>
                 </div>
-                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/editorial.png" alt="Tela do editor editorial com lista de boletins e artigos" onclick="openShot(this,'Conteúdo Editorial — boletins, artigos e editor estruturado')"><figcaption>Editorial — clique para ampliar</figcaption></figure>
+                <figure class="help-shot"><img loading="lazy" src="assets/img/ajuda/editorial.png" alt="Tela do editor editorial com lista de boletins e artigos" data-act="openShot" data-cap="Conteúdo Editorial — boletins, artigos e editor estruturado"><figcaption>Editorial — clique para ampliar</figcaption></figure>
               </div>
             </div>
 
@@ -2438,24 +2438,24 @@
 </div><!-- /dashboard -->
 
 <!-- Lightbox — visualização ampliada de screenshots da Ajuda -->
-<div id="shotLightbox" role="dialog" aria-modal="true" aria-label="Pré-visualização da tela" onclick="if(event.target===this)closeShot()">
-  <button class="shot-close" onclick="closeShot()" aria-label="Fechar">✕</button>
+<div id="shotLightbox" role="dialog" aria-modal="true" aria-label="Pré-visualização da tela" data-act="shotBackdrop">
+  <button class="shot-close" data-act="closeShot" aria-label="Fechar">✕</button>
   <img id="shotLightboxImg" src="" alt="Screenshot ampliado"/>
   <div id="shotLightboxCap"></div>
 </div>
 
 <!-- Modal — Editor de Conteúdo (90% viewport) -->
-<div id="modalEditor" role="dialog" aria-modal="true" aria-labelledby="editorTitle" onclick="if(event.target===this)closeEditor()">
-  <div class="editor-shell" onclick="event.stopPropagation()">
+<div id="modalEditor" role="dialog" aria-modal="true" aria-labelledby="editorTitle" data-act="editorBackdrop">
+  <div class="editor-shell" data-act="stopPropagation">
 
     <!-- Top bar -->
     <div class="editor-topbar">
       <div class="editor-topbar-title" id="editorTitle">Novo Boletim Técnico</div>
       <span class="editor-autosave" id="editorAutosave">rascunho</span>
-      <button class="editor-preview-btn" id="editorPreviewBtn" onclick="toggleEditorPreview()">👁 Preview</button>
-      <button class="editor-save-btn" onclick="saveEditorDraft()">Salvar rascunho</button>
-      <button class="editor-publish-btn" onclick="publishEditorContent()">Publicar</button>
-      <button class="editor-close-btn" onclick="closeEditor()" aria-label="Fechar editor">✕</button>
+      <button class="editor-preview-btn" id="editorPreviewBtn" data-act="toggleEditorPreview">👁 Preview</button>
+      <button class="editor-save-btn" data-act="saveEditorDraft">Salvar rascunho</button>
+      <button class="editor-publish-btn" data-act="publishEditorContent">Publicar</button>
+      <button class="editor-close-btn" data-act="closeEditor" aria-label="Fechar editor">✕</button>
     </div>
 
     <div class="editor-main">
@@ -2464,21 +2464,21 @@
       <div class="editor-content-wrap">
         <!-- Toolbar -->
         <div class="editor-toolbar">
-          <button class="ed-tool" title="Título H2" onclick="edCmd('h2')"><b>H2</b></button>
-          <button class="ed-tool" title="Subtítulo H3" onclick="edCmd('h3')"><b>H3</b></button>
+          <button class="ed-tool" title="Título H2" data-act="edCmd" data-cmd="h2"><b>H2</b></button>
+          <button class="ed-tool" title="Subtítulo H3" data-act="edCmd" data-cmd="h3"><b>H3</b></button>
           <span class="ed-tool-sep"></span>
-          <button class="ed-tool" title="Negrito" onclick="edCmd('bold')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
-          <button class="ed-tool" title="Itálico" onclick="edCmd('italic')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+          <button class="ed-tool" title="Negrito" data-act="edCmd" data-cmd="bold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+          <button class="ed-tool" title="Itálico" data-act="edCmd" data-cmd="italic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
           <span class="ed-tool-sep"></span>
-          <button class="ed-tool" title="Lista" onclick="edCmd('ul')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
-          <button class="ed-tool" title="Lista numerada" onclick="edCmd('ol')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+          <button class="ed-tool" title="Lista" data-act="edCmd" data-cmd="ul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+          <button class="ed-tool" title="Lista numerada" data-act="edCmd" data-cmd="ol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
           <span class="ed-tool-sep"></span>
-          <button class="ed-tool" title="Divisor" onclick="edCmd('hr')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-          <button class="ed-tool" title="Link" onclick="edCmd('link')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+          <button class="ed-tool" title="Divisor" data-act="edCmd" data-cmd="hr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <button class="ed-tool" title="Link" data-act="edCmd" data-cmd="link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
         </div>
 
         <!-- Editor area -->
-        <div class="editor-area" id="editorArea" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Conteúdo do artigo" data-placeholder="Comece a escrever o conteúdo aqui…" oninput="onEditorInput()"></div>
+        <div class="editor-area" id="editorArea" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Conteúdo do artigo" data-placeholder="Comece a escrever o conteúdo aqui…" data-act="onEditorInput"></div>
         <div class="editor-preview" id="editorPreview"></div>
       </div>
 
@@ -2487,12 +2487,12 @@
 
         <div class="ed-meta-group">
           <label class="ed-meta-label">Título</label>
-          <input class="ed-meta-input" type="text" id="edMetaTitle" placeholder="Título do conteúdo..." oninput="document.getElementById('editorTitle').textContent=this.value||'Novo conteúdo'"/>
+          <input class="ed-meta-input" type="text" id="edMetaTitle" placeholder="Título do conteúdo..." data-act="edMetaTitleInput"/>
         </div>
 
         <div class="ed-meta-group">
           <label class="ed-meta-label">Tipo de conteúdo</label>
-          <select class="ed-meta-input ed-meta-select" id="edMetaContentType" onchange="onEdMetaTypeChange()">
+          <select class="ed-meta-input ed-meta-select" id="edMetaContentType" data-act="onEdMetaTypeChange">
             <option value="boletim">Boletim Técnico</option>
             <option value="artigo">Artigo</option>
           </select>
@@ -2531,7 +2531,7 @@
 
         <div class="ed-meta-group" id="edLayoutGroup">
           <label class="ed-meta-label">Layout</label>
-          <select class="ed-meta-input ed-meta-select" id="edMetaLayout" onchange="onEdLayoutChange()">
+          <select class="ed-meta-input ed-meta-select" id="edMetaLayout" data-act="onEdLayoutChange">
             <option value="technical">Técnico / Científico</option>
             <option value="newsletter">Newsletter</option>
           </select>
@@ -2727,11 +2727,11 @@
 </div>
 
 <!-- Modal — Biblioteca de Materiais (Superadmin) -->
-<div class="modal-overlay" id="modalSaBiblioteca" onclick="if(event.target===this)closeModal('modalSaBiblioteca')">
-  <div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
+<div class="modal-overlay" id="modalSaBiblioteca" data-act="saLibBackdrop">
+  <div class="modal" style="max-width:640px" data-act="stopPropagation">
     <div class="modal-header">
       <div class="modal-title" id="saLibModalTitle">Adicionar material</div>
-      <button class="modal-close" onclick="closeModal('modalSaBiblioteca')">✕</button>
+      <button class="modal-close" data-act="closeModal" data-modal="modalSaBiblioteca">✕</button>
     </div>
     <div class="config-row">
       <div class="config-field"><label>Título <span style="color:var(--danger)">*</span></label><input class="config-input" id="saLibTitle" placeholder="Ex: Honda LKAS Tipo 3"/></div>
@@ -2780,35 +2780,35 @@
     <div class="config-field" style="margin-bottom:0">
       <label>Arquivo PDF <span style="font-size:.7rem;color:rgba(255,255,255,.3)">(opcional — Supabase Storage)</span></label>
       <div class="sa-upload-zone" id="saUploadZone">
-        <input type="file" id="saLibFile" accept=".pdf,application/pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="onSaFileSelected(this)"/>
+        <input type="file" id="saLibFile" accept=".pdf,application/pdf" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" data-act="onSaFileSelected"/>
         <div style="font-size:1.4rem;margin-bottom:4px">📁</div>
         <div style="font-size:.8rem;color:rgba(255,255,255,.4)">Arraste o PDF ou <strong style="color:var(--accent)">clique para selecionar</strong></div>
       </div>
       <div class="sa-upload-info" id="saUploadFileInfo">
         <span>📄</span>
         <div class="sa-upload-name" id="saUploadFileName">—</div>
-        <div class="sa-upload-remove" onclick="clearSaFileInput()">✕ remover</div>
+        <div class="sa-upload-remove" data-act="clearSaFileInput">✕ remover</div>
       </div>
       <div class="sa-upload-progress" id="saUploadProgress"><div class="sa-upload-bar" id="saUploadProgressBar"></div></div>
       <div style="font-size:.72rem;color:rgba(0,180,216,.6);margin-top:5px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="saUploadCurrentPath"></div>
     </div>
 
     <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:18px">
-      <button id="saLibRevokeBtn" style="display:none;padding:8px 14px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25);border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer" onclick="revokeCurrentCatAccess()">🚫 Revogar acesso global à categoria</button>
+      <button id="saLibRevokeBtn" style="display:none;padding:8px 14px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25);border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer" data-act="revokeCurrentCatAccess">🚫 Revogar acesso global à categoria</button>
       <div style="display:flex;gap:10px;margin-left:auto">
-        <button class="modal-btn modal-btn-secondary" onclick="closeModal('modalSaBiblioteca')">Cancelar</button>
-        <button class="modal-btn modal-btn-primary" id="saLibSaveBtn" onclick="saveSaContent()">Salvar material</button>
+        <button class="modal-btn modal-btn-secondary" data-act="closeModal" data-modal="modalSaBiblioteca">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" id="saLibSaveBtn" data-act="saveSaContent">Salvar material</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Modal — Confirmar Exclusão de Usuário -->
-<div class="modal-overlay" id="modalDeleteConfirm" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle" onclick="closeModal('modalDeleteConfirm')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:420px">
+<div class="modal-overlay" id="modalDeleteConfirm" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle" data-act="closeModal" data-modal="modalDeleteConfirm">
+  <div class="modal" data-act="stopPropagation" style="max-width:420px">
     <div class="modal-title" id="modalDeleteTitle">
       <span style="color:#EF4444">Excluir usuário</span>
-      <button class="modal-close" onclick="closeModal('modalDeleteConfirm')" aria-label="Fechar">&times;</button>
+      <button class="modal-close" data-act="closeModal" data-modal="modalDeleteConfirm" aria-label="Fechar">&times;</button>
     </div>
     <div class="del-confirm-info">
       <div class="del-confirm-name" id="delConfirmName">Nome do usuário</div>
@@ -2819,22 +2819,22 @@
     </div>
     <div class="modal-field">
       <label class="modal-label">Digite o e-mail para confirmar</label>
-      <input class="del-confirm-input" type="text" id="delConfirmInput" placeholder="email@exemplo.com" oninput="checkDelConfirm()"/>
+      <input class="del-confirm-input" type="text" id="delConfirmInput" placeholder="email@exemplo.com" data-act="checkDelConfirm"/>
     </div>
     <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeModal('modalDeleteConfirm')">Cancelar</button>
-      <button class="btn-danger-confirm" id="delConfirmBtn" disabled onclick="executeDeleteUser()">Excluir definitivamente</button>
+      <button class="btn-modal-cancel" data-act="closeModal" data-modal="modalDeleteConfirm">Cancelar</button>
+      <button class="btn-danger-confirm" id="delConfirmBtn" disabled data-act="executeDeleteUser">Excluir definitivamente</button>
     </div>
   </div>
 </div>
 
 <!-- Drawer — Novo Usuário -->
 <div id="drawerNewUser" role="dialog" aria-modal="true" aria-labelledby="drawerNewUserTitle">
-  <div class="drawer-backdrop" onclick="closeDrawerNewUser()"></div>
+  <div class="drawer-backdrop" data-act="closeDrawerNewUser"></div>
   <div class="drawer-panel">
     <div class="drawer-header">
       <div class="drawer-title" id="drawerNewUserTitle">+ Novo Usuário</div>
-      <button class="drawer-close" onclick="closeDrawerNewUser()" aria-label="Fechar painel">✕</button>
+      <button class="drawer-close" data-act="closeDrawerNewUser" aria-label="Fechar painel">✕</button>
     </div>
     <div class="drawer-body">
       <div class="drawer-field">
@@ -2852,15 +2852,15 @@
       <div class="drawer-field">
         <label class="drawer-label">Função / Role <span style="color:#EF4444">*</span></label>
         <div class="csel" id="dnuRoleSel" data-target="dnuRole" data-onchange="onDnuRoleChange">
-          <div class="csel-trigger" onclick="toggleCSel(this)">
+          <div class="csel-trigger" data-act="toggleCSel">
             <span class="csel-val">👤 Membro</span>
             <svg class="csel-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="csel-dropdown">
-            <div class="csel-opt" data-val="membro"     onclick="pickCSel(this)">👤 <span>Membro</span>     <span class="csel-opt-sub">Acesso a conteúdo conforme plano</span></div>
-            <div class="csel-opt" data-val="gestor"     onclick="pickCSel(this)">⚙️ <span>Gestor</span>     <span class="csel-opt-sub">Gerencia membros e conteúdo</span></div>
-            <div class="csel-opt" data-val="admin"      onclick="pickCSel(this)">🛡️ <span>Admin</span>      <span class="csel-opt-sub">Acesso ao painel administrativo</span></div>
-            <div class="csel-opt" data-val="superadmin" onclick="pickCSel(this)">👑 <span>Superadmin</span> <span class="csel-opt-sub">Controle total da plataforma</span></div>
+            <div class="csel-opt" data-val="membro"     data-act="pickCSel">👤 <span>Membro</span>     <span class="csel-opt-sub">Acesso a conteúdo conforme plano</span></div>
+            <div class="csel-opt" data-val="gestor"     data-act="pickCSel">⚙️ <span>Gestor</span>     <span class="csel-opt-sub">Gerencia membros e conteúdo</span></div>
+            <div class="csel-opt" data-val="admin"      data-act="pickCSel">🛡️ <span>Admin</span>      <span class="csel-opt-sub">Acesso ao painel administrativo</span></div>
+            <div class="csel-opt" data-val="superadmin" data-act="pickCSel">👑 <span>Superadmin</span> <span class="csel-opt-sub">Controle total da plataforma</span></div>
           </div>
         </div>
         <input type="hidden" id="dnuRole" value="membro"/>
@@ -2868,13 +2868,13 @@
       <div class="drawer-field">
         <label class="drawer-label">Status inicial</label>
         <div class="csel" id="dnuStatusSel" data-target="dnuStatus">
-          <div class="csel-trigger" onclick="toggleCSel(this)">
+          <div class="csel-trigger" data-act="toggleCSel">
             <span class="csel-val">✅ Ativo</span>
             <svg class="csel-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="csel-dropdown">
-            <div class="csel-opt" data-val="active"  onclick="pickCSel(this)">✅ <span>Ativo</span>    <span class="csel-opt-sub">Acesso imediato à plataforma</span></div>
-            <div class="csel-opt" data-val="pending" onclick="pickCSel(this)">⏳ <span>Pendente</span> <span class="csel-opt-sub">Aguarda aprovação manual</span></div>
+            <div class="csel-opt" data-val="active"  data-act="pickCSel">✅ <span>Ativo</span>    <span class="csel-opt-sub">Acesso imediato à plataforma</span></div>
+            <div class="csel-opt" data-val="pending" data-act="pickCSel">⏳ <span>Pendente</span> <span class="csel-opt-sub">Aguarda aprovação manual</span></div>
           </div>
         </div>
         <input type="hidden" id="dnuStatus" value="active"/>
@@ -2885,15 +2885,15 @@
           <!-- populado via JS -->
         </div>
         <div style="display:flex;gap:6px;margin-top:6px">
-          <button style="font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0" onclick="dnuSelectAllPerms(true)">Selecionar todas</button>
+          <button style="font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0" data-act="dnuSelectAllPerms" data-select="true">Selecionar todas</button>
           <span style="color:var(--text-subtle)">·</span>
-          <button style="font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0" onclick="dnuSelectAllPerms(false)">Limpar</button>
+          <button style="font-size:.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0" data-act="dnuSelectAllPerms" data-select="false">Limpar</button>
         </div>
       </div>
     </div>
     <div class="drawer-footer">
-      <button class="drawer-btn-cancel" onclick="closeDrawerNewUser()">Cancelar</button>
-      <button class="drawer-btn-submit" onclick="submitNewUser()">Criar usuário</button>
+      <button class="drawer-btn-cancel" data-act="closeDrawerNewUser">Cancelar</button>
+      <button class="drawer-btn-submit" data-act="submitNewUser">Criar usuário</button>
     </div>
   </div>
 </div>
@@ -3096,8 +3096,87 @@ window.__acts = {
   saDeleteUser:      el => openDeleteUserConfirm(el.dataset.id, el.dataset.name, el.dataset.email),
   saRemoveAccess:    el => removeAccess(el.dataset.id),
   saEditPlan:        el => openEditPlan(Number(el.dataset.idx)),
+
+  /* Modais / overlays */
+  closeModal:        el => closeModal(el.dataset.modal),
+  stopPropagation:   (el, e) => e.stopPropagation(),
+  shotBackdrop:      (el, e) => { if (e.target === el) closeShot(); },
+  editorBackdrop:    (el, e) => { if (e.target === el) closeEditor(); },
+  saLibBackdrop:     (el, e) => { if (e.target === el) closeModal('modalSaBiblioteca'); },
+  closeShot:         () => closeShot(),
+  closeEditor:       () => closeEditor(),
+
+  /* Navegação / sessão */
+  showPage:          el => showPage(el.dataset.page, el),
+  goAdmin:           () => { location.href = 'admin.html'; },
+  reloadPage:        () => location.reload(),
+  doLogout:          () => doLogout(),
+
+  /* Admins / usuários */
+  addAdminUser:      () => addAdminUser(),
+  openDrawerNewUser: () => openDrawerNewUser(),
+  closeDrawerNewUser:() => closeDrawerNewUser(),
+  submitNewUser:     () => submitNewUser(),
+  executeDeleteUser: () => executeDeleteUser(),
+  filterAdmins:      () => filterAdmins(),
+  checkDelConfirm:   () => checkDelConfirm(),
+  toggleCSel:        el => toggleCSel(el),
+  pickCSel:          el => pickCSel(el),
+  dnuSelectAllPerms: el => dnuSelectAllPerms(el.dataset.select === 'true'),
+
+  /* Segurança / sistema */
+  terminateAllSessions: () => terminateAllSessions(),
+  onSecurityToggle:  el => onSecurityToggle(el.dataset.key, el.checked),
+  onMaintenanceToggle: el => onMaintenanceToggle(el.checked),
+  saveConfigToast:   () => showToast('Configuração salva.','success'),
+  addNewModule:      () => addNewModule(),
+  saveGlobalMessage: () => saveGlobalMessage(),
+  saveWebhook:       () => saveWebhook(),
+  testWebhook:       () => testWebhook(),
+
+  /* Planos */
+  savePlan:          () => savePlan(),
+
+  /* Auditoria */
+  filterAudit:       () => filterAudit(),
+  exportAudit:       () => exportAudit(),
+
+  /* Editorial */
+  switchEdType:      el => switchEdType(el.dataset.type, el),
+  switchEdStatus:    el => switchEdStatus(el.dataset.status, el),
+  seedEditorialDemo: () => seedEditorialDemo(),
+  openEditorNew:     () => openEditor(),
+  renderEditorialTable: () => renderEditorialTable(),
+  edCmd:             el => edCmd(el.dataset.cmd),
+  onEditorInput:     () => onEditorInput(),
+  edMetaTitleInput:  el => { document.getElementById('editorTitle').textContent = el.value || 'Novo conteúdo'; },
+  onEdMetaTypeChange:() => onEdMetaTypeChange(),
+  onEdLayoutChange:  () => onEdLayoutChange(),
+  toggleEditorPreview: () => toggleEditorPreview(),
+  saveEditorDraft:   () => saveEditorDraft(),
+  publishEditorContent: () => publishEditorContent(),
+
+  /* Biblioteca */
+  filterSaContent:   () => filterSaContent(),
+  openAddSaContent:  () => openAddSaContent(),
+  saveSaContent:     () => saveSaContent(),
+  revokeCurrentCatAccess: () => revokeCurrentCatAccess(),
+  clearSaFileInput:  () => clearSaFileInput(),
+  onSaFileSelected:  el => onSaFileSelected(el),
+
+  /* Ajuda / screenshots */
+  ajudaTab:          el => ajudaTab(el.dataset.tab, el),
+  openShot:          el => openShot(el, el.dataset.cap),
 };
 document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
+document.addEventListener('change', e => {
+  const t = e.target.closest('[data-act]');
+  if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
+});
+document.addEventListener('input', e => {
   const t = e.target.closest('[data-act]');
   if (t && window.__acts[t.dataset.act]) window.__acts[t.dataset.act](t, e);
 });

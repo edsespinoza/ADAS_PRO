@@ -17,6 +17,7 @@ const ROOT = path.join(__dirname, '..');
 const HTML_FILES = [
   'index.html', 'login.html', 'reset-password.html', 'mfa-verify.html',
   'admin.html', 'membros.html', 'superadmin.html', 'email-config.html',
+  'lgpd.html', 'certifications.html', 'api-docs.html', 'verificar.html',
 ];
 
 const sha384b64 = (buf) => crypto.createHash('sha384').update(buf).digest('base64');

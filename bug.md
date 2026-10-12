@@ -130,7 +130,7 @@
 | # | Prioridade | Achado | Ação | Onde |
 |---|---|---|---|---|
 | C | ✅ Resolvido | Secrets de e-mail **configurados** (2026-10-10) via `supabase secrets set`: `SITE_URL=https://adaspro.com.br`, `ADMIN_EMAIL=espinozatecnico@gmail.com`, `RESEND_API_KEY` (conta Resend criada; domínio `adaspro.com.br` **verificado**). Teste de envio Resend → **HTTP 200 / `delivered`**; E2E `capture-lead` → `{ok:true}` + `dedup:true`; e-mail de aviso entregue | — | Supabase → Project Settings → Edge Functions → Secrets |
-| D | 🟡 Médio | 4 contas staff (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` `@adaspro.com.br`) com **0 fatores TOTP**; código MFA pronto | Ativar "TOTP obrigatório" e configurar autenticador (ver #36) | Supabase Dashboard → Auth → MFA Policy |
+| D | 🟡 Médio | 4 contas staff (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` `@adaspro.com.br`) com **0 fatores TOTP**; política TOTP **já ativa** (verificado 2026-10-11 via Management API); código MFA pronto | **Ação do usuário:** logar com `superadmin@`/`admin@` e configurar o autenticador (QR) — GoTrue não expõe criação de fator TOTP via API (ver #36) | App → perfil/segurança (ou Supabase Auth → MFA Policy) |
 | F | ✅ Resolvido | Senhas de produção (`AutoTech@…` / `Admin@…`) expostas no histórico → **rotacionadas em 2026-10-10** para valores fortes e distintos (ver #110); novas senhas entregues ao proprietário, não versionadas | — | Supabase Dashboard → Authentication → Users |
 | G | ✅ Resolvido | Modo demo em produção — **revertido por decisão de produto** (2026-10-10): `DEMO_ENABLED=true` **reativado** de propósito em produção (ver #106). O demo é sandbox local sem dados reais | — | Vercel Dashboard → Project → Settings → Environment Variables |
 | H | 🟡 Médio | `VERCEL_TOKEN` em `~/.bashrc:133` **inválido** (HTTP 403 em `api.vercel.com/v2/user`) — **contornado**: CLI reautenticada via `vercel login` (device flow, credencial em `auth.json`, ver #105) | (Opcional) gerar token novo e exportar `VERCEL_TOKEN` apenas p/ CI/deploy não-interativo | Terminal / `~/.bashrc` |
@@ -490,10 +490,12 @@
 
 - [ ] **#36 — Ativar MFA (TOTP) obrigatório para admin e superadmin**
   - **Pré-requisito:** Código 100% pronto — `mfa-verify.html`, `AUTH.verifyMFA()`, redirect automático em `login.html` e persistência de sessão via `sessionStorage` já implementados
-  - **Passo 1 — Ativar TOTP no Supabase Dashboard:**
+  - **Passo 1 — Ativar TOTP no Supabase Dashboard:** ✅ **já ativo (verificado 2026-10-11)**
     - Supabase Dashboard → Authentication → Sign In / MFA
     - Ativar "Time-based One-Time Password (TOTP)"
-  - **Passo 2 — Configurar o Google Authenticator na conta superadmin:**
+    - **Verificação via Management API** (`GET /v1/projects/{ref}/config/auth`): `mfa_totp_enroll_enabled: true` e `mfa_totp_verify_enabled: true` — nada a alterar. `mfa_phone_*`/`mfa_web_authn_*` desabilitados (só TOTP).
+  - **Estado dos fatores (verificado 2026-10-11):** as 4 contas staff (`admin@`, `superadmin@`, `teste_admin@`, `testesa@` `@adaspro.com.br`) têm **0 fatores TOTP** (`auth.mfa_factors`). **Nenhuma está bloqueada** — sem fator, o login segue em `aal1`; o redirect para `mfa-verify.html` só ocorre quando o fator existe e está pendente.
+  - **Passo 2 — Configurar o Google Authenticator na conta superadmin (AÇÃO DO USUÁRIO):**
     - Logar em `adaspro.com.br` com a conta `superadmin@adaspro.com.br`
     - Acessar perfil / configurações de segurança → "Configurar autenticador"
     - Escanear QR code com Google Authenticator ou Authy

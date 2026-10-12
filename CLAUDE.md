@@ -245,5 +245,6 @@ Existe uma suíte headless mínima: `npm test` (`node --test tests/`, Node 20+ c
 - `tests/bulletins.headless.test.js` — repro do caminho `getBulletins → renderBulletinsDynamic`: carrega o `js/auth.js` **real** num DOM jsdom (modo offline) e a `renderBulletinsDynamic` **real** extraída de `membros.html`, cobrindo seed/substituição de seed obsoleto/preservação de edição humana/render/empty-state. Ver `bug.md` para o achado de `_isStaleSeed`.
 - `jsdom` é `devDependency` (instalado via `npm install`); `node_modules/` é gitignored.
 
-Fora isso, a verificação é manual via browser (dev server em `localhost:3000`) ou URL de preview do Vercel. As Edge Functions têm testes Deno próprios: `npx deno test --allow-all supabase/functions/`.
+Fora isso, a verificação é manual via browser (dev server em `localhost:3000`) ou URL de preview do Vercel.
+As Edge Functions têm testes Deno próprios: `npx deno test --allow-all supabase/functions/`. A lógica fica em `handler.ts` (DI via `handler(req, deps)`, sem módulos remotos) e o wiring em `index.ts` — padrão em `approve-user`, `api-gateway` e `notify` (`notify/handler.test.ts`, 28 testes).
 

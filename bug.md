@@ -1,7 +1,7 @@
 # ADAS PRO — Controle de Tarefas e Melhorias
 
 **Projeto:** ADAS PRO Platform  
-**Última atualização:** 2026-10-10  
+**Última atualização:** 2026-10-11  
 **Responsável:** AutoTech Service
 
 ---
@@ -104,6 +104,15 @@
   - **#24 / pendência C ✅ (notify E2E):** com JWT de superadmin, os 4 eventos retornaram **HTTP 200 `{"ok":true}`** — `new_user`, `user_approved`, `ticket_reply`, `new_lead` — e os **4 e-mails aparecem `delivered` no Resend**. Negativos: evento inválido → `400 {"error":"Evento inválido."}`; sem `Authorization` → `401 UNAUTHORIZED_NO_AUTH_HEADER`; sem `event`/`data` → `400 {"error":"Payload inválido..."}`. `audit_logs` action=`notify` com 4 registros. Usuário-membro temporário criado e **removido** (cascade → 4 staff de volta; `public.bulletins`/`leads` = 0).
   - **#108 ✅ (round-trip validado):** `ts` estava **indefinido** em `getBulletins` (`js/auth.js`) → `ReferenceError` ao listar boletins (**causa provável do sintoma "versão antiga"**). `ts` só existia como constante **local** de `getAllTickets`. **Fix:** promovido a helper de módulo `function ts(v)` (após `_msFromIso`) e removida a const local. Build + `vercel --prod --yes` (`landing-page-gdcdw8vym` → `https://adaspro.com.br`). E2E em produção: boletim criado só-editorial (`dtcs`, `appliedVehicles`), **cache local limpo e página recarregada** → leitura retornou os dados **do Supabase**, com `payload` e colunas (`access_level=2`, `status=draft`) corretos (conferido por SQL). Linha de teste removida.
   - **Arquivos:** `js/auth.js` (fix `ts`); 7 HTMLs com SRI de `auth.js` atualizado (`admin`, `email-config`, `login`, `membros`, `mfa-verify`, `reset-password`, `superadmin`). `SRI`+`CSP` regenerados por `npm run build` (`js/supabase-config.js` sem diff; `vercel.json` inalterado).
+
+- [x] **#111 — REFACTOR: `notify` extraída p/ `handler.ts` testável + 28 testes Deno** ✅ 2026-10-11
+  - **Motivo:** a `notify` era um monólito com `serve()` no load — impossível importar em teste sem subir um servidor. Diferente de `approve-user`/`api-gateway`, que já usam o padrão `handler(req, deps)` (DI).
+  - **Código:** novo `supabase/functions/notify/handler.ts` (lógica pura + `handler(req, deps: NotifyDeps)` + `buildMessage`) com os templates movidos **verbatim** (`baseWrapper`, `templateNewUser`, `templateUserApproved`, `templateTicketReply`, `templateNewLead`), `esc`, `json`, `corsHeadersFor`. `handler.test.ts` cobre CORS/método/limite de payload/config/auth (token, role, status, MFA)/rate limits/validação por evento/destinatário inativo/os 4 eventos/falha da Resend/escape de HTML. `index.ts` ficou só com o wiring (`serve` + `createClient` + `fetch` Resend), `supabase-js@2.49.0` pinado.
+  - **Contrato preservado integralmente:** `OPTIONS`→200 · não-POST→405 · >64KB→413 · sem `RESEND_API_KEY`→500 · sem `authorization`→401 · token inválido→401 · role ∉ `[gestor,admin,superadmin]`→403 · `status!=='active'`→403 · MFA (erro/aal2 pendente)→403 · 20/min→429 · 100/dia→429 · payload inválido→400 · evento inválido→400 · destinatário inativo→400 · Resend falha→500 · sucesso→200 `{ok:true}`.
+  - **Verificação:** `npx deno test --allow-all supabase/functions/` → **92/92**; `npx deno check supabase/functions/notify/index.ts` → limpo; `npm test` → 10/10; `npm run security` → OK.
+  - **Deploy:** `supabase functions deploy notify` (124 kB). **Prod:** `OPTIONS`→200 `access-control-allow-origin: https://adaspro.com.br`; `POST` sem auth→`401 UNAUTHORIZED_NO_AUTH_HEADER`.
+  - **Arquivos:** `supabase/functions/notify/{handler.ts,handler.test.ts,index.ts}`, `deno.lock` (jsdom em workspace deps).
+  - **Nota:** `#24` (E2E manual do botão "Enviar email real") segue como pendência manual — requer sessão admin; coberto por testes headless daqui.
 
 **Pendências manuais confirmadas nesta auditoria (não automatizáveis por código — revisadas 2026-10-10, ver #110):**
 

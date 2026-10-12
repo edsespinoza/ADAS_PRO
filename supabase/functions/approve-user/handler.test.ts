@@ -18,6 +18,10 @@ interface Overrides {
   createUserError?: string | null;
   usersInsertError?: string | null;
   auditInsertError?: string | null;
+  targetStatus?: string;
+  targetEmail?: string;
+  targetName?: string;
+  notifyError?: string | null;
 }
 
 interface FakeState {
@@ -27,12 +31,15 @@ interface FakeState {
   lastUpdate: Record<string, unknown> | null;
   /** Updates aplicados em api_keys: { user_id, active } */
   apiKeyUpdates: Array<{ user_id: unknown; active: unknown }>;
+  /** Chamadas feitas a deps.notify (evento + payload). */
+  notifyCalls: Array<{ event: string; data: Record<string, unknown> }>;
 }
 
 function makeDeps(overrides: Overrides = {}) {
   const caller = overrides.caller ?? { id: 'caller-1', role: 'superadmin', status: 'active' };
   const state: FakeState = {
     createdAuthUsers: [], usersRows: [], auditLogs: [], lastUpdate: null, apiKeyUpdates: [],
+    notifyCalls: [],
   };
 
   const dep: ApproveUserDeps = {
@@ -75,8 +82,10 @@ function makeDeps(overrides: Overrides = {}) {
             if (table === 'users') {
               const isCaller = caller?.id != null && eqValue === caller.id;
               const role = isCaller ? (caller?.role ?? '') : (overrides.target?.role ?? '');
-              const status = isCaller ? (caller?.status ?? '') : 'active';
-              return { data: { role, status }, error: null };
+              const status = isCaller ? (caller?.status ?? '') : (overrides.targetStatus ?? 'active');
+              const email = isCaller ? 'caller@adaspro.com.br' : (overrides.targetEmail ?? 'alvo@adaspro.com.br');
+              const name = isCaller ? 'Caller' : (overrides.targetName ?? 'Usuário Alvo');
+              return { data: { role, status, email, name }, error: null };
             }
             return { data: null, error: null };
           },
@@ -116,6 +125,11 @@ function makeDeps(overrides: Overrides = {}) {
         return b;
       },
     }),
+    notify: async (_authHeader, event, data) => {
+      state.notifyCalls.push({ event, data });
+      if (overrides.notifyError) throw new Error(overrides.notifyError);
+      return true;
+    },
   };
 
   return { deps: dep, state };
@@ -408,4 +422,55 @@ Deno.test('update rejeita name vazio ou acima de 120 chars', async () => {
     assertEquals(res.status, 400, `name=${name.slice(0, 10)}`);
   }
   assertEquals(state.lastUpdate, null);
+});
+/* ─── #112: wiring do `notify` na transição pendente→ativo ─── */
+
+Deno.test('#112: approve envia notify user_approved na transição pendente→ativo', async () => {
+  const { deps, state } = makeDeps({
+    target: { id: 't-1', role: 'membro' },
+    targetStatus: 'pending',
+    targetEmail: 'novo@adaspro.com.br',
+    targetName: 'Novo Membro',
+  });
+  const res = await handler(post({ action: 'approve', targetId: 't-1' }), deps);
+
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { ok: true });
+  assertEquals(state.notifyCalls.length, 1);
+  assertEquals(state.notifyCalls[0].event, 'user_approved');
+  assertEquals(state.notifyCalls[0].data, { userEmail: 'novo@adaspro.com.br', userName: 'Novo Membro' });
+});
+
+Deno.test('#112: approve de usuário já ativo NÃO reenvia notify (idempotência)', async () => {
+  const { deps, state } = makeDeps({
+    target: { id: 't-1', role: 'membro' },
+    targetStatus: 'active',
+  });
+  const res = await handler(post({ action: 'approve', targetId: 't-1' }), deps);
+
+  assertEquals(res.status, 200);
+  assertEquals(state.notifyCalls.length, 0);
+});
+
+Deno.test('#112: falha do notify não bloqueia a aprovação', async () => {
+  const { deps, state } = makeDeps({
+    target: { id: 't-1', role: 'membro' },
+    targetStatus: 'pending',
+    notifyError: 'notify indisponível',
+  });
+  const res = await handler(post({ action: 'approve', targetId: 't-1' }), deps);
+
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { ok: true });
+  assertEquals(state.notifyCalls.length, 1);
+});
+
+Deno.test('#112: block/update não disparam notify user_approved', async () => {
+  const { deps, state } = makeDeps({
+    target: { id: 't-1', role: 'membro' },
+    targetStatus: 'active',
+  });
+  await handler(post({ action: 'block', targetId: 't-1' }), deps);
+  await handler(post({ action: 'update', targetId: 't-1', updates: { name: 'Novo Nome' } }), deps);
+  assertEquals(state.notifyCalls.length, 0);
 });

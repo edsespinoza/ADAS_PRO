@@ -47,6 +47,9 @@ export interface ApproveUserDeps {
     };
     from(table: string): any;
   };
+  // Opcional: envia e-mail transacional (Edge Function `notify`) encaminhando o
+  // JWT do chamador. Ausente nos testes antigos; falha nunca bloqueia a ação.
+  notify?(authHeader: string, event: string, data: Record<string, unknown>): Promise<unknown>;
 }
 
 export async function handler(req: Request, deps: ApproveUserDeps): Promise<Response> {
@@ -197,8 +200,11 @@ export async function handler(req: Request, deps: ApproveUserDeps): Promise<Resp
 
     // Paridade com can_manage_role (RLS): só age sobre roles estritamente inferiores à do chamador
     const { data: targetData } = await supabaseAdmin
-      .from('users').select('role').eq('id', targetId).single();
+      .from('users').select('role, email, name, status').eq('id', targetId).single();
     const targetRole = targetData?.role || '';
+    const targetEmail = (targetData?.email as string) || '';
+    const targetName = (targetData?.name as string) || '';
+    const targetWasActive = targetData?.status === 'active';
     if (!VALID_ROLES.includes(targetRole)) {
       return json({ error: 'Usuário não encontrado.' }, 404);
     }
@@ -313,6 +319,19 @@ export async function handler(req: Request, deps: ApproveUserDeps): Promise<Resp
       details: updates || null, created_at: new Date().toISOString()
     });
     if (logErr) console.error('[approve-user] logAudit falhou:', action, logErr.message);
+
+    // 5. E-mail transacional (best-effort): `user_approved` na transição
+    // pendente→ativo. Encaminha o JWT do chamador p/ passar no gate do `notify`.
+    if (action === 'approve' && !targetWasActive && targetEmail) {
+      try {
+        await deps.notify?.(authHeader, 'user_approved', {
+          userEmail: targetEmail,
+          userName: targetName,
+        });
+      } catch (e) {
+        console.error('[approve-user] notify falhou:', e instanceof Error ? e.message : 'unknown');
+      }
+    }
 
     return json({ ok: true });
 

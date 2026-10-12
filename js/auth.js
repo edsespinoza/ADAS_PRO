@@ -1614,7 +1614,22 @@ const AUTH = (function () {
     _tickets[ticketId].messages.push({ id:'msg_'+Date.now().toString(36), authorId, authorName:user?.name||session?.name||'Usuário', role:(user?.role||session?.role)==='membro'?'member':'admin', message, createdAt:Date.now() });
     _tickets[ticketId].updatedAt = Date.now();
     if (['admin','gestor'].includes(user?.role||session?.role) && _tickets[ticketId].status==='open') _tickets[ticketId].status = 'in-progress';
-    _sbUpsertTicket(_tickets[ticketId]); return true;
+    _sbUpsertTicket(_tickets[ticketId]);
+    // #112: e-mail transacional `ticket_reply` ao dono do ticket — só quando o
+    // autor é staff (membro não recebe e-mail da própria resposta). Fire-and-forget.
+    if (_mode === 'supabase' && _sb && !_demo) {
+      const _authorRole = user?.role || session?.role;
+      if (['gestor','admin','superadmin'].includes(_authorRole)) {
+        const _tk = _tickets[ticketId];
+        const _owner = _users[_tk.userId];
+        const _ownerEmail = (_tk.userEmail || _owner?.email || '').toLowerCase();
+        const _authorEmail = (user?.email || session?.email || '').toLowerCase();
+        if (_ownerEmail && _ownerEmail !== _authorEmail) {
+          callEdgeFunction('notify', { event:'ticket_reply', data:{ userEmail:_ownerEmail, userName:_tk.userName||_owner?.name||'', ticketTitle:_tk.title||'' } });
+        }
+      }
+    }
+    return true;
   }
   function updateTicketStatus(ticketId, status) {
     const session = getSession();

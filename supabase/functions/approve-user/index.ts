@@ -19,6 +19,15 @@ const deps: ApproveUserDeps = {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     ),
+  // Encaminha o JWT do chamador para o gate de auth do `notify` (server→server).
+  notify: async (authHeader, event, data) => {
+    const res = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/notify`, {
+      method: 'POST',
+      headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, data }),
+    });
+    return res.ok;
+  },
 };
 
 if (import.meta.main) {

@@ -114,6 +114,13 @@
   - **Arquivos:** `supabase/functions/notify/{handler.ts,handler.test.ts,index.ts}`, `deno.lock` (jsdom em workspace deps).
   - **Nota:** `#24` (E2E manual do botão "Enviar email real") segue como pendência manual — requer sessão admin; coberto por testes headless daqui.
 
+- [!] **#112 — Wiring: eventos do `notify` não disparam no fluxo real** (aberto 2026-10-11)
+  - **Achado:** a Edge Function `notify` está pronta, testada (ver #111) e deployada, e o harness `email-config.html` a chama com JWT de admin — mas **nenhum fluxo de negócio** a invoca. `approve-user` (aprovação/criação) e `admin.html`/`js/auth.js` **não** chamam `notify`, então os e-mails `new_user`, `user_approved` e `ticket_reply` só saem pelo botão "📤 Enviar email real" da página de configuração.
+  - **Evidência:** `grep -rn "functions/v1/notify"` → o único caller é `email-config.html:788`; `approve-user/` não contém referência a `notify`. Grep confirma os 3 eventos **sem** uso no frontend.
+  - **Impacto:** o e-mail transacional existe de fato só em teste — usuário recém-aprovado e dono do ticket **não** recebem aviso em uso normal.
+  - **Decisão de arquitetura pendente:** (a) frontend (`admin.html`) chama `notify` com o JWT do admin ao aprovar/responder; ou (b) `approve-user` invoca `notify` internamente (service role — exige aceitar origem interna no gate de auth da função). Definir a opção antes de implementar.
+  - **Arquivos previstos:** `supabase/functions/approve-user/index.ts` **ou** `admin.html`/`js/auth.js` (+ eventual ajuste de auth em `supabase/functions/notify/handler.ts`).
+
 **Pendências manuais confirmadas nesta auditoria (não automatizáveis por código — revisadas 2026-10-10, ver #110):**
 
 | # | Prioridade | Achado | Ação | Onde |
@@ -445,10 +452,8 @@
     - `RESEND_API_KEY` = chave `re_*` (Resend)
     - `ADMIN_EMAIL` = espinozatecnico@gmail.com
     - `SITE_URL` = https://adaspro.com.br
-  - [ ] Testar evento `new_user`: fazer cadastro demo → verificar inbox admin (desbloqueado — secrets ativos)
-  - [ ] Testar evento `user_approved`: aprovar usuário demo → verificar inbox usuário
-  - [ ] Testar evento `ticket_reply`: responder ticket → verificar inbox membro
-  - [ ] Confirmar que `approve-user` Edge Function dispara `notify` ao aprovar usuário
+  - [x] Validar os 3 eventos por chamada direta com JWT superadmin ✅ 2026-10-10 (ver #110) — `new_user`, `user_approved` e `ticket_reply` retornaram HTTP 200 e ficaram `delivered` no Resend
+  - [!] **Wiring no fluxo real ausente (novo #112):** `approve-user` (Edge Function) e `admin.html`/`js/auth.js` **não** chamam `notify` — o único caller hoje é o harness `email-config.html`. Sem esse wiring, aprovação de usuário / novo cadastro / resposta de ticket **não** disparam e-mail, apesar de a função estar pronta e testada.
 
   **Arquivo:** `supabase/functions/notify/index.ts`
 
@@ -1268,7 +1273,7 @@ confirmado por nova consulta de baseline depois.
 
 ### Pendência conhecida (não bloqueia)
 
-- [ ] **Boletins continuam locais ao navegador.** O seed é compartilhado por estar no `auth.js`, mas qualquer boletim criado no painel editorial em `superadmin.html` segue só no `localStorage` de quem o criou. Para compartilhamento real é preciso uma tabela `bulletins` no Supabase + `_sbLoadAll`/RLS. Fora do escopo deste pedido.
+- [x] **Boletins continuam locais ao navegador.** ✅ **RESOLVIDO em #108** (2026-10-10) — migração para Supabase (tabela `bulletins` + coluna `payload` + dual-write) implementada. O seed segue no `auth.js`; boletins criados no painel editorial agora persistem no Supabase.
 
 ---
 

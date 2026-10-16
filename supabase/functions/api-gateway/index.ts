@@ -95,9 +95,11 @@ serve(async (req) => {
 
   try {
     /* ─── 1. Rate limit (credencial + IP) ─── */
-    const clientIp = req.headers.get('x-real-ip')
-      || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
-      || 'unknown';
+    // M1: confiamos apenas na entrada mais à direita do X-Forwarded-For (inserida
+    // pelo proxy da plataforma). `x-real-ip` e o XFF[0] são forjáveis pelo cliente.
+    const xffParts = (req.headers.get('x-forwarded-for') || '')
+      .split(',').map((s) => s.trim()).filter(Boolean);
+    const clientIp = xffParts.length ? xffParts[xffParts.length - 1] : 'unknown';
     const cred = req.headers.get('x-api-key') || req.headers.get('authorization') || 'anonymous';
 
     let allowed = true, remaining = RATE_LIMIT, resetAt = 0;

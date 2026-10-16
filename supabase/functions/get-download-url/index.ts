@@ -44,9 +44,13 @@ serve(async (req) => {
     if (userError || !user) return json({ error: 'Token inválido.' }, 401);
 
     // MFA: se a conta possui fator configurado mas a sessão ainda é aal1,
-    // a 2ª etapa é obrigatória (usuários sem MFA têm nextLevel aal1 — passam)
-    const { data: aalData } = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+    // a 2ª etapa é obrigatória (usuários sem MFA têm nextLevel aal1 — passam).
+    // Fail-closed: se não for possível determinar o nível, nega (paridade com api-gateway/requireMfa).
+    const aal = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal.error || !aal.data) {
+      return json({ error: 'Não foi possível determinar o nível de autenticação.' }, 403);
+    }
+    if (aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2') {
       return json({ error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' }, 403);
     }
 

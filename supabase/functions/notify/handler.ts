@@ -35,7 +35,10 @@ export interface NotifyDeps {
       };
     };
   };
-  createAdminClient(): { from(table: string): any };
+  createAdminClient(): {
+    from(table: string): any;
+    rpc(fn: string, args: Record<string, unknown>): Promise<{ data: number | null; error: { message: string } | null }>;
+  };
   /** Envia o e-mail (fetch à Resend em produção). */
   sendEmail(payload: { from: string; to: string; subject: string; html: string }): Promise<{
     ok: boolean;
@@ -162,27 +165,33 @@ export async function handler(req: Request, deps: NotifyDeps): Promise<Response>
       return json({ error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' }, 403);
     }
 
-    // Rate limiting — máximo 20 emails/minuto por usuário
-    const { count: recentCount, error: countErr } = await supabaseAdmin
-      .from('audit_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('actor_id', user.id)
-      .eq('action', 'notify')
-      .gte('created_at', new Date(now - 60_000).toISOString());
+    // Rate limiting atômico via RPC (service_role) — 20/min e 100/dia por usuário.
+    // Fail-closed: se o limiter estiver indisponível, nega o envio.
+    const [minR, dayR] = await Promise.all([
+      supabaseAdmin.rpc('increment_rate_limit', {
+        p_bucket: `notify:min:${user.id}`,
+        p_window: new Date(Math.floor(now / 60_000) * 60_000).toISOString(),
+        p_limit: 20, p_window_ms: 60_000,
+      }),
+      supabaseAdmin.rpc('increment_rate_limit', {
+        p_bucket: `notify:day:${user.id}`,
+        p_window: new Date(Math.floor(now / 86_400_000) * 86_400_000).toISOString(),
+        p_limit: 100, p_window_ms: 86_400_000,
+      }),
+    ]);
 
-    if (!countErr && recentCount && recentCount >= 20) {
+    if (minR.error || dayR.error || typeof minR.data !== 'number' || typeof dayR.data !== 'number') {
+      console.error('[notify] rate limit indisponível:', minR.error?.message || dayR.error?.message);
+      return json({ error: 'Serviço temporariamente indisponível. Tente novamente.' }, 503);
+    }
+
+    // Rate limiting — máximo 20 emails/minuto por usuário
+    if (minR.data > 20) {
       return json({ error: 'Muitas requisições. Aguarde 1 minuto.' }, 429);
     }
 
     // Rate limiting — máximo 100 emails/dia por usuário (limita abuso via conta comprometida)
-    const { count: dayCount, error: dayErr } = await supabaseAdmin
-      .from('audit_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('actor_id', user.id)
-      .eq('action', 'notify')
-      .gte('created_at', new Date(now - 86_400_000).toISOString());
-
-    if (!dayErr && dayCount && dayCount >= 100) {
+    if (dayR.data > 100) {
       return json({ error: 'Limite diário de envios atingido.' }, 429);
     }
   } catch (_) {

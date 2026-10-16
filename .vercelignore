@@ -1,0 +1,5 @@
+# PDFs do catálogo pago — NÃO podem ser servidos publicamente pelo hosting.
+# O download validado acontece via Edge Function get-download-url
+# (signed URL no bucket privado `materiais`). Estes arquivos são a fonte
+# local para upload ao Storage — permanecem no repo, mas fora do deploy.
+assets/downloads/

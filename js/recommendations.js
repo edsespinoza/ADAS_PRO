@@ -752,8 +752,13 @@ const RECOMMENDATIONS = (function () {
       }
     }
     const item = _getContentById(contentId);
-    if (item && item.filePath) {
-      window.open('assets/downloads/' + item.filePath, '_blank');
+    if (!item || !item.filePath) return;
+    if (typeof downloadContent === 'function') {
+      downloadContent(contentId);
+    } else if (typeof AUTH !== 'undefined' && AUTH.callEdgeFunction) {
+      AUTH.callEdgeFunction('get-download-url', { contentId }).then(result => {
+        if (result.ok && result.data?.url) window.open(result.data.url, '_blank', 'noopener');
+      });
     }
   }
 

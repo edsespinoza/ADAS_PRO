@@ -17,6 +17,7 @@ interface Overrides {
   aalCurrentLevel?: string;
   recentCount?: number;
   dayCount?: number;
+  rpcError?: boolean;
   recipient?: { status: string } | null;
   sendOk?: boolean;
   sendErrText?: string;
@@ -80,7 +81,15 @@ function makeDeps(over: Overrides = {}) {
         },
       },
     }) as unknown as ReturnType<NotifyDeps['createUserClient']>,
-    createAdminClient: () => ({ from: () => builder }),
+    createAdminClient: () => ({
+      from: () => builder,
+      rpc: async (_fn: string, args: Record<string, unknown>) => {
+        if (over.rpcError) return { data: null, error: { message: 'limiter down' } };
+        const bucket = String((args as { p_bucket?: string })?.p_bucket ?? '');
+        const data = bucket.startsWith('notify:min:') ? (over.recentCount ?? 1) : (over.dayCount ?? 1);
+        return { data, error: null };
+      },
+    }),
     sendEmail: async (p) => {
       sent.push(p as unknown as Record<string, unknown>);
       return { ok: over.sendOk ?? true, text: async () => over.sendErrText ?? '' };
@@ -247,17 +256,24 @@ Deno.test('MFA: aal2 pendente → 403; aal2 cumprido → passa', async () => {
 /* ─── handler: rate limit ─── */
 
 Deno.test('rate limit 20/min → 429', async () => {
-  const { deps } = makeDeps({ recentCount: 20 });
+  const { deps } = makeDeps({ recentCount: 21 });
   const res = await handler(req({ auth: 'Bearer x', body: {} }), deps);
   assertEquals(res.status, 429);
   assertEquals((await body(res)).error, 'Muitas requisições. Aguarde 1 minuto.');
 });
 
 Deno.test('rate limit 100/dia → 429', async () => {
-  const { deps } = makeDeps({ dayCount: 100 });
+  const { deps } = makeDeps({ dayCount: 101 });
   const res = await handler(req({ auth: 'Bearer x', body: {} }), deps);
   assertEquals(res.status, 429);
   assertEquals((await body(res)).error, 'Limite diário de envios atingido.');
+});
+
+Deno.test('rate limit indisponível (rpc erro) → 503 fail-closed', async () => {
+  const { deps } = makeDeps({ rpcError: true });
+  const res = await handler(req({ auth: 'Bearer x', body: {} }), deps);
+  assertEquals(res.status, 503);
+  assertEquals((await body(res)).error, 'Serviço temporariamente indisponível. Tente novamente.');
 });
 
 /* ─── handler: payload ─── */

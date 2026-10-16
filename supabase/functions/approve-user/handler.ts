@@ -31,6 +31,7 @@ export interface ApproveUserDeps {
       mfa: {
         getAuthenticatorAssuranceLevel(): Promise<{
           data: { nextLevel: string | null; currentLevel: string | null } | null;
+          error: { message: string } | null;
         }>;
       };
     };
@@ -46,6 +47,7 @@ export interface ApproveUserDeps {
       };
     };
     from(table: string): any;
+    rpc(fn: string, args: Record<string, unknown>): Promise<{ data: number | null; error: { message: string } | null }>;
   };
   // Opcional: envia e-mail transacional (Edge Function `notify`) encaminhando o
   // JWT do chamador. Ausente nos testes antigos; falha nunca bloqueia a ação.
@@ -89,19 +91,28 @@ export async function handler(req: Request, deps: ApproveUserDeps): Promise<Resp
     }
     // MFA: se a conta possui fator configurado mas a sessão ainda é aal1,
     // a 2ª etapa é obrigatória (usuários sem MFA têm nextLevel aal1 — passam)
-    const { data: aalData } = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+    // Fail-closed: se não for possível determinar o nível, nega (paridade com api-gateway/requireMfa).
+    const aal = await supabaseUser.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal.error || !aal.data) {
+      return json({ error: 'Não foi possível determinar o nível de autenticação.' }, 403);
+    }
+    if (aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2') {
       return json({ error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' }, 403);
     }
 
-    // 2b. Rate limiting — verificar audit_logs dos últimos 60s
-    const { count: recentCount, error: countErr } = await supabaseAdmin
-      .from('audit_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('actor_id', user.id)
-      .gte('created_at', new Date(Date.now() - 60_000).toISOString());
+    // 2b. Rate limiting atômico via RPC (service_role) — 30 ações/min por administrador.
+    // Fail-closed: se o limiter estiver indisponível, nega a ação.
+    const { data: recentCount, error: countErr } = await supabaseAdmin.rpc('increment_rate_limit', {
+      p_bucket: `admin_action:${user.id}`,
+      p_window: new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString(),
+      p_limit: 30, p_window_ms: 60_000,
+    });
 
-    if (!countErr && recentCount && recentCount >= 30) {
+    if (countErr || typeof recentCount !== 'number') {
+      console.error('[approve-user] rate limit indisponível:', countErr?.message);
+      return json({ error: 'Serviço temporariamente indisponível. Tente novamente.' }, 503);
+    }
+    if (recentCount > 30) {
       return json({ error: 'Muitas requisições. Aguarde 1 minuto.' }, 429);
     }
 

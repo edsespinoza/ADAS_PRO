@@ -67,10 +67,13 @@ serve(async (req) => {
   const digits = (phone || '').replace(/\D/g, '');
   if (digits.length < 10 || digits.length > 13)    return json({ error: 'WhatsApp inválido.' }, 400, origin);
 
-  /* ─── Rate limit (IP + e-mail) — fail-open ─── */
-  const ip = (req.headers.get('x-real-ip')
-    || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
-    || 'unknown');
+  /* ─── Rate limit (IP + e-mail) — fail-closed ─── */
+  // M1: o X-Forwarded-For é appendable pelo cliente; confiamos apenas na entrada
+  // mais à direita (a que o proxy da plataforma insere). `x-real-ip` é descartado
+  // por ser livremente forjável quando não é sobrescrito pela borda.
+  const xffParts = (req.headers.get('x-forwarded-for') || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  const ip = xffParts.length ? xffParts[xffParts.length - 1] : 'unknown';
   const ipHash    = await sha256Hex(`${IP_SALT}:${ip}`);
   const emailHash = await sha256Hex(email);
 
@@ -90,14 +93,20 @@ serve(async (req) => {
         p_limit: RATE_EMAIL_LIMIT, p_window_ms: HOUR_MS,
       }),
     ]);
-    if (typeof ipR.data === 'number' && ipR.data > RATE_IP_LIMIT) {
+    // M3: fail-closed — se o limiter estiver indisponível, não deixa passar.
+    if (ipR.error || emailR.error || typeof ipR.data !== 'number' || typeof emailR.data !== 'number') {
+      console.error('[capture-lead] rate limit indisponível:', ipR.error?.message || emailR.error?.message);
+      return json({ error: 'Serviço temporariamente indisponível. Tente novamente em instantes.' }, 503, origin);
+    }
+    if (ipR.data > RATE_IP_LIMIT) {
       return json({ error: 'Muitas solicitações. Tente novamente em 1 minuto.' }, 429, origin);
     }
-    if (typeof emailR.data === 'number' && emailR.data > RATE_EMAIL_LIMIT) {
+    if (emailR.data > RATE_EMAIL_LIMIT) {
       return json({ error: 'Você já enviou recentemente. Aguarde alguns minutos.' }, 429, origin);
     }
   } catch (e) {
-    console.error('[capture-lead] rate limit falhou (fail-open):', e instanceof Error ? e.message : e);
+    console.error('[capture-lead] rate limit falhou (fail-closed):', e instanceof Error ? e.message : e);
+    return json({ error: 'Serviço temporariamente indisponível. Tente novamente em instantes.' }, 503, origin);
   }
 
   /* ─── Origem / visitante ─── */

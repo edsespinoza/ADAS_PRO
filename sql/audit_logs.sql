@@ -28,8 +28,14 @@ DROP POLICY IF EXISTS "audit_insert" ON public.audit_logs;
 CREATE POLICY "audit_select" ON public.audit_logs
   FOR SELECT USING (public.is_admin());
 
+-- `actor_id = auth.uid()` amarra a linha ao autor da requisição: sem isso um
+-- admin/gestor podia inserir registros com actor_id de terceiros — forjando a
+-- auditoria E envenenando os contadores que sustentam o rate limit de
+-- approve-user (30/60s) e notify (20/min, 100/dia), que contam linhas de
+-- audit_logs por actor_id. Escritas legítimas do cliente (js/auth.js logAudit)
+-- sempre usam o próprio userId; service_role (Edge Functions) ignora a policy.
 CREATE POLICY "audit_insert" ON public.audit_logs
-  FOR INSERT WITH CHECK (public.is_admin());
+  FOR INSERT WITH CHECK (public.is_admin() AND actor_id = auth.uid());
 
 -- Comentários descritivos
 COMMENT ON TABLE  public.audit_logs            IS 'Registro de ações administrativas do sistema ADAS PRO';

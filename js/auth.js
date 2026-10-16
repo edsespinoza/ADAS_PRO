@@ -1045,6 +1045,17 @@ const AUTH = (function () {
 
   async function _sbDirectUpdate(table, id, updates) {
     const session = getSession();
+    // Fallback direto (coberto por RLS) só após a 2ª etapa de MFA — paridade com callEdgeFunction.
+    // Sem isto, staff com MFA pendente (aal1) escreveria via tabela contornando o gate aal2.
+    if (session && ['admin','gestor','superadmin'].includes(session.role)) {
+      try {
+        const { data } = await _sb.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (data?.nextLevel === 'aal2' && data?.currentLevel !== 'aal2') {
+          console.error('[AUTH] _sbDirectUpdate bloqueado: MFA pendente (aal1).');
+          return false;
+        }
+      } catch(_) {}
+    }
     console.info('[AUTH] _sbDirectUpdate:', { table, id, actor: session?.userId, fields: Object.keys(updates) });
     const { error } = await _sb.from(table).update(updates).eq('id', id);
     if (error) { console.error('[AUTH] _sbDirectUpdate FAILED:', { table, id, msg: error.message }); return false; }
@@ -1091,9 +1102,15 @@ const AUTH = (function () {
   }
 
   async function updateUserPermissions(id, perms) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'gestor')) return false;
+    if (session.userId === id) return false;
+    if (hasRole(_users[id]?.role || 'membro', session.role)) return false;
     if (_mode === 'supabase' && _sb && !_demo) {
       const r = await callEdgeFunction('approve-user', { action:'update', targetId:id, updates:{ permissions:perms } });
       if (!r.ok) {
+        // Fallback só p/ indisponibilidade da edge function (ex.: CORS em localhost/preview);
+        // RLS e o gate de MFA em _sbDirectUpdate ainda se aplicam.
         const ok = await _sbDirectUpdate('users', id, { permissions:perms });
         if (!ok) return false;
       }
@@ -1123,6 +1140,10 @@ const AUTH = (function () {
   }
 
   async function setAccessExpiry(userId, expiresAt) {
+    const session = getSession();
+    if (!session || !hasRole(session.role, 'gestor')) return false;
+    if (session.userId === userId) return false;
+    if (hasRole(_users[userId]?.role || 'membro', session.role)) return false;
     const val = expiresAt || null;
     if (_mode === 'supabase' && _sb && !_demo) {
       const r = await callEdgeFunction('approve-user', { action:'update', targetId:userId, updates:{ accessExpires: val } });

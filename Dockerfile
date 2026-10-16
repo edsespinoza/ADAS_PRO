@@ -1,4 +1,6 @@
-FROM node:20-alpine AS builder
+# Builder em Debian (glibc) — o pacote npm `deno` (devDependency, só p/ testes)
+# lança "Musl is not supported" em imagens Alpine.
+FROM node:20-slim AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci

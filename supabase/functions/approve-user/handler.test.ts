@@ -14,7 +14,9 @@ interface Overrides {
   target?: TargetLike | null;
   tokenError?: string | null;
   aalNextLevel?: string;
+  aalError?: string | null;
   recentCount?: number;
+  rateLimitError?: string | null;
   createUserError?: string | null;
   usersInsertError?: string | null;
   auditInsertError?: string | null;
@@ -50,13 +52,21 @@ function makeDeps(overrides: Overrides = {}) {
             ? { data: { user: null }, error: { message: overrides.tokenError } }
             : { data: { user: caller ? { id: caller.id } : null }, error: null },
         mfa: {
-          getAuthenticatorAssuranceLevel: async () => ({
-            data: { nextLevel: overrides.aalNextLevel ?? 'aal1', currentLevel: 'aal1' },
-          }),
+          getAuthenticatorAssuranceLevel: async () =>
+            overrides.aalError
+              ? { data: null, error: { message: overrides.aalError } }
+              : {
+                  data: { nextLevel: overrides.aalNextLevel ?? 'aal1', currentLevel: 'aal1' },
+                  error: null,
+                },
         },
       },
     }),
     createAdminClient: () => ({
+      rpc: async () =>
+        overrides.rateLimitError
+          ? { data: null, error: { message: overrides.rateLimitError } }
+          : { data: overrides.recentCount ?? 1, error: null },
       auth: {
         admin: {
           createUser: async (opts) => {
@@ -213,11 +223,28 @@ Deno.test('create sem MFA quando exigido retorna 403', async () => {
   assertEquals(await res.json(), { error: 'Autenticação em duas etapas (MFA) é obrigatória para esta ação.' });
 });
 
+Deno.test('falha ao consultar o nível de MFA retorna 403 fail-closed', async () => {
+  const { deps } = makeDeps({ aalError: 'mfa indisponível' });
+  const res = await handler(
+    post({ action: 'create', email: 'x@adaspro.com.br', password: 'Str0ng!Pass', name: 'X' }),
+    deps
+  );
+  assertEquals(res.status, 403);
+  assertEquals(await res.json(), { error: 'Não foi possível determinar o nível de autenticação.' });
+});
+
 Deno.test('rate limit (30+ ações em 60s) retorna 429', async () => {
-  const { deps } = makeDeps({ recentCount: 30 });
+  const { deps } = makeDeps({ recentCount: 31 });
   const res = await handler(post({ action: 'approve', targetId: 't-1' }), deps);
   assertEquals(res.status, 429);
   assertEquals(await res.json(), { error: 'Muitas requisições. Aguarde 1 minuto.' });
+});
+
+Deno.test('rate limit indisponível (rpc erro) retorna 503 fail-closed', async () => {
+  const { deps } = makeDeps({ rateLimitError: 'limiter down' });
+  const res = await handler(post({ action: 'approve', targetId: 't-1' }), deps);
+  assertEquals(res.status, 503);
+  assertEquals(await res.json(), { error: 'Serviço temporariamente indisponível. Tente novamente.' });
 });
 
 Deno.test('create com erro no auth.admin.createUser retorna 500', async () => {

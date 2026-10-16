@@ -1,0 +1,37 @@
+# Dependências — reinstaladas no container via `npm ci`
+node_modules
+
+# Git / Vercel / ferramentas locais
+.git
+.gitignore
+.vercel
+.vercelignore
+.github
+.agents
+.augment
+.claude
+.claude-plugin
+.opencode
+mcp-servers
+mcp-manager.sh
+opencode.json
+skills-lock.json
+
+# Documentação e auditorias (não fazem parte do site)
+*.md
+memory
+docs
+
+# Backend / infra que não é servido pelo nginx
+supabase
+sql
+api
+tests
+scripts/security-*
+
+# Segredos: manter APENAS .env.local (usado pelo build). Nunca .env.
+.env
+.env.example
+
+# PDFs pagos — excluir para espelhar produção (fix A1) e reduzir contexto
+assets/downloads
